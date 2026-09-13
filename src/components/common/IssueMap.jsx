@@ -1,0 +1,137 @@
+import React from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import { StatusBadge } from './StatusBadge';
+
+// Fix standard Leaflet default icon issues in bundlers
+const createCustomIcon = (status) => {
+  let color = '#F59E0B'; // under review / submitted
+  if (status === 'validated' || status === 'adopted' || status === 'assigned' || status === 'in_progress') {
+    color = '#2563EB';
+  } else if (status === 'resolved' || status === 'selected' || status === 'completed') {
+    color = '#10B981';
+  } else if (status === 'rejected') {
+    color = '#EF4444';
+  }
+
+  const svgHtml = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="${color}">
+      <path d="M12 0C7.58 0 4 3.58 4 8c0 5.25 7 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+    </svg>
+  `;
+
+  return L.divIcon({
+    html: svgHtml,
+    className: 'custom-map-pin',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+};
+
+export const IssueMap = ({ issues = [], onViewIssue, height = '340px' }) => {
+  // Center on first issue coordinates or default to Jharkhand / Odisha region
+  const validIssues = (issues || []).filter(
+    (i) => i.latitude && i.longitude && !isNaN(parseFloat(i.latitude)) && !isNaN(parseFloat(i.longitude))
+  );
+
+  const defaultCenter = validIssues.length > 0
+    ? [parseFloat(validIssues[0].latitude), parseFloat(validIssues[0].longitude)]
+    : [23.3441, 85.3096]; // Ranchi / Jharkhand region
+
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: height,
+        borderRadius: '16px',
+        overflow: 'hidden',
+        border: '1px solid #E2E8F0',
+        position: 'relative',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+      }}
+    >
+      <MapContainer
+        center={defaultCenter}
+        zoom={validIssues.length > 0 ? 8 : 7}
+        scrollWheelZoom={false}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {validIssues.map((issue) => (
+          <Marker
+            key={issue.id}
+            position={[parseFloat(issue.latitude), parseFloat(issue.longitude)]}
+            icon={createCustomIcon(issue.status)}
+          >
+            <Popup>
+              <div style={{ padding: '4px', minWidth: '180px' }}>
+                <div style={{ marginBottom: '6px' }}>
+                  <StatusBadge status={issue.status} />
+                </div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0F172A', marginBottom: '4px' }}>
+                  {issue.title}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '8px' }}>
+                  📍 {issue.district || 'Location'}
+                </div>
+                {onViewIssue && (
+                  <button
+                    onClick={() => onViewIssue(issue)}
+                    style={{
+                      background: '#2563EB',
+                      color: '#FFFFFF',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      width: '100%',
+                    }}
+                  >
+                    View Details
+                  </button>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+
+      {/* Map Legend Overlay at bottom left */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '12px',
+          left: '12px',
+          zIndex: 1000,
+          background: 'rgba(255, 255, 255, 0.92)',
+          backdropFilter: 'blur(6px)',
+          padding: '6px 12px',
+          borderRadius: '8px',
+          border: '1px solid #E2E8F0',
+          fontSize: '0.725rem',
+          display: 'flex',
+          gap: '12px',
+          fontWeight: 600,
+        }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }}></span>
+          Under Review
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB' }}></span>
+          In Progress
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }}></span>
+          Resolved
+        </span>
+      </div>
+    </div>
+  );
+};
