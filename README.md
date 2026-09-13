@@ -41,7 +41,7 @@ A collaborative civic-tech platform connecting citizens, municipal authorities, 
 git clone https://github.com/DiscoveringRohit/Confluence-frontend-.git
 
 # Navigate to project directory
-cd Confluence-frontend-
+cd Confluence-frontend
 
 # Install dependencies
 npm install
