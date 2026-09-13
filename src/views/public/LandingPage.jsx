@@ -498,10 +498,10 @@ export const LandingPage = ({
                 style={{ width: '150px', height: '40px', fontSize: '0.875rem' }}
               >
                 <option value="all">All States</option>
-                <option value="odisha">Odisha</option>
                 <option value="jharkhand">Jharkhand</option>
-                <option value="west bengal">West Bengal</option>
                 <option value="bihar">Bihar</option>
+                <option value="odisha">Odisha</option>
+                <option value="west bengal">West Bengal</option>
               </select>
 
               <select
@@ -557,7 +557,7 @@ export const LandingPage = ({
                   </h3>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#64748B', marginBottom: '0.75rem' }}>
-                    <MapPin size={12} color="#94A3B8" /> {issue.district || 'Bhubaneswar, Odisha'}
+                    <MapPin size={12} color="#94A3B8" /> {issue.district ? `${issue.district}, Jharkhand` : 'Dhanbad, Jharkhand'}
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -723,12 +723,12 @@ export const LandingPage = ({
             {/* Solutions Grid */}
             <div className="grid-3" style={{ gap: '1.5rem' }}>
               {[
-                { title: 'Smart Irrigation System', solves: 'Water logging / Irrigation', stage: 'Prototype', impact: 'High Impact', university: 'ITER', img: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500' },
-                { title: 'AI Traffic Management', solves: 'Traffic congestion', stage: 'Development', impact: 'Medium Impact', university: 'SOA', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=500' },
-                { title: 'Low-Cost Water Purification', solves: 'Drinking water shortage', stage: 'Prototype', impact: 'High Impact', university: 'NIT Rourkela', img: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=500' },
-                { title: 'Agriculture Monitoring Drone', solves: 'Crop monitoring & Yield', stage: 'Testing', impact: 'Medium Impact', university: 'OUAT', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=500' },
-                { title: 'Smart Solar Street Light', solves: 'Street light not working', stage: 'Deployed', impact: 'High Impact', university: 'KIIT', img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500' },
-                { title: 'Digital Learning Platform', solves: 'Lack of digital facilities', stage: 'Prototype', impact: 'Medium Impact', university: 'Ravenshaw', img: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500' },
+                { title: 'IoT Damodar Water Turbidity Monitor', solves: 'Industrial Effluent in Water', stage: 'Prototype', impact: 'High Impact', university: 'BIT Sindri', img: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500' },
+                { title: 'Mining Slag & Waste Repurposing', solves: 'Heavy Metal Land Contamination', stage: 'Development', impact: 'High Impact', university: 'NIT Jamshedpur', img: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=500' },
+                { title: 'Solar Cold Storage for Tribal Farmers', solves: 'Perishable Produce Spoilage', stage: 'Deployed', impact: 'High Impact', university: 'Birsa Agricultural University', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=500' },
+                { title: 'Lac & Tassar Silk Micro-Enterprise IoT', solves: 'Rural Artisan Livelihood Yield', stage: 'Testing', impact: 'Medium Impact', university: 'Ranchi University', img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500' },
+                { title: 'Rural Microgrid Power Backup', solves: 'Grid Outages in Remote Panchayats', stage: 'Deployed', impact: 'High Impact', university: 'BIT Sindri', img: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=500' },
+                { title: 'Tribal Dialect Digital Literacy App', solves: 'Santhali / Ho Medium Learning', stage: 'Prototype', impact: 'Medium Impact', university: 'Kolhan University', img: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500' },
               ].map((sol, idx) => (
                 <div
                   key={idx}
@@ -970,30 +970,30 @@ export const LandingPage = ({
             <div className="grid-3" style={{ gap: '1.75rem' }}>
               {[
                 {
-                  category: 'Agriculture',
-                  title: 'Smart Irrigation Transforms Farming in Odisha',
-                  desc: 'A student team from ITER developed a low-cost smart irrigation system, helping local farmers increase crop yield by 30%.',
-                  stat1: { value: '30%', label: 'Yield Increase' },
-                  stat2: { value: '200+', label: 'Farmers Benefited' },
-                  university: 'ITER University',
+                  category: 'Water & Sanitation',
+                  title: 'IoT Damodar River Water Monitoring in Dhanbad',
+                  desc: 'A student team from BIT Sindri deployed low-cost turbidity sensors along the Damodar industrial belt, alerting municipal boards to toxic runoff.',
+                  stat1: { value: '45%', label: 'Runoff Reduction' },
+                  stat2: { value: '18K+', label: 'Citizens Served' },
+                  university: 'BIT Sindri',
                   img: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500',
                 },
                 {
-                  category: 'Infrastructure',
-                  title: 'Solar Street Lights Brighten Rural Communities',
-                  desc: 'A clean energy solution by KIIT students brought solar street lights to 5 villages, improving safety, night markets, and mobility.',
-                  stat1: { value: '5', label: 'Villages Lighted' },
-                  stat2: { value: '1,200+', label: 'People Impacted' },
-                  university: 'KIIT University',
-                  img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500',
+                  category: 'Agriculture & Livelihood',
+                  title: 'Solar Cold Storage for Tribal Farmers in Khunti',
+                  desc: 'Birsa Agricultural University innovators engineered decentralized solar cold-rooms, cutting vegetable spoilage and doubling tribal farmer margins.',
+                  stat1: { value: '40%', label: 'Spoilage Cut' },
+                  stat2: { value: '450+', label: 'Farmers Benefited' },
+                  university: 'Birsa Agricultural University',
+                  img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=500',
                 },
                 {
-                  category: 'Water & Health',
-                  title: 'Clean Water, Healthier Lives in Tribal Belts',
-                  desc: 'NIT Rourkela students designed a low-cost water purification device, now deployed in schools and rural community centers.',
-                  stat1: { value: '15', label: 'Schools Equipped' },
-                  stat2: { value: '5,000+', label: 'People Benefited' },
-                  university: 'NIT Rourkela',
+                  category: 'Industrial Tech & Environment',
+                  title: 'Automated Slag Recycling with Tata Steel CSR',
+                  desc: 'NIT Jamshedpur researchers partnered with Tata Steel Foundation to convert blast furnace slag into durable, low-cost rural road pavers.',
+                  stat1: { value: '12 km', label: 'Rural Roads Paved' },
+                  stat2: { value: '8,000+', label: 'Residents Impacted' },
+                  university: 'NIT Jamshedpur',
                   img: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=500',
                 },
               ].map((story, idx) => (

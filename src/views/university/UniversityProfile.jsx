@@ -21,12 +21,12 @@ export const UniversityProfile = () => {
   const [formData, setFormData] = useState({
     name: user?.name || 'Prof. S. Soren',
     role: 'University Coordinator',
-    institution: user?.university?.name || 'Birsa Institute of Technology (BIT) Sindri',
-    email: user?.email || 's.soren@iter.ac.in',
-    phone: '+91 9876543210',
+    institution: user?.university_details?.name || user?.university?.name || 'Birsa Institute of Technology (BIT) Sindri',
+    email: user?.email || 's.soren@bitsindri.ac.in',
+    phone: user?.phone || '+91 94311 88990',
     department: 'Computer Science & Engineering',
-    institute_code: 'UCRD001',
-    address: 'BIT Sindri / ITER, Bhubaneswar, Odisha',
+    institute_code: user?.university_details?.code || 'BITS-DHN',
+    address: 'BIT Sindri Campus, Dhanbad, Jharkhand - 828123',
   });
 
   const handleSave = (e) => {

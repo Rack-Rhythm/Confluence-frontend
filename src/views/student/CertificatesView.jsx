@@ -29,7 +29,7 @@ export const CertificatesView = () => {
   const certificates = pitches.map((pitch, idx) => ({
     id: pitch.id,
     title: `Certificate of Prior-Art & Innovation: ${pitch.title}`,
-    issuer: `${pitch.university?.name || user?.university?.name || 'Confluence National Innovation Board'} & Dept of Higher Education`,
+    issuer: `${pitch.university_details?.name || user?.university_details?.name || pitch.university?.name || user?.university?.name || 'Birsa Institute of Technology (BIT) Sindri'} & Dept of Higher Education`,
     date: new Date(pitch.created_at).toLocaleDateString(),
     hash: pitch.submission_hash || 'SHA-256 prior art verified',
     status: pitch.status === 'selected' ? 'Winning Solution Award' : 'Verified Submission',

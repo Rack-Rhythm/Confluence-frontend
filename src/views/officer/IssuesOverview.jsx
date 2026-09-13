@@ -55,20 +55,6 @@ export const IssuesOverview = ({ onSelectIssue }) => {
     }
   };
 
-  const handleAdopt = async (issueId) => {
-    setActionInProgress(issueId);
-    try {
-      await issuesAPI.adoptIssue(issueId);
-      showToast(`Issue #${issueId} adopted by your university! Open call initialized.`, 'success');
-      loadIssues();
-    } catch (err) {
-      const msg = err.response?.data?.detail || 'Failed to adopt issue. Ensure your role is University Coordinator.';
-      showToast(msg, 'error');
-    } finally {
-      setActionInProgress(null);
-    }
-  };
-
   const filtered = issues.filter((i) => {
     const matchesCat = categoryFilter === 'all' || i.category === categoryFilter;
     const matchesStatus = statusFilter === 'all' || i.status === statusFilter;
@@ -235,18 +221,6 @@ export const IssuesOverview = ({ onSelectIssue }) => {
                             style={{ background: '#10B981', borderRadius: '6px', padding: '4px 10px', fontSize: '0.75rem' }}
                           >
                             Validate
-                          </button>
-                        )}
-
-                        {/* Direct Adopt button if validated & user is coordinator */}
-                        {issue.status === 'validated' && (
-                          <button
-                            disabled={actionInProgress === issue.id}
-                            onClick={() => handleAdopt(issue.id)}
-                            className="btn btn-blue btn-sm"
-                            style={{ borderRadius: '6px', padding: '4px 10px', fontSize: '0.75rem' }}
-                          >
-                            <Layers size={13} /> Adopt
                           </button>
                         )}
                       </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -14,6 +14,7 @@ import {
   Sparkles,
   Download,
   Send,
+  Star,
 } from 'lucide-react';
 import { pitchesAPI } from '../../api/pitches';
 import { StatusBadge } from '../../components/common/StatusBadge';
@@ -25,6 +26,7 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
   const [currentPitch, setCurrentPitch] = useState(pitch || {});
   const [actionLoading, setActionLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [scoringState, setScoringState] = useState({});
   const [comments, setComments] = useState([
     {
       id: 1,
@@ -32,8 +34,35 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
       role: 'University Coordinator',
       text: 'Methodology is strong. Sensor calibration for high-salinity water should be documented before prototype review.',
       time: '1 day ago',
+      relevance_score: 8,
+      mentor_notes: 'Encourage testing with regional water samples',
+      is_shared_with_students: true,
     },
   ]);
+
+  useEffect(() => {
+    if (pitch?.id) {
+      pitchesAPI.getPitch(pitch.id)
+        .then((data) => {
+          if (data) {
+            setCurrentPitch(data);
+            if (Array.isArray(data.community_feedback) && data.community_feedback.length > 0) {
+              setComments(data.community_feedback.map((fb) => ({
+                id: fb.id,
+                author: fb.citizen_details?.name || 'Citizen Contributor',
+                role: 'Community Feedback',
+                text: fb.feedback_text,
+                time: fb.created_at ? new Date(fb.created_at).toLocaleDateString() : 'Recent',
+                relevance_score: fb.relevance_score,
+                mentor_notes: fb.mentor_notes,
+                is_shared_with_students: fb.is_shared_with_students,
+              })));
+            }
+          }
+        })
+        .catch((err) => console.error('Failed to load pitch details:', err));
+    }
+  }, [pitch?.id]);
 
   if (!pitch) {
     return (
@@ -46,46 +75,110 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
     );
   }
 
-  const handleStatusUpdate = async (newStatus) => {
+  const handleReviewAction = async (action, defaultFeedback = '') => {
     setActionLoading(true);
     try {
       if (currentPitch.id) {
-        await pitchesAPI.updatePitch(currentPitch.id, { status: newStatus });
+        await pitchesAPI.reviewAction(currentPitch.id, {
+          action,
+          review_feedback: defaultFeedback || (action === 'select_winner'
+            ? 'Selected as winning solution by University Review Board.'
+            : 'Your proposal was reviewed by the university board and has been withdrawn from this open call.'),
+        });
       }
+      const newStatus = action === 'select_winner' ? 'selected' : action === 'reject' ? 'rejected' : currentPitch.status;
       setCurrentPitch((prev) => ({ ...prev, status: newStatus }));
-      addToast(`Pitch status updated to "${newStatus.toUpperCase()}"!`, 'success');
+      addToast(action === 'select_winner' ? 'Pitch successfully selected as winner!' : 'Pitch rejected.', 'success');
       if (onRefresh) onRefresh();
     } catch (err) {
-      console.error('Failed to update status:', err);
-      // Optimistic fallback for demo
-      setCurrentPitch((prev) => ({ ...prev, status: newStatus }));
-      addToast(`Pitch updated to "${newStatus}"`, 'success');
+      console.error('Failed to execute review action:', err);
+      const errMsg = err.response?.data?.error || err.message || 'Action failed';
+      addToast(`Action failed: ${errMsg}`, 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleAddComment = (e) => {
+  const handleAddComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
 
-    setComments([
-      ...comments,
-      {
-        id: Date.now(),
-        author: 'Prof. S. Soren',
-        role: 'University Coordinator',
-        text: commentText,
-        time: 'Just now',
-      },
-    ]);
-    setCommentText('');
-    addToast('Feedback comment added to pitch record.', 'success');
+    try {
+      if (currentPitch.id) {
+        const res = await pitchesAPI.submitFeedback(currentPitch.id, commentText);
+        setComments((prev) => [
+          ...prev,
+          {
+            id: res?.id || Date.now(),
+            author: res?.citizen_details?.name || 'Review Board',
+            role: 'Reviewer Note',
+            text: res?.feedback_text || commentText,
+            time: 'Just now',
+            relevance_score: res?.relevance_score,
+            mentor_notes: res?.mentor_notes,
+            is_shared_with_students: res?.is_shared_with_students,
+          },
+        ]);
+      } else {
+        setComments((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            author: 'Prof. S. Soren',
+            role: 'University Coordinator',
+            text: commentText,
+            time: 'Just now',
+          },
+        ]);
+      }
+      setCommentText('');
+      addToast('Feedback comment added to pitch record.', 'success');
+    } catch (err) {
+      console.error('Failed to submit feedback:', err);
+      setComments((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          author: 'Prof. S. Soren',
+          role: 'University Coordinator',
+          text: commentText,
+          time: 'Just now',
+        },
+      ]);
+      setCommentText('');
+      addToast('Feedback added to record.', 'success');
+    }
+  };
+
+  const handleScoreFeedback = async (feedbackId) => {
+    const s = scoringState[feedbackId] || { score: 8, notes: '', share: true };
+    try {
+      await pitchesAPI.scoreFeedback(feedbackId, {
+        relevance_score: parseInt(s.score, 10) || 8,
+        mentor_notes: s.notes || '',
+        is_shared_with_students: s.share !== undefined ? s.share : true,
+      });
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === feedbackId
+            ? { ...c, relevance_score: parseInt(s.score, 10) || 8, mentor_notes: s.notes, is_shared_with_students: s.share }
+            : c
+        )
+      );
+      setScoringState((prev) => ({ ...prev, [feedbackId]: { ...prev[feedbackId], open: false } }));
+      addToast('Feedback relevance scored successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to score feedback:', err);
+      const errMsg = err.response?.data?.error || err.message || 'Failed to score feedback';
+      addToast(`Scoring failed: ${errMsg}`, 'error');
+    }
   };
 
   const title = currentPitch.title || currentPitch.executive_summary || 'Smart Water Monitoring System';
-  const authorName = currentPitch.author?.name || currentPitch.student_name || 'Ananya Verma';
-  const teamName = currentPitch.team_name || 'Team AquaTech';
+  const authorName = currentPitch.student_team_details?.[0]?.name || currentPitch.student_team_details?.[0]?.email || currentPitch.author?.name || currentPitch.student_name || 'Ananya Verma';
+  const uniName = currentPitch.university_details?.name || currentPitch.student_team_details?.[0]?.university_details?.name || 'Birsa Institute of Technology (BIT) Sindri';
+  const mentorName = currentPitch.assigned_mentor_details?.name || 'Dr. A. K. Singh (Faculty Mentor)';
+  const teamName = currentPitch.team_name || (currentPitch.student_team_details?.length ? `Team ${currentPitch.student_team_details[0]?.name?.split(' ')[0] || 'Innovators'}` : 'Team AquaTech');
   const category = currentPitch.category || 'water';
 
   return (
@@ -257,22 +350,37 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
           {/* Tab 3: Team */}
           {activeTab === 'team' && (
             <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem' }}>
-                Student Innovation Team ({teamName})
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                {[
-                  { name: authorName, role: 'Team Lead & Embedded Hardware', dept: 'Electronics & Comm.' },
-                  { name: 'Rohan Das', role: 'Firmware & LoRa Networking', dept: 'Computer Science' },
-                  { name: 'Priya Mahato', role: 'UI/UX & Mobile Dashboard', dept: 'Information Technology' },
-                  { name: 'Dr. P. Mishra', role: 'Faculty Mentor', dept: 'Environmental Eng.' },
-                ].map((member, idx) => (
-                  <div key={idx} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{member.name}</div>
-                    <div style={{ fontSize: '0.775rem', color: '#2563EB', fontWeight: 600 }}>{member.role}</div>
-                    <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>{member.dept}</div>
-                  </div>
-                ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
+                  Student Innovation Team ({teamName})
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: '#2563EB', fontWeight: 700 }}>
+                  🏫 {uniName}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
+                {currentPitch.student_team_details && currentPitch.student_team_details.length > 0 ? (
+                  currentPitch.student_team_details.map((member, idx) => (
+                    <div key={idx} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                      <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{member.name || member.email}</div>
+                      <div style={{ fontSize: '0.775rem', color: '#2563EB', fontWeight: 600 }}>{idx === 0 ? 'Lead Innovator' : 'Co-Innovator'}</div>
+                      <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>{member.email}</div>
+                    </div>
+                  ))
+                ) : (
+                  [
+                    { name: authorName, role: 'Team Lead & Embedded Hardware', dept: 'Electronics & Comm.' },
+                    { name: 'Rohan Das', role: 'Firmware & LoRa Networking', dept: 'Computer Science' },
+                    { name: 'Priya Mahato', role: 'UI/UX & Mobile Dashboard', dept: 'Information Technology' },
+                    { name: mentorName, role: 'Assigned Mentor', dept: 'Environmental Eng.' },
+                  ].map((member, idx) => (
+                    <div key={idx} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                      <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{member.name}</div>
+                      <div style={{ fontSize: '0.775rem', color: '#2563EB', fontWeight: 600 }}>{member.role}</div>
+                      <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>{member.dept}</div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -319,21 +427,133 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
           {activeTab === 'comments' && (
             <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
-                Faculty & Review Board Notes
+                Faculty, Mentor & Review Board Notes
               </h3>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {comments.map((c) => (
-                  <div key={c.id} style={{ padding: '0.85rem 1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.825rem', fontWeight: 800, color: '#0F172A' }}>
-                        {c.author} <span style={{ fontSize: '0.725rem', color: '#2563EB', fontWeight: 600 }}>({c.role})</span>
-                      </span>
-                      <span style={{ fontSize: '0.725rem', color: '#94A3B8' }}>{c.time}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {comments.map((c) => {
+                  const isScoringOpen = scoringState[c.id]?.open;
+                  const currentScore = scoringState[c.id]?.score ?? (c.relevance_score || 8);
+                  const currentNotes = scoringState[c.id]?.notes ?? (c.mentor_notes || '');
+                  const currentShare = scoringState[c.id]?.share ?? (c.is_shared_with_students ?? true);
+
+                  return (
+                    <div key={c.id} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '0.825rem', fontWeight: 800, color: '#0F172A' }}>
+                          {c.author} <span style={{ fontSize: '0.725rem', color: '#2563EB', fontWeight: 600 }}>({c.role})</span>
+                        </span>
+                        <span style={{ fontSize: '0.725rem', color: '#94A3B8' }}>{c.time}</span>
+                      </div>
+                      <p style={{ fontSize: '0.85rem', color: '#334155', lineHeight: 1.5, marginBottom: '0.5rem' }}>{c.text}</p>
+
+                      {/* Score display & Scoring Controls */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #CBD5E1' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {c.relevance_score ? (
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#D97706', background: '#FEF3C7', padding: '2px 8px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                              <Star size={12} fill="#D97706" /> Score: {c.relevance_score}/10
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Unscored</span>
+                          )}
+                          {c.mentor_notes && (
+                            <span style={{ fontSize: '0.75rem', color: '#475569', fontStyle: 'italic' }}>
+                              Notes: {c.mentor_notes}
+                            </span>
+                          )}
+                        </div>
+
+                        {c.id && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setScoringState((prev) => ({
+                                ...prev,
+                                [c.id]: {
+                                  score: currentScore,
+                                  notes: currentNotes,
+                                  share: currentShare,
+                                  open: !isScoringOpen,
+                                },
+                              }))
+                            }
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#2563EB',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {isScoringOpen ? 'Cancel Scoring' : 'Score / Evaluate Feedback'}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Expandable Scoring Panel */}
+                      {isScoringOpen && (
+                        <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #BFDBFE', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E3A8A' }}>
+                              Relevance Score (1-10):
+                              <input
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={currentScore}
+                                onChange={(e) =>
+                                  setScoringState((prev) => ({
+                                    ...prev,
+                                    [c.id]: { ...prev[c.id], score: e.target.value },
+                                  }))
+                                }
+                                style={{ marginLeft: '6px', width: '50px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #CBD5E1' }}
+                              />
+                            </label>
+                            <label style={{ fontSize: '0.75rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <input
+                                type="checkbox"
+                                checked={currentShare}
+                                onChange={(e) =>
+                                  setScoringState((prev) => ({
+                                    ...prev,
+                                    [c.id]: { ...prev[c.id], share: e.target.checked },
+                                  }))
+                                }
+                              />
+                              Share with student team
+                            </label>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input
+                              type="text"
+                              placeholder="Mentor evaluation note..."
+                              value={currentNotes}
+                              onChange={(e) =>
+                                setScoringState((prev) => ({
+                                  ...prev,
+                                  [c.id]: { ...prev[c.id], notes: e.target.value },
+                                }))
+                              }
+                              className="input-field"
+                              style={{ flex: 1, height: '32px', fontSize: '0.8rem' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleScoreFeedback(c.id)}
+                              className="btn btn-blue btn-sm"
+                            >
+                              Save Score
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p style={{ fontSize: '0.825rem', color: '#334155', lineHeight: 1.5 }}>{c.text}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -407,30 +627,21 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
           {/* Action Decision Buttons */}
           <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
-              University Evaluation Actions
+              University Review Actions
             </h4>
 
             <button
-              onClick={() => handleStatusUpdate('shortlisted')}
-              disabled={actionLoading}
+              onClick={() => handleReviewAction('select_winner')}
+              disabled={actionLoading || currentPitch.status === 'selected'}
               className="btn btn-blue"
               style={{ width: '100%', borderRadius: '10px' }}
             >
-              Shortlist Pitch
+              {currentPitch.status === 'selected' ? '✓ Selected as Winner' : 'Select as Winner'}
             </button>
 
             <button
-              onClick={() => handleStatusUpdate('under_review')}
-              disabled={actionLoading}
-              className="btn btn-outline"
-              style={{ width: '100%', borderRadius: '10px' }}
-            >
-              Request Changes
-            </button>
-
-            <button
-              onClick={() => handleStatusUpdate('rejected')}
-              disabled={actionLoading}
+              onClick={() => handleReviewAction('reject')}
+              disabled={actionLoading || currentPitch.status === 'rejected'}
               style={{
                 width: '100%',
                 padding: '0.65rem',
@@ -440,10 +651,10 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
                 color: '#DC2626',
                 fontWeight: 700,
                 fontSize: '0.85rem',
-                cursor: 'pointer',
+                cursor: currentPitch.status === 'rejected' ? 'not-allowed' : 'pointer',
               }}
             >
-              Reject
+              {currentPitch.status === 'rejected' ? 'Rejected' : 'Reject Proposal'}
             </button>
           </div>
         </div>

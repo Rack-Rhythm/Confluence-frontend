@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle2, Clock, PlayCircle, Sparkles, CheckCheck } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
 import { pitchesAPI } from '../../api/pitches';
+import { notificationsAPI } from '../../api/notifications';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
@@ -15,6 +16,27 @@ export const NotificationsView = () => {
     const fetchNotifications = async () => {
       setLoading(true);
       try {
+        let dbNotifs = [];
+        try {
+          const res = await notificationsAPI.getNotifications();
+          dbNotifs = Array.isArray(res) ? res : res.results || [];
+        } catch (e) {
+          console.warn('DB notifications fallback:', e);
+        }
+
+        if (dbNotifs.length > 0) {
+          const mapped = dbNotifs.map((n) => ({
+            id: n.id,
+            title: n.title,
+            desc: n.message,
+            time: new Date(n.created_at).toLocaleDateString(),
+            type: n.notification_type === 'project' ? 'resolved' : n.notification_type === 'issue' ? 'review' : 'in_progress',
+            unread: !n.is_read,
+          }));
+          setNotifications(mapped);
+          setLoading(false);
+          return;
+        }
         const [issuesRes, pitchesRes] = await Promise.allSettled([
           issuesAPI.getIssues({ mine: 1 }),
           pitchesAPI.getPitches({ mine: 1 }),
@@ -90,7 +112,14 @@ export const NotificationsView = () => {
           unread: false,
         });
 
-        setNotifications(notifs);
+        const storageKey = `confluence_read_notifs_${user?.id || 'guest'}`;
+        const storedReadIds = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const persistedNotifs = notifs.map((n) => ({
+          ...n,
+          unread: storedReadIds.includes(n.id) ? false : n.unread,
+        }));
+
+        setNotifications(persistedNotifs);
       } catch (err) {
         console.error('Failed to load notifications:', err);
       } finally {
@@ -101,9 +130,30 @@ export const NotificationsView = () => {
     fetchNotifications();
   }, [user]);
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    try {
+      await notificationsAPI.markAllRead();
+    } catch (e) {}
+    const storageKey = `confluence_read_notifs_${user?.id || 'guest'}`;
+    const allIds = notifications.map((n) => n.id);
+    localStorage.setItem(storageKey, JSON.stringify(allIds));
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
     showToast('All notifications marked as read', 'info');
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      if (typeof id === 'number') {
+        await notificationsAPI.markRead(id);
+      }
+    } catch (e) {}
+    const storageKey = `confluence_read_notifs_${user?.id || 'guest'}`;
+    const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (!stored.includes(id)) {
+      stored.push(id);
+      localStorage.setItem(storageKey, JSON.stringify(stored));
+    }
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, unread: false } : n)));
   };
 
   const getIcon = (type) => {

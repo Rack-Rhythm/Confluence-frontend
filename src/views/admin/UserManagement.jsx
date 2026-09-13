@@ -95,7 +95,7 @@ export const UserManagement = () => {
                     </span>
                   </td>
                   <td style={{ padding: '1rem 1.25rem', color: '#64748B' }}>
-                    {u.university || u.organization || 'General Public'}
+                    {u.university_details?.name || u.organization_details?.name || u.university || u.organization || 'General Public'}
                   </td>
                   <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
                     <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>

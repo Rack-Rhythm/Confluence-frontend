@@ -118,7 +118,7 @@ export const ProjectsOverview = () => {
                         PITCH #{pitch.id}
                       </span>
                       <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                        University: {pitch.university?.name || 'BIT Sindri'}
+                        University: {pitch.university_details?.name || pitch.university?.name || 'Birsa Institute of Technology (BIT) Sindri'}
                       </span>
                     </div>
                     <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>

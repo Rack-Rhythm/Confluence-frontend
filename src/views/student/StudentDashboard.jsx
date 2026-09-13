@@ -96,7 +96,7 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSubmitPitchFor
             ● INSTITUTIONAL INNOVATION
           </div>
           <div style={{ fontSize: '0.9rem', fontWeight: 800, marginTop: '2px' }}>
-            {user?.university?.name || 'BIT Sindri Innovation Lab'}
+            {user?.university_details?.name || user?.university?.name || 'BIT Sindri Innovation Lab'}
           </div>
         </div>
       </div>

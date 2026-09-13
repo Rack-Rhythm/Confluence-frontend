@@ -195,7 +195,7 @@ export const ReportIssue = ({ onBack, onSuccess }) => {
               <input
                 type="text"
                 className="form-input"
-                placeholder="e.g. Dhanbad, Ranchi, Khunti, Bhubaneswar"
+                placeholder="e.g. Dhanbad, Ranchi, Khunti, East Singhbhum, Bokaro"
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
                 required

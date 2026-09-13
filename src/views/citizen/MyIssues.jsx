@@ -161,13 +161,15 @@ export const MyIssues = ({ onNavigate, onSelectIssue }) => {
           {filtered.map((issue) => (
             <div
               key={issue.id}
-              className="card"
+              className="card table-row-hover"
+              onClick={() => onSelectIssue && onSelectIssue(issue)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1.25rem',
                 padding: '1.25rem',
                 transition: 'all 0.2s ease',
+                cursor: 'pointer',
               }}
             >
               <img
@@ -224,11 +226,18 @@ export const MyIssues = ({ onNavigate, onSelectIssue }) => {
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.75rem' }}>
                 <StatusBadge status={issue.status} />
                 <button
-                  onClick={() => onSelectIssue(issue)}
-                  className="btn btn-outline btn-sm"
-                  style={{ borderRadius: '8px' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSelectIssue) onSelectIssue(issue);
+                  }}
+                  className={issue.status === 'resolved' && !issue.citizen_verified_resolved ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+                  style={{
+                    borderRadius: '8px',
+                    background: issue.status === 'resolved' && !issue.citizen_verified_resolved ? '#10B981' : undefined,
+                    color: issue.status === 'resolved' && !issue.citizen_verified_resolved ? '#FFFFFF' : undefined,
+                  }}
                 >
-                  View Details
+                  {issue.status === 'resolved' && !issue.citizen_verified_resolved ? 'Verify Resolution' : 'View Details'}
                 </button>
               </div>
             </div>

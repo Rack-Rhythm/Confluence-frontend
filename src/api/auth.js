@@ -30,4 +30,9 @@ export const authAPI = {
     const response = await apiClient.get('/auth/organizations/');
     return response.data;
   },
+
+  refreshToken: async (refresh) => {
+    const response = await apiClient.post('/auth/token/refresh/', { refresh });
+    return response.data;
+  },
 };

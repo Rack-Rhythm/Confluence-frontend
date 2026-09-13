@@ -126,9 +126,40 @@ export const ValidationView = ({ onSelectIssue }) => {
                       {issue.title}
                     </td>
                     <td style={{ padding: '1rem 1.25rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#10B981', background: '#ECFDF5', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
-                        ✓ No duplicate match
-                      </span>
+                      {issue.duplicate_of || issue.duplicate_of_details || (issue.ai_triage_notes && issue.ai_triage_notes.includes('Flagged duplicate')) ? (
+                        <span
+                          title={issue.ai_triage_notes || 'Flagged as potential duplicate by AI microservice'}
+                          style={{
+                            fontSize: '0.75rem',
+                            color: '#B45309',
+                            background: '#FEF3C7',
+                            border: '1px solid #FCD34D',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          ⚠️ Likely Dup (#{issue.duplicate_of_details?.id || issue.duplicate_of || 'Match'})
+                        </span>
+                      ) : (
+                        <span
+                          title={issue.ai_triage_notes || 'AI similarity check passed: Unique submission'}
+                          style={{
+                            fontSize: '0.75rem',
+                            color: '#10B981',
+                            background: '#ECFDF5',
+                            border: '1px solid #A7F3D0',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                          }}
+                        >
+                          ✓ Verified Unique
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <CategoryPill category={issue.category} />

@@ -62,6 +62,11 @@ import { UserManagement } from './views/admin/UserManagement';
 import { OrganizationsManagement } from './views/admin/OrganizationsManagement';
 import { SystemLogsView } from './views/admin/SystemLogsView';
 
+// Industry views
+import { IndustryDashboard } from './views/industry/IndustryDashboard';
+import { IndustryEngagementsView } from './views/industry/IndustryEngagementsView';
+import { IndustryProfile } from './views/industry/IndustryProfile';
+
 function MainApp() {
   const { user, role, isAuthenticated } = useAuth();
 
@@ -304,20 +309,21 @@ function MainApp() {
     if (role === 'industry_partner') {
       switch (currentView) {
         case 'dashboard':
+          return <IndustryDashboard onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />;
         case 'opportunities':
-        case 'shortlisted_projects':
         case 'funding':
-          return <OpportunitiesView />;
         case 'partnerships':
+          return <IndustryEngagementsView />;
+        case 'shortlisted_projects':
         case 'mentorship':
         case 'project_progress':
           return <ProjectsOverview />;
         case 'notifications':
           return <NotificationsView />;
         case 'profile':
-          return <ProfileView />;
+          return <IndustryProfile />;
         default:
-          return <OpportunitiesView />;
+          return <IndustryDashboard onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />;
       }
     }
 

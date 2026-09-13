@@ -51,8 +51,8 @@ export const OpportunitiesView = () => {
       setApplied((prev) => ({ ...prev, [item.id]: true }));
       showToast(`Application submitted for "${item.title}"!`, 'success');
     } catch (err) {
-      setApplied((prev) => ({ ...prev, [item.id]: true }));
-      showToast(`Application registered for "${item.title}".`, 'info');
+      const errorMsg = err.response?.data?.detail || err.response?.data?.message || 'Application could not be submitted. Please check role permissions.';
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -60,14 +60,15 @@ export const OpportunitiesView = () => {
   const liveOpportunities = [];
 
   engagements.forEach((eng) => {
+    const orgName = eng.industry_org_details?.name || eng.industry_org?.name || 'Tata Steel CSR / Industry Sponsor';
     liveOpportunities.push({
       id: `eng-${eng.id}`,
       issue_id: eng.issue,
-      title: `${eng.industry_org?.name || 'Industry CSR Partner'} — ${eng.engagement_type?.toUpperCase()} Grant`,
-      sponsor: eng.industry_org?.name || 'Tata Steel CSR / Industry Sponsor',
+      title: `${orgName} — ${eng.engagement_type?.toUpperCase() || 'CSR'} Grant`,
+      sponsor: orgName,
       deadline: 'Ongoing Review',
       sector: 'Technology & CSR',
-      grant: `Verified ${eng.engagement_type?.toUpperCase()} Partnership`,
+      grant: `Verified ${eng.engagement_type?.toUpperCase() || 'CSR'} Partnership`,
       desc: eng.proposal_notes || 'Industry partner active sponsorship, equipment support, and student mentorship grant.',
     });
   });

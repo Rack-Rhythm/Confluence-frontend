@@ -45,7 +45,7 @@ export const StudentPitchesList = ({ onSelectPitch }) => {
 
   const filteredPitches = pitches.filter((pitch) => {
     const title = pitch.title || pitch.executive_summary || '';
-    const student = pitch.author?.name || pitch.student_name || 'Student Innovator';
+    const student = pitch.student_team_details?.[0]?.name || pitch.student_team_details?.[0]?.email || pitch.author?.name || pitch.student_name || 'Student Innovator';
     const matchesSearch =
       title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.toLowerCase().includes(searchQuery.toLowerCase());
@@ -178,8 +178,10 @@ export const StudentPitchesList = ({ onSelectPitch }) => {
             ) : (
               filteredPitches.map((pitch, idx) => {
                 const pitchIdNum = pitch.id ? `#${pitch.id.toString().padStart(4, '0')}` : `#020${idx + 1}`;
-                const authorName = pitch.author?.name || pitch.author_name || 'Ananya Verma';
-                const uniName = pitch.author?.university?.name || 'BIT Sindri / ITER';
+                const leadStudent = pitch.student_team_details?.[0]?.name || pitch.student_team_details?.[0]?.email || pitch.author?.name || pitch.author_name || 'Student Innovator';
+                const extraTeam = pitch.student_team_details?.length > 1 ? ` (+${pitch.student_team_details.length - 1})` : '';
+                const authorName = `${leadStudent}${extraTeam}`;
+                const uniName = pitch.university_details?.name || pitch.student_team_details?.[0]?.university_details?.name || 'Birsa Institute of Technology (BIT) Sindri';
                 const titleText = pitch.title || pitch.executive_summary || 'Smart Water Monitoring System';
 
                 return (

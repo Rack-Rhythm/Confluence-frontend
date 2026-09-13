@@ -30,7 +30,7 @@ const createCustomIcon = (status) => {
 };
 
 export const IssueMap = ({ issues = [], onViewIssue, height = '340px' }) => {
-  // Center on first issue coordinates or default to Jharkhand / Odisha region
+  // Center on first issue coordinates or default to Ranchi, Jharkhand region
   const validIssues = (issues || []).filter(
     (i) => i.latitude && i.longitude && !isNaN(parseFloat(i.latitude)) && !isNaN(parseFloat(i.longitude))
   );

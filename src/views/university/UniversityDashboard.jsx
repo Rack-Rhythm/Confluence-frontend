@@ -106,7 +106,7 @@ export const UniversityDashboard = ({ onNavigate, onSelectIssue, onSelectPitch }
           </div>
           <div>
             <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>
-              {user?.university?.name || 'Birsa Institute of Technology (BIT) Sindri'}
+              {user?.university_details?.name || user?.university?.name || 'Birsa Institute of Technology (BIT) Sindri'}
             </div>
             <div style={{ fontSize: '0.725rem', color: '#10B981', fontWeight: 700 }}>
               ● University Innovation Cell Active

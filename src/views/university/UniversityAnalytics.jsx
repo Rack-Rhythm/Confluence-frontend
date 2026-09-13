@@ -54,10 +54,10 @@ export const UniversityAnalytics = () => {
     fetchData();
   }, []);
 
-  const totalAdopted = issues.filter((i) => ['adopted', 'assigned', 'resolved'].includes(i.status)).length || 8;
-  const totalPitches = pitches.length || 24;
-  const totalProjects = pitches.filter((p) => p.status === 'shortlisted' || p.status === 'selected' || p.status === 'merged').length || 10;
-  const deployedSolutions = issues.filter((i) => i.status === 'resolved').length || 3;
+  const totalAdopted = analytics?.overview?.adopted_issues ?? (issues.filter((i) => ['adopted', 'assigned', 'resolved'].includes(i.status)).length || 8);
+  const totalPitches = analytics?.overview?.total_pitches_submitted ?? (pitches.length || 24);
+  const totalProjects = analytics?.overview?.assigned_solutions ?? (pitches.filter((p) => p.status === 'shortlisted' || p.status === 'selected' || p.status === 'merged').length || 10);
+  const deployedSolutions = analytics?.overview?.resolved_issues ?? (issues.filter((i) => i.status === 'resolved').length || 3);
 
   const categories = analytics?.categories || [
     { category: 'water', count: 28 },

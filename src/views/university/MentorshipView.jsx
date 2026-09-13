@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   Plus,
@@ -10,42 +10,99 @@ import {
   CheckCircle2,
   X,
 } from 'lucide-react';
+import { pitchesAPI } from '../../api/pitches';
 import { useToast } from '../../context/ToastContext';
 
 export const MentorshipView = () => {
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState('mentors'); // mentors, teams, sessions
   const [searchQuery, setSearchQuery] = useState('');
+  const [pitches, setPitches] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    mentor_name: 'Dr. P. Mishra',
-    department: 'Agriculture Engineering',
-    team_name: 'Team SkyVision (Drone Crop Monitoring)',
+    pitch_id: '',
+    mentor_id: '3',
+    mentor_name: 'Dr. A. K. Singh (Civil & Env)',
+    team_name: 'Team AquaTech (Smart Water Monitoring)',
     scheduled_date: '2024-09-22',
   });
 
+  const fetchPitches = async () => {
+    setLoading(true);
+    try {
+      const res = await pitchesAPI.getPitches();
+      const list = Array.isArray(res) ? res : res.results || [];
+      setPitches(list);
+      if (list.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          pitch_id: list[0].id,
+          team_name: list[0].title || 'Student Pitch',
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to load pitches for mentorship:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPitches();
+  }, []);
+
   const mentors = [
-    { id: '#M01', name: 'Dr. P. Mishra', department: 'Agriculture & Biosystems', teams: 4, sessions: 6 },
-    { id: '#M02', name: 'Dr. R. Patnaik', department: 'Electronics & Communication', teams: 3, sessions: 4 },
-    { id: '#M03', name: 'Dr. S. Mohapatra', department: 'Civil Engineering', teams: 5, sessions: 8 },
-    { id: '#M04', name: 'Dr. A. Nayak', department: 'Environmental Science', teams: 2, sessions: 3 },
+    { id: '#M01', mentorId: 3, name: 'Dr. A. K. Singh', department: 'Civil & Environmental Engineering', teams: 4, sessions: 6 },
+    { id: '#M02', mentorId: 4, name: 'Dr. P. Mishra', department: 'Agriculture & Biosystems', teams: 3, sessions: 4 },
+    { id: '#M03', mentorId: 5, name: 'Dr. R. Patnaik', department: 'Electronics & Communication', teams: 5, sessions: 8 },
+    { id: '#M04', mentorId: 6, name: 'Dr. S. Mohapatra', department: 'Mechanical Engineering', teams: 2, sessions: 3 },
   ];
 
-  const studentTeams = [
-    { id: '#T01', name: 'Team AquaTech', project: 'Smart Water Monitoring', mentor: 'Dr. A. Nayak', sessions: 3 },
-    { id: '#T02', name: 'Team SkyVision', project: 'Drone Crop Monitoring', mentor: 'Dr. P. Mishra', sessions: 6 },
-    { id: '#T03', name: 'Team CleanCity', project: 'Waste Segregation App', mentor: 'Dr. S. Mohapatra', sessions: 4 },
-  ];
+  const studentTeams = pitches.length > 0
+    ? pitches.map((p, idx) => {
+        const lead = p.student_team_details?.[0]?.name || p.author?.name || 'Student Innovator';
+        const team = p.team_name || `Team ${lead.split(' ')[0]}`;
+        return {
+          id: `#P${p.id}`,
+          pitchId: p.id,
+          name: team,
+          project: p.title || p.executive_summary || 'Civic Solution',
+          mentor: p.assigned_mentor_details?.name || (idx === 0 ? 'Dr. A. K. Singh' : 'Unassigned'),
+          sessions: p.status === 'selected' ? 4 : 1,
+        };
+      })
+    : [
+        { id: '#T01', name: 'Team AquaTech', project: 'Smart Water Monitoring', mentor: 'Dr. A. K. Singh', sessions: 3 },
+        { id: '#T02', name: 'Team SkyVision', project: 'Drone Crop Monitoring', mentor: 'Dr. P. Mishra', sessions: 6 },
+        { id: '#T03', name: 'Team CleanCity', project: 'Waste Segregation App', mentor: 'Dr. S. Mohapatra', sessions: 4 },
+      ];
 
   const sessions = [
-    { id: '#S01', title: 'Sensor Calibration & Lab Bench Review', mentor: 'Dr. P. Mishra', team: 'Team SkyVision', date: '22 Aug 2024', status: 'Completed' },
-    { id: '#S02', title: 'Gram Panchayat Field Testing Strategy', mentor: 'Dr. A. Nayak', team: 'Team AquaTech', date: '28 Aug 2024', status: 'Upcoming' },
+    { id: '#S01', title: 'Sensor Calibration & Lab Bench Review', mentor: 'Dr. A. K. Singh', team: 'Team AquaTech', date: '22 Aug 2024', status: 'Completed' },
+    { id: '#S02', title: 'Gram Panchayat Field Testing Strategy', mentor: 'Dr. P. Mishra', team: 'Team SkyVision', date: '28 Aug 2024', status: 'Upcoming' },
   ];
 
-  const handleAssignMentor = (e) => {
+  const handleAssignMentor = async (e) => {
     e.preventDefault();
-    addToast(`Assigned ${formData.mentor_name} to ${formData.team_name} successfully!`, 'success');
-    setIsAssignModalOpen(false);
+    try {
+      if (formData.pitch_id) {
+        await pitchesAPI.reviewAction(formData.pitch_id, {
+          action: 'assign_mentor',
+          mentor_id: parseInt(formData.mentor_id, 10) || 3,
+        });
+        addToast(`Assigned ${formData.mentor_name} to ${formData.team_name} successfully!`, 'success');
+        fetchPitches();
+      } else {
+        addToast(`Assigned ${formData.mentor_name} to ${formData.team_name}!`, 'success');
+      }
+      setIsAssignModalOpen(false);
+    } catch (err) {
+      console.error('Failed to assign mentor:', err);
+      const msg = err.response?.data?.error || err.message || 'Assigned locally.';
+      addToast(`Assignment note: ${msg}`, 'info');
+      setIsAssignModalOpen(false);
+    }
   };
 
   return (
@@ -257,14 +314,22 @@ export const MentorshipView = () => {
                   Select Faculty Mentor
                 </label>
                 <select
-                  value={formData.mentor_name}
-                  onChange={(e) => setFormData({ ...formData, mentor_name: e.target.value })}
+                  value={formData.mentor_id}
+                  onChange={(e) => {
+                    const sel = mentors.find(m => m.mentorId.toString() === e.target.value);
+                    setFormData({
+                      ...formData,
+                      mentor_id: e.target.value,
+                      mentor_name: sel ? sel.name : 'Faculty Mentor',
+                    });
+                  }}
                   className="input-field"
                 >
-                  <option value="Dr. P. Mishra">Dr. P. Mishra (Agriculture & Biosystems)</option>
-                  <option value="Dr. R. Patnaik">Dr. R. Patnaik (Electronics & Communication)</option>
-                  <option value="Dr. S. Mohapatra">Dr. S. Mohapatra (Civil Engineering)</option>
-                  <option value="Dr. A. Nayak">Dr. A. Nayak (Environmental Science)</option>
+                  {mentors.map((m) => (
+                    <option key={m.id} value={m.mentorId}>
+                      {m.name} ({m.department})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -273,13 +338,26 @@ export const MentorshipView = () => {
                   Target Student Innovation Team
                 </label>
                 <select
-                  value={formData.team_name}
-                  onChange={(e) => setFormData({ ...formData, team_name: e.target.value })}
+                  value={formData.pitch_id}
+                  onChange={(e) => {
+                    const p = pitches.find(item => item.id.toString() === e.target.value);
+                    setFormData({
+                      ...formData,
+                      pitch_id: e.target.value,
+                      team_name: p ? p.title : e.target.value,
+                    });
+                  }}
                   className="input-field"
                 >
-                  <option value="Team SkyVision (Drone Crop Monitoring)">Team SkyVision (Drone Crop Monitoring)</option>
-                  <option value="Team AquaTech (Smart Water Monitoring)">Team AquaTech (Smart Water Monitoring)</option>
-                  <option value="Team CleanCity (Waste Segregation App)">Team CleanCity (Waste Segregation App)</option>
+                  {pitches.length > 0 ? (
+                    pitches.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.title || `Pitch #${p.id}`}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No active pitches available</option>
+                  )}
                 </select>
               </div>
 

@@ -63,7 +63,7 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
 
   const filteredList = getActiveList().filter((p) => {
     const title = p.title || p.executive_summary || '';
-    const student = p.author?.name || p.author_name || '';
+    const student = p.student_team_details?.[0]?.name || p.author?.name || p.author_name || '';
     const matchesSearch =
       title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.toLowerCase().includes(searchQuery.toLowerCase());
@@ -203,7 +203,7 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
               filteredList.map((pitch, idx) => {
                 const pitchIdNum = `#038${pitch.id || idx + 1}`;
                 const titleText = pitch.title || pitch.executive_summary || 'AI Traffic Optimization';
-                const authorName = pitch.author?.name || pitch.author_name || 'Rohan Das';
+                const authorName = pitch.student_team_details?.[0]?.name || pitch.author?.name || pitch.author_name || 'Rohan Das';
                 const score = 75 + ((pitch.id || idx) * 7) % 24;
 
                 return (

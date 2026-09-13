@@ -36,6 +36,18 @@ export const ProblemPipeline = ({ onSelectIssue }) => {
     }
   };
 
+  const handleAdopt = async (issueId) => {
+    try {
+      await issuesAPI.adoptIssue(issueId);
+      showToast(`Problem #${issueId} adopted by your university! Open call initialized.`, 'success');
+      load();
+    } catch (err) {
+      console.error('Failed to adopt issue:', err);
+      const msg = err.response?.data?.detail || err.response?.data?.error || 'Failed to adopt issue.';
+      showToast(msg, 'error');
+    }
+  };
+
   const tabs = [
     { id: 'all', label: `All Problems (${issues.length})` },
     { id: 'pending', label: `Pending Validation (${issues.filter((i) => i.status === 'submitted').length})` },
@@ -151,6 +163,15 @@ export const ProblemPipeline = ({ onSelectIssue }) => {
                             style={{ background: '#10B981', borderRadius: '6px' }}
                           >
                             Validate
+                          </button>
+                        )}
+                        {issue.status === 'validated' && (
+                          <button
+                            onClick={() => handleAdopt(issue.id)}
+                            className="btn btn-blue btn-sm"
+                            style={{ borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem' }}
+                          >
+                            <Layers size={13} /> Adopt
                           </button>
                         )}
                       </div>

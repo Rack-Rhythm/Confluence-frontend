@@ -130,7 +130,7 @@ export const MyProjects = () => {
                       {pitch.title}
                     </h2>
                     <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                      Assigned Mentor: {pitch.assigned_mentor?.name || 'Dr. A. K. Singh (Civil & Env)'}
+                      Assigned Mentor: {pitch.assigned_mentor_details?.name || pitch.assigned_mentor?.name || 'Dr. A. K. Singh (Civil & Env)'}
                     </div>
                   </div>
 

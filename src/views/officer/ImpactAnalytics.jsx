@@ -84,8 +84,8 @@ export const ImpactAnalytics = () => {
             { district: 'Ranchi', count: 24 },
             { district: 'Khunti', count: 19 },
             { district: 'East Singhbhum', count: 16 },
-            { district: 'Bhubaneswar', count: 14 },
-            { district: 'Cuttack', count: 11 },
+            { district: 'Bokaro', count: 14 },
+            { district: 'Hazaribagh', count: 11 },
           ]).map((d) => (
             <div key={d.district} style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
               <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{d.district}</div>

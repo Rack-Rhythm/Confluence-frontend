@@ -336,7 +336,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#065F46' }}>
-                    <Trees size={15} /> {eng.industry_org?.name || 'Industry CSR Partner'}
+                    <Trees size={15} /> {eng.industry_org_details?.name || eng.industry_org?.name || 'Industry CSR Partner'}
                   </div>
                   <div style={{ fontSize: '0.725rem', color: '#047857', marginTop: '2px' }}>
                     {eng.proposal_notes || 'Active CSR sponsorship & mentoring for district societal challenge.'}

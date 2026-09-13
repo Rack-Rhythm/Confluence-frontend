@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Bell,
   Lightbulb,
@@ -9,66 +9,166 @@ import {
   Clock,
   CheckCircle2,
 } from 'lucide-react';
+import { issuesAPI } from '../../api/issues';
+import { pitchesAPI } from '../../api/pitches';
+import { notificationsAPI } from '../../api/notifications';
 import { useToast } from '../../context/ToastContext';
 
 export const UniversityNotifications = () => {
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState('all'); // all, issues, pitches, projects, mentorship, system
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const notifications = [
-    {
-      id: 1,
-      type: 'pitches',
-      title: 'New pitch submitted for Smart Water Monitoring',
-      subtext: 'Team AquaTech attached dual-package IP schematics with SHA-256 stamp.',
-      time: '2 hours ago',
-      icon: Lightbulb,
-      color: '#8B5CF6',
-      bg: '#F5F3FF',
-    },
-    {
-      id: 2,
-      type: 'issues',
-      title: 'Problem #1132 (Turbidity in Mahanadi Basin) is ready for validation',
-      subtext: 'AI Duplicate detection passed with 0 conflicts.',
-      time: '5 hours ago',
-      icon: FileText,
-      color: '#2563EB',
-      bg: '#EFF6FF',
-    },
-    {
-      id: 3,
-      type: 'projects',
-      title: 'Your project Drone Crop Monitoring reached 40% completion',
-      subtext: 'Milestone "Edge AI Firmware Flashing" was logged by student team.',
-      time: '1 day ago',
-      icon: FolderKanban,
-      color: '#10B981',
-      bg: '#ECFDF5',
-    },
-    {
-      id: 4,
-      type: 'mentorship',
-      title: 'Review board evaluation scheduled on 20 Aug 2024',
-      subtext: '3 faculty members and 1 industry expert confirmed attendance.',
-      time: '2 days ago',
-      icon: Users,
-      color: '#F59E0B',
-      bg: '#FFFBEB',
-    },
-    {
-      id: 5,
-      type: 'system',
-      title: 'New open call published: Clean Energy & Waste to Energy',
-      subtext: 'Published to 4 engineering universities in Odisha & Jharkhand region.',
-      time: '3 days ago',
-      icon: Bell,
-      color: '#06B6D4',
-      bg: '#ECFEFF',
-    },
-  ];
+  const storageKey = 'confluence_uni_read_notifs';
+  const [readIds, setReadIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || '[]');
+    } catch {
+      return [];
+    }
+  });
 
-  const filtered = activeTab === 'all' ? notifications : notifications.filter((n) => n.type === activeTab);
+  useEffect(() => {
+    const fetchLiveEvents = async () => {
+      setLoading(true);
+      try {
+        let dbNotifs = [];
+        try {
+          const res = await notificationsAPI.getNotifications();
+          dbNotifs = Array.isArray(res) ? res : res.results || [];
+        } catch (e) {
+          console.warn('DB notifications fallback:', e);
+        }
+
+        if (dbNotifs.length > 0) {
+          const mapped = dbNotifs.map((n) => ({
+            id: n.id,
+            type: n.notification_type || 'system',
+            title: n.title,
+            subtext: n.message,
+            time: new Date(n.created_at).toLocaleDateString(),
+            icon: n.notification_type === 'pitches' ? Lightbulb : n.notification_type === 'project' ? FolderKanban : n.notification_type === 'mentorship' ? Users : FileText,
+            color: n.notification_type === 'project' ? '#10B981' : n.notification_type === 'mentorship' ? '#F59E0B' : '#2563EB',
+            bg: n.notification_type === 'project' ? '#ECFDF5' : n.notification_type === 'mentorship' ? '#FFFBEB' : '#EFF6FF',
+          }));
+          setNotifications(mapped);
+          setLoading(false);
+          return;
+        }
+
+        const [issuesRes, pitchesRes] = await Promise.allSettled([
+          issuesAPI.getIssues(),
+          pitchesAPI.getPitches(),
+        ]);
+
+        const notifs = [];
+
+        if (pitchesRes.status === 'fulfilled') {
+          const pList = Array.isArray(pitchesRes.value) ? pitchesRes.value : pitchesRes.value.results || [];
+          pList.forEach((p) => {
+            if (p.status === 'selected') {
+              notifs.push({
+                id: `pitch-win-${p.id}`,
+                type: 'projects',
+                title: `Winning pitch selected: ${p.title}`,
+                subtext: `Selected for project incubation and assigned development track.`,
+                time: p.updated_at ? new Date(p.updated_at).toLocaleDateString() : 'Recent',
+                icon: FolderKanban,
+                color: '#10B981',
+                bg: '#ECFDF5',
+              });
+            } else if (p.assigned_mentor_details) {
+              notifs.push({
+                id: `pitch-mentor-${p.id}`,
+                type: 'mentorship',
+                title: `Faculty mentor assigned to ${p.title}`,
+                subtext: `Assigned Mentor: ${p.assigned_mentor_details.name}.`,
+                time: p.updated_at ? new Date(p.updated_at).toLocaleDateString() : 'Recent',
+                icon: Users,
+                color: '#F59E0B',
+                bg: '#FFFBEB',
+              });
+            } else {
+              notifs.push({
+                id: `pitch-sub-${p.id}`,
+                type: 'pitches',
+                title: `New student pitch submitted: ${p.title}`,
+                subtext: `Team innovation pitch received and awaiting board evaluation.`,
+                time: p.created_at ? new Date(p.created_at).toLocaleDateString() : 'Recent',
+                icon: Lightbulb,
+                color: '#8B5CF6',
+                bg: '#F5F3FF',
+              });
+            }
+          });
+        }
+
+        if (issuesRes.status === 'fulfilled') {
+          const iList = Array.isArray(issuesRes.value) ? issuesRes.value : issuesRes.value.results || [];
+          iList.forEach((issue) => {
+            if (issue.status === 'validated') {
+              notifs.push({
+                id: `iss-val-${issue.id}`,
+                type: 'issues',
+                title: `Civic Challenge #${issue.id} validated by District`,
+                subtext: `"${issue.title}" is ready for university adoption.`,
+                time: issue.created_at ? new Date(issue.created_at).toLocaleDateString() : 'Recent',
+                icon: FileText,
+                color: '#2563EB',
+                bg: '#EFF6FF',
+              });
+            } else if (issue.status === 'adopted') {
+              notifs.push({
+                id: `iss-adp-${issue.id}`,
+                type: 'projects',
+                title: `Problem #${issue.id} actively adopted`,
+                subtext: `"${issue.title}" active in university engineering pipeline.`,
+                time: issue.updated_at ? new Date(issue.updated_at).toLocaleDateString() : 'Recent',
+                icon: CheckCircle2,
+                color: '#059669',
+                bg: '#ECFDF5',
+              });
+            }
+          });
+        }
+
+        notifs.push({
+          id: 'sys-call-01',
+          type: 'system',
+          title: 'University Innovation Network Active',
+          subtext: 'Synchronized with live state database and District Innovation portal.',
+          time: 'Active',
+          icon: Bell,
+          color: '#06B6D4',
+          bg: '#ECFEFF',
+        });
+
+        setNotifications(notifs);
+      } catch (err) {
+        console.error('Failed to load university notifications:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLiveEvents();
+  }, []);
+
+  const markAllAsRead = async () => {
+    try {
+      await notificationsAPI.markAllRead();
+    } catch (e) {}
+    const all = notifications.map((n) => n.id);
+    setReadIds(all);
+    localStorage.setItem(storageKey, JSON.stringify(all));
+    addToast('All notifications marked as read', 'success');
+  };
+
+  const filtered = (activeTab === 'all' ? notifications : notifications.filter((n) => n.type === activeTab)).map((n) => ({
+    ...n,
+    unread: !readIds.includes(n.id),
+  }));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '900px' }}>
@@ -84,7 +184,7 @@ export const UniversityNotifications = () => {
         </div>
 
         <button
-          onClick={() => addToast('All notifications marked as read', 'success')}
+          onClick={markAllAsRead}
           className="btn btn-outline btn-sm"
           style={{ borderRadius: '8px' }}
         >
