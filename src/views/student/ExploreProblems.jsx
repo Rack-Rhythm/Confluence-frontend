@@ -14,8 +14,9 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
     const load = async () => {
       setLoading(true);
       try {
-        const res = await issuesAPI.getIssues();
-        setIssues(Array.isArray(res) ? res : res.results || []);
+        const res = await issuesAPI.getIssues({ status__in: 'validated,adopted' });
+        const raw = Array.isArray(res) ? res : res.results || [];
+        setIssues(raw.filter((i) => ['validated', 'adopted'].includes(i.status)));
       } catch (err) {
         console.error('Failed to load problems:', err);
       } finally {

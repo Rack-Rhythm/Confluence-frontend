@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Briefcase, Building2, Calendar, Sparkles, MapPin, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { engagementsAPI } from '../../api/engagements';
 import { issuesAPI } from '../../api/issues';
 import { useToast } from '../../context/ToastContext';
 
 export const OpportunitiesView = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [engagements, setEngagements] = useState([]);
   const [adoptedIssues, setAdoptedIssues] = useState([]);
@@ -39,20 +41,13 @@ export const OpportunitiesView = () => {
     load();
   }, []);
 
-  const handleApply = async (item) => {
-    try {
-      if (item.issue_id) {
-        await engagementsAPI.createEngagement({
-          issue: item.issue_id,
-          engagement_type: 'mentorship',
-          proposal_notes: 'Student innovation team applying for industry mentoring and technical co-development.',
-        });
-      }
+  const handleApply = (item) => {
+    if (item.issue_id) {
+      showToast(`Redirecting to submit solution pitch for "${item.title}"...`, 'info');
+      navigate(`/student/submit-pitch/${item.issue_id}`);
+    } else {
       setApplied((prev) => ({ ...prev, [item.id]: true }));
-      showToast(`Application submitted for "${item.title}"!`, 'success');
-    } catch (err) {
-      const errorMsg = err.response?.data?.detail || err.response?.data?.message || 'Application could not be submitted. Please check role permissions.';
-      showToast(errorMsg, 'error');
+      showToast(`Interest registered for "${item.title}"!`, 'success');
     }
   };
 

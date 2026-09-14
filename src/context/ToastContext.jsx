@@ -24,7 +24,7 @@ export const ToastProvider = ({ children }) => {
   }, [removeToast]);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, addToast: showToast }}>
       {children}
       <div className="toast-container" aria-live="polite">
         {toasts.map((t) => {

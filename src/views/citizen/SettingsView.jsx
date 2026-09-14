@@ -4,12 +4,34 @@ import { useToast } from '../../context/ToastContext';
 
 export const SettingsView = () => {
   const { showToast } = useToast();
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [pushAlerts, setPushAlerts] = useState(true);
-  const [language, setLanguage] = useState('English');
+  const [emailAlerts, setEmailAlerts] = useState(() => {
+    try {
+      const v = localStorage.getItem('confluence_citizen_email_alerts');
+      return v !== null ? JSON.parse(v) : true;
+    } catch { return true; }
+  });
+  const [pushAlerts, setPushAlerts] = useState(() => {
+    try {
+      const v = localStorage.getItem('confluence_citizen_push_alerts');
+      return v !== null ? JSON.parse(v) : true;
+    } catch { return true; }
+  });
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('confluence_citizen_lang') || 'English';
+  });
 
-  const handleSavePref = () => {
-    showToast('Preferences updated successfully!', 'success');
+  const toggleEmailAlerts = () => {
+    const nextVal = !emailAlerts;
+    setEmailAlerts(nextVal);
+    localStorage.setItem('confluence_citizen_email_alerts', JSON.stringify(nextVal));
+    showToast(`Email alerts ${nextVal ? 'enabled' : 'disabled'}`, 'success');
+  };
+
+  const togglePushAlerts = () => {
+    const nextVal = !pushAlerts;
+    setPushAlerts(nextVal);
+    localStorage.setItem('confluence_citizen_push_alerts', JSON.stringify(nextVal));
+    showToast(`Push notifications ${nextVal ? 'enabled' : 'disabled'}`, 'success');
   };
 
   return (
@@ -19,12 +41,12 @@ export const SettingsView = () => {
           Settings
         </h1>
         <p style={{ fontSize: '0.85rem', color: '#64748B' }}>
-          Manage your account preferences and notification settings.
+          Manage your account preferences and notification settings. (Saved locally)
         </p>
       </div>
 
       <div className="card" style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column' }}>
-        {/* Notification Preferences */}
+        {/* Email Alerts */}
         <div
           style={{
             display: 'flex',
@@ -40,14 +62,50 @@ export const SettingsView = () => {
             </div>
             <div>
               <div style={{ fontSize: '0.925rem', fontWeight: 700, color: '#0F172A' }}>
-                Notification Preferences
+                Email Notifications
               </div>
               <div style={{ fontSize: '0.775rem', color: '#64748B' }}>
-                Choose what notifications you want to receive regarding your reported issues
+                Receive emails when your reported issue gets triaged or resolved
               </div>
             </div>
           </div>
-          <ChevronRight size={18} color="#94A3B8" />
+          <input
+            type="checkbox"
+            checked={emailAlerts}
+            onChange={toggleEmailAlerts}
+            style={{ width: '20px', height: '20px', accentColor: '#2563EB', cursor: 'pointer' }}
+          />
+        </div>
+
+        {/* Push Alerts */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '1.25rem 1.5rem',
+            borderBottom: '1px solid #F1F5F9',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}>
+              <Bell size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.925rem', fontWeight: 700, color: '#0F172A' }}>
+                Push Alerts & SMS
+              </div>
+              <div style={{ fontSize: '0.775rem', color: '#64748B' }}>
+                Receive instant status notifications on your mobile device
+              </div>
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={pushAlerts}
+            onChange={togglePushAlerts}
+            style={{ width: '20px', height: '20px', accentColor: '#16A34A', cursor: 'pointer' }}
+          />
         </div>
 
         {/* Change Password */}
@@ -105,6 +163,7 @@ export const SettingsView = () => {
             value={language}
             onChange={(e) => {
               setLanguage(e.target.value);
+              localStorage.setItem('confluence_citizen_lang', e.target.value);
               showToast(`Language set to ${e.target.value}`, 'success');
             }}
             className="form-select"

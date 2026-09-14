@@ -55,7 +55,7 @@ export const AdoptionPipeline = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
         <div className="card" style={{ padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#2563EB' }}>
-            {nominations.length || 6}
+            {nominations.length}
           </div>
           <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A' }}>
             Submitted Nominations
@@ -64,7 +64,7 @@ export const AdoptionPipeline = () => {
 
         <div className="card" style={{ padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#F59E0B' }}>
-            {nominations.filter((n) => n.status === 'pending').length || 2}
+            {nominations.filter((n) => n.status === 'pending').length}
           </div>
           <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A' }}>
             Pending Review
@@ -73,7 +73,7 @@ export const AdoptionPipeline = () => {
 
         <div className="card" style={{ padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#10B981' }}>
-            {nominations.filter((n) => n.status === 'approved').length || 3}
+            {nominations.filter((n) => n.status === 'approved').length}
           </div>
           <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A' }}>
             Adopted & Approved
@@ -82,7 +82,7 @@ export const AdoptionPipeline = () => {
 
         <div className="card" style={{ padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#EF4444' }}>
-            {nominations.filter((n) => n.status === 'rejected').length || 1}
+            {nominations.filter((n) => n.status === 'rejected').length}
           </div>
           <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A' }}>
             Rejected

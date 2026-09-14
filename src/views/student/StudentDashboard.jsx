@@ -18,7 +18,7 @@ import { pitchesAPI } from '../../api/pitches';
 import { StatCard } from '../../components/common/StatCard';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 
-export const StudentDashboard = ({ onNavigate, onSelectProblem, onSubmitPitchForProblem }) => {
+export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, onSubmitPitchForProblem }) => {
   const { user } = useAuth();
   const [openProblems, setOpenProblems] = useState([]);
   const [myPitches, setMyPitches] = useState([]);
@@ -55,7 +55,7 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSubmitPitchFor
   const totalOpenProblems = openProblems.filter((i) => ['validated', 'adopted'].includes(i.status)).length || openProblems.length;
   const totalPitches = myPitches.length;
   const ongoingProjects = myPitches.filter((p) => p.status === 'selected' || p.status === 'merged').length;
-  const certificatesCount = 2; // Derived from completed milestones & participation
+  const certificatesCount = myPitches.length; // 1:1 verified credential per registered pitch
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -223,50 +223,59 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSubmitPitchFor
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB', flexShrink: 0 }}>
-                <Lightbulb size={16} />
+            {myPitches.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '1.5rem 0.5rem', color: '#94A3B8', fontSize: '0.85rem' }}>
+                No recent activity. Explore open problems to register your first innovation pitch!
               </div>
-              <div>
-                <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#0F172A' }}>
-                  New pitch submitted
+            ) : (
+              myPitches.slice(0, 3).map((pitch) => (
+                <div
+                  key={pitch.id}
+                  onClick={() => {
+                    if (onSelectPitch) onSelectPitch(pitch);
+                    else onNavigate('my_pitches');
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '0.75rem',
+                    cursor: 'pointer',
+                    padding: '8px',
+                    borderRadius: '10px',
+                    transition: 'all 0.15s ease',
+                  }}
+                  className="table-row-hover"
+                  title="Click to view pitch details"
+                >
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: pitch.status === 'selected' ? '#ECFDF5' : pitch.status === 'merged' ? '#F5F3FF' : '#EFF6FF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: pitch.status === 'selected' ? '#10B981' : pitch.status === 'merged' ? '#8B5CF6' : '#2563EB',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {pitch.status === 'selected' ? <Award size={16} /> : pitch.status === 'merged' ? <FolderKanban size={16} /> : <Lightbulb size={16} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#0F172A', textTransform: 'capitalize' }}>
+                      {pitch.status === 'selected' ? 'Pitch Selected for Pilot' : pitch.status === 'merged' ? 'Solution Merged' : 'Pitch Submitted'}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {pitch.title}
+                    </div>
+                    <span style={{ fontSize: '0.675rem', color: '#94A3B8' }}>
+                      {new Date(pitch.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                  JalShuddhi: Activated Alumina Filter (SHA-256 protected)
-                </div>
-                <span style={{ fontSize: '0.675rem', color: '#94A3B8' }}>2 hours ago</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', flexShrink: 0 }}>
-                <Award size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#0F172A' }}>
-                  Pitch shortlisted
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                  MundariBani Speech App assigned for district field pilot
-                </div>
-                <span style={{ fontSize: '0.675rem', color: '#94A3B8' }}>1 day ago</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6', flexShrink: 0 }}>
-                <FolderKanban size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#0F172A' }}>
-                  Milestone Completed
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                  Field Recordings with Tribal Elders verified
-                </div>
-                <span style={{ fontSize: '0.675rem', color: '#94A3B8' }}>3 days ago</span>
-              </div>
-            </div>
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Bell,
   Lightbulb,
@@ -8,14 +9,17 @@ import {
   AlertCircle,
   Clock,
   CheckCircle2,
+  ChevronRight,
 } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
 import { pitchesAPI } from '../../api/pitches';
 import { notificationsAPI } from '../../api/notifications';
 import { useToast } from '../../context/ToastContext';
+import { resolveNotificationUrl } from '../../utils/navigation';
 
 export const UniversityNotifications = () => {
-  const { addToast } = useToast();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('all'); // all, issues, pitches, projects, mentorship, system
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +51,7 @@ export const UniversityNotifications = () => {
             type: n.notification_type || 'system',
             title: n.title,
             subtext: n.message,
+            link_url: n.link_url,
             time: new Date(n.created_at).toLocaleDateString(),
             icon: n.notification_type === 'pitches' ? Lightbulb : n.notification_type === 'project' ? FolderKanban : n.notification_type === 'mentorship' ? Users : FileText,
             color: n.notification_type === 'project' ? '#10B981' : n.notification_type === 'mentorship' ? '#F59E0B' : '#2563EB',
@@ -73,6 +78,7 @@ export const UniversityNotifications = () => {
                 type: 'projects',
                 title: `Winning pitch selected: ${p.title}`,
                 subtext: `Selected for project incubation and assigned development track.`,
+                link_url: `/university/projects/${p.id}`,
                 time: p.updated_at ? new Date(p.updated_at).toLocaleDateString() : 'Recent',
                 icon: FolderKanban,
                 color: '#10B981',
@@ -84,6 +90,7 @@ export const UniversityNotifications = () => {
                 type: 'mentorship',
                 title: `Faculty mentor assigned to ${p.title}`,
                 subtext: `Assigned Mentor: ${p.assigned_mentor_details.name}.`,
+                link_url: `/university/mentorship`,
                 time: p.updated_at ? new Date(p.updated_at).toLocaleDateString() : 'Recent',
                 icon: Users,
                 color: '#F59E0B',
@@ -95,6 +102,7 @@ export const UniversityNotifications = () => {
                 type: 'pitches',
                 title: `New student pitch submitted: ${p.title}`,
                 subtext: `Team innovation pitch received and awaiting board evaluation.`,
+                link_url: `/university/pitches/${p.id}`,
                 time: p.created_at ? new Date(p.created_at).toLocaleDateString() : 'Recent',
                 icon: Lightbulb,
                 color: '#8B5CF6',
@@ -113,6 +121,7 @@ export const UniversityNotifications = () => {
                 type: 'issues',
                 title: `Civic Challenge #${issue.id} validated by District`,
                 subtext: `"${issue.title}" is ready for university adoption.`,
+                link_url: `/university/problem-pipeline`,
                 time: issue.created_at ? new Date(issue.created_at).toLocaleDateString() : 'Recent',
                 icon: FileText,
                 color: '#2563EB',
@@ -124,6 +133,7 @@ export const UniversityNotifications = () => {
                 type: 'projects',
                 title: `Problem #${issue.id} actively adopted`,
                 subtext: `"${issue.title}" active in university engineering pipeline.`,
+                link_url: `/university/adopted-problems`,
                 time: issue.updated_at ? new Date(issue.updated_at).toLocaleDateString() : 'Recent',
                 icon: CheckCircle2,
                 color: '#059669',
@@ -138,6 +148,7 @@ export const UniversityNotifications = () => {
           type: 'system',
           title: 'University Innovation Network Active',
           subtext: 'Synchronized with live state database and District Innovation portal.',
+          link_url: `/university/dashboard`,
           time: 'Active',
           icon: Bell,
           color: '#06B6D4',
@@ -162,13 +173,29 @@ export const UniversityNotifications = () => {
     const all = notifications.map((n) => n.id);
     setReadIds(all);
     localStorage.setItem(storageKey, JSON.stringify(all));
-    addToast('All notifications marked as read', 'success');
+    showToast('All notifications marked as read', 'success');
   };
 
   const filtered = (activeTab === 'all' ? notifications : notifications.filter((n) => n.type === activeTab)).map((n) => ({
     ...n,
     unread: !readIds.includes(n.id),
   }));
+
+  const handleItemClick = async (item) => {
+    try {
+      if (typeof item.id === 'number') {
+        await notificationsAPI.markRead(item.id);
+      }
+    } catch (e) {}
+    const updated = Array.from(new Set([...readIds, item.id]));
+    setReadIds(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
+
+    const targetUrl = resolveNotificationUrl(item.link_url, 'university_coordinator');
+    if (targetUrl) {
+      navigate(targetUrl);
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '900px' }}>
@@ -198,28 +225,29 @@ export const UniversityNotifications = () => {
           display: 'flex',
           gap: '1.25rem',
           borderBottom: '1px solid #E2E8F0',
-          paddingBottom: '0.5rem',
           overflowX: 'auto',
+          paddingBottom: '0.25rem',
         }}
       >
         {[
-          { id: 'all', label: 'All' },
-          { id: 'issues', label: 'Issues' },
+          { id: 'all', label: 'All Alerts' },
           { id: 'pitches', label: 'Pitches' },
           { id: 'projects', label: 'Projects' },
           { id: 'mentorship', label: 'Mentorship' },
+          { id: 'issues', label: 'Issues' },
           { id: 'system', label: 'System' },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              padding: '0.5rem 0',
+              padding: '0.65rem 0.5rem',
+              fontSize: '0.875rem',
+              fontWeight: 700,
+              background: 'none',
+              border: 'none',
               borderBottom: activeTab === tab.id ? '2px solid #2563EB' : '2px solid transparent',
               color: activeTab === tab.id ? '#2563EB' : '#64748B',
-              fontWeight: activeTab === tab.id ? 800 : 600,
-              fontSize: '0.875rem',
-              background: 'transparent',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
             }}
@@ -237,14 +265,25 @@ export const UniversityNotifications = () => {
             <div
               key={item.id}
               className="card"
+              onClick={() => handleItemClick(item)}
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: '1rem',
                 padding: '1.15rem 1.25rem',
                 borderRadius: '14px',
-                border: '1px solid #F1F5F9',
-                transition: 'transform 0.15s ease, background 0.15s ease',
+                border: item.unread ? '1px solid #BFDBFE' : '1px solid #F1F5F9',
+                background: item.unread ? '#F0F9FF' : '#FFFFFF',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
               <div
@@ -272,10 +311,26 @@ export const UniversityNotifications = () => {
                     {item.time}
                   </span>
                 </div>
-                <p style={{ fontSize: '0.825rem', color: '#64748B', lineHeight: 1.4 }}>
+                <p style={{ fontSize: '0.825rem', color: '#64748B', lineHeight: 1.4, margin: '0 0 6px 0' }}>
                   {item.subtext}
                 </p>
+                <div style={{ fontSize: '0.75rem', color: '#2563EB', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  View Details & Action <ChevronRight size={13} />
+                </div>
               </div>
+
+              {item.unread && (
+                <span
+                  style={{
+                    width: '9px',
+                    height: '9px',
+                    borderRadius: '50%',
+                    background: '#2563EB',
+                    marginTop: '8px',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
             </div>
           );
         })}

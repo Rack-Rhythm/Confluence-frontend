@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { pitchesAPI } from '../../api/pitches';
+import { authAPI } from '../../api/auth';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { useToast } from '../../context/ToastContext';
 import confetti from 'canvas-confetti';
@@ -24,7 +25,11 @@ export const ProjectsOverview = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   const [reviewNote, setReviewNote] = useState('');
-  const [mentorId, setMentorId] = useState('4');
+  const [mentors, setMentors] = useState([]);
+  const [assigningPitchId, setAssigningPitchId] = useState(null);
+  const [mergingPitchId, setMergingPitchId] = useState(null);
+  const [targetMergePitchId, setTargetMergePitchId] = useState('');
+  const [selectedMentorId, setSelectedMentorId] = useState('');
   const [mergePitchId, setMergePitchId] = useState('');
 
   const loadPitches = async () => {
@@ -41,16 +46,23 @@ export const ProjectsOverview = () => {
 
   useEffect(() => {
     loadPitches();
+    authAPI.getUsers({ role: 'faculty_mentor' })
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data.results || [];
+        setMentors(list);
+        if (list.length > 0) setSelectedMentorId(String(list[0].id));
+      })
+      .catch((err) => console.error('Failed to load mentors:', err));
   }, []);
 
-  const handleReviewAction = async (pitchId, action) => {
+  const handleReviewAction = async (pitchId, action, customParam) => {
     setActionLoading(true);
     try {
       const payload = {
         action,
         review_feedback: reviewNote || 'Approved by University Innovation Review Board.',
-        mentor_id: action === 'assign_mentor' ? parseInt(mentorId) : undefined,
-        merge_with_pitch_id: action === 'merge_pitches' ? parseInt(mergePitchId) : undefined,
+        mentor_id: action === 'assign_mentor' ? parseInt(customParam || selectedMentorId, 10) : undefined,
+        merge_with_pitch_id: action === 'merge_pitches' ? parseInt(customParam || targetMergePitchId || mergePitchId, 10) : undefined,
       };
 
       const res = await pitchesAPI.reviewAction(pitchId, payload);
@@ -62,6 +74,9 @@ export const ProjectsOverview = () => {
 
       loadPitches();
       setSelectedPitch(null);
+      setAssigningPitchId(null);
+      setMergingPitchId(null);
+      setTargetMergePitchId('');
     } catch (err) {
       const msg = err.response?.data?.error || err.response?.data?.detail || 'Action failed.';
       showToast(msg, 'error');
@@ -167,29 +182,96 @@ export const ProjectsOverview = () => {
                       <Award size={15} /> Select as Winning Solution
                     </button>
 
-                    <button
-                      disabled={actionLoading}
-                      onClick={() => {
-                        const targetId = prompt('Enter the other Pitch ID to merge this solution with:');
-                        if (targetId) {
-                          setMergePitchId(targetId);
-                          handleReviewAction(pitch.id, 'merge_pitches');
-                        }
-                      }}
-                      className="btn btn-blue btn-sm"
-                      style={{ borderRadius: '8px' }}
-                    >
-                      <GitMerge size={15} /> Merge Teams
-                    </button>
+                    {mergingPitchId === pitch.id ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#F8FAFC', padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1' }}>
+                        <select
+                          value={targetMergePitchId}
+                          onChange={(e) => setTargetMergePitchId(e.target.value)}
+                          className="form-select"
+                          style={{ fontSize: '0.75rem', padding: '3px 6px', height: '28px', maxWidth: '180px' }}
+                        >
+                          <option value="">Select Pitch to Merge...</option>
+                          {pitches.filter((p) => p.id !== pitch.id).map((p) => (
+                            <option key={p.id} value={p.id}>
+                              #{p.id}: {p.title ? p.title.substring(0, 24) : 'Pitch'}...
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          disabled={actionLoading || !targetMergePitchId}
+                          onClick={() => handleReviewAction(pitch.id, 'merge_pitches', targetMergePitchId)}
+                          className="btn btn-primary btn-sm"
+                          style={{ borderRadius: '6px', fontSize: '0.75rem', padding: '3px 8px' }}
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => {
+                            setMergingPitchId(null);
+                            setTargetMergePitchId('');
+                          }}
+                          className="btn btn-outline btn-sm"
+                          style={{ borderRadius: '6px', fontSize: '0.75rem', padding: '3px 6px' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        disabled={actionLoading}
+                        onClick={() => {
+                          setMergingPitchId(pitch.id);
+                          const other = pitches.find((p) => p.id !== pitch.id);
+                          if (other) setTargetMergePitchId(String(other.id));
+                        }}
+                        className="btn btn-blue btn-sm"
+                        style={{ borderRadius: '8px' }}
+                      >
+                        <GitMerge size={15} /> Merge Teams
+                      </button>
+                    )}
 
-                    <button
-                      disabled={actionLoading}
-                      onClick={() => handleReviewAction(pitch.id, 'assign_mentor')}
-                      className="btn btn-outline btn-sm"
-                      style={{ borderRadius: '8px' }}
-                    >
-                      <UserCheck size={15} /> Assign Mentor
-                    </button>
+                    {assigningPitchId === pitch.id ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#F8FAFC', padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1' }}>
+                        <select
+                          value={selectedMentorId}
+                          onChange={(e) => setSelectedMentorId(e.target.value)}
+                          className="form-select"
+                          style={{ fontSize: '0.75rem', padding: '3px 6px', height: '28px' }}
+                        >
+                          {mentors.length === 0 && <option value="">No mentors found</option>}
+                          {mentors.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name || m.email} ({m.department || 'Faculty Mentor'})
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          disabled={actionLoading}
+                          onClick={() => handleReviewAction(pitch.id, 'assign_mentor', selectedMentorId)}
+                          className="btn btn-primary btn-sm"
+                          style={{ borderRadius: '6px', fontSize: '0.75rem', padding: '3px 8px' }}
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setAssigningPitchId(null)}
+                          className="btn btn-outline btn-sm"
+                          style={{ borderRadius: '6px', fontSize: '0.75rem', padding: '3px 6px' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        disabled={actionLoading}
+                        onClick={() => setAssigningPitchId(pitch.id)}
+                        className="btn btn-outline btn-sm"
+                        style={{ borderRadius: '8px' }}
+                      >
+                        <UserCheck size={15} /> Assign Mentor
+                      </button>
+                    )}
 
                     <button
                       disabled={actionLoading}

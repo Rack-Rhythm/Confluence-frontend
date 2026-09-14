@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { DemoRoleSwitcher } from './components/common/DemoRoleSwitcher';
 import { Navbar } from './components/common/Navbar';
-import { Sidebar } from './components/common/Sidebar';
+import { Sidebar, getViewPath } from './components/common/Sidebar';
 import { TopHeader } from './components/common/TopHeader';
 import { LogoutModal } from './components/common/LogoutModal';
 import { AuthModal } from './views/public/AuthModal';
@@ -19,6 +27,7 @@ import { IssueDetail } from './views/citizen/IssueDetail';
 import { NotificationsView } from './views/citizen/NotificationsView';
 import { ProfileView } from './views/citizen/ProfileView';
 import { SettingsView } from './views/citizen/SettingsView';
+import { MyFeedbackView } from './views/citizen/MyFeedbackView';
 
 // Student views
 import { StudentDashboard } from './views/student/StudentDashboard';
@@ -55,9 +64,9 @@ import { AdoptionPipeline } from './views/officer/AdoptionPipeline';
 import { ProjectsOverview } from './views/officer/ProjectsOverview';
 import { ImpactAnalytics } from './views/officer/ImpactAnalytics';
 import { ReportsDocuments } from './views/officer/ReportsDocuments';
-import { HelpSupport } from './views/officer/HelpSupport';
 
 // Admin views
+import { AdminDashboard } from './views/admin/AdminDashboard';
 import { UserManagement } from './views/admin/UserManagement';
 import { OrganizationsManagement } from './views/admin/OrganizationsManagement';
 import { SystemLogsView } from './views/admin/SystemLogsView';
@@ -65,302 +74,94 @@ import { SystemLogsView } from './views/admin/SystemLogsView';
 // Industry views
 import { IndustryDashboard } from './views/industry/IndustryDashboard';
 import { IndustryEngagementsView } from './views/industry/IndustryEngagementsView';
+import { IndustryProjectsView } from './views/industry/IndustryProjectsView';
 import { IndustryProfile } from './views/industry/IndustryProfile';
 
-function MainApp() {
-  const { user, role, isAuthenticated } = useAuth();
+export const getBaseRole = (r) => {
+  if (r === 'university_coordinator' || r === 'faculty_mentor') return 'university';
+  if (r === 'gov_admin') return 'officer';
+  if (r === 'industry_partner') return 'industry';
+  if (r === 'student') return 'student';
+  if (r === 'citizen') return 'citizen';
+  if (r === 'admin') return 'admin';
+  return r || 'citizen';
+};
 
-  // Navigation State
-  const [currentView, setCurrentView] = useState('dashboard');
-  const [publicNavTab, setPublicNavTab] = useState('landing');
-  const [showPublicOnly, setShowPublicOnly] = useState(false);
+function MainApp() {
+  const { user, role, isAuthenticated, demoLogin } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Modals
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState('login');
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
+  // Selected item states
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [selectedProblemForPitch, setSelectedProblemForPitch] = useState(null);
   const [selectedPitch, setSelectedPitch] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [globalSearch, setGlobalSearch] = useState('');
 
+  const publicRoutes = ['/', '/problems', '/solutions', '/how_it_works', '/success_stories', '/stats', '/public'];
+  const isPublicPage = publicRoutes.includes(location.pathname);
+
   const openAuth = (tab = 'login') => {
     setAuthModalTab(tab);
     setIsAuthModalOpen(true);
   };
 
-  const handleNavigate = (viewId) => {
-    setCurrentView(viewId);
-    setShowPublicOnly(false);
+  const handleNavigate = (viewIdOrPath) => {
+    if (typeof viewIdOrPath === 'string' && viewIdOrPath.startsWith('/')) {
+      navigate(viewIdOrPath);
+    } else {
+      const path = getViewPath(role, viewIdOrPath);
+      navigate(path);
+    }
   };
 
   const handleSelectIssue = (issue) => {
+    if (!issue) return;
     setSelectedIssue(issue);
     if (role === 'student') {
-      setCurrentView('problem_detail');
+      navigate(`/student/problems/${issue.id}`);
     } else {
-      setCurrentView('issue_detail');
+      const baseRole = getBaseRole(role);
+      navigate(`/${baseRole}/issues/${issue.id}`);
     }
   };
 
   const handleSelectPitch = (pitch) => {
+    if (!pitch) return;
     setSelectedPitch(pitch);
-    setCurrentView('pitch_details');
+    const baseRole = getBaseRole(role);
+    navigate(`/${baseRole}/pitches/${pitch.id}`);
   };
 
   const handleSelectProject = (project) => {
+    if (!project) return;
     setSelectedProject(project);
-    setCurrentView('project_details');
+    const baseRole = getBaseRole(role);
+    navigate(`/${baseRole}/projects/${project.id}`);
   };
 
   const handleSubmitPitchForProblem = (problem) => {
     setSelectedProblemForPitch(problem);
-    setCurrentView('submit_pitch');
+    navigate(`/student/submit-pitch/${problem.id}`);
   };
 
-  // Render role-specific view
-  const renderDashboardView = () => {
-    // 1. Citizen Dashboard
-    if (role === 'citizen') {
-      switch (currentView) {
-        case 'dashboard':
-          return <CitizenDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />;
-        case 'report_problem':
-          return (
-            <ReportIssue
-              onBack={() => handleNavigate('dashboard')}
-              onSuccess={() => handleNavigate('my_issues')}
-            />
-          );
-        case 'my_issues':
-        case 'track_status':
-          return <MyIssues onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />;
-        case 'issue_detail':
-          return (
-            <IssueDetail
-              issue={selectedIssue}
-              onBack={() => handleNavigate('my_issues')}
-              onRefresh={() => {}}
-            />
-          );
-        case 'notifications':
-          return <NotificationsView />;
-        case 'profile':
-          return <ProfileView />;
-        case 'settings':
-          return <SettingsView />;
-        default:
-          return <CitizenDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />;
-      }
-    }
-
-    // 2. Student Dashboard
-    if (role === 'student') {
-      switch (currentView) {
-        case 'dashboard':
-          return (
-            <StudentDashboard
-              onNavigate={handleNavigate}
-              onSelectProblem={handleSelectIssue}
-              onSubmitPitchForProblem={handleSubmitPitchForProblem}
-            />
-          );
-        case 'explore_problems':
-          return (
-            <ExploreProblems
-              onSelectProblem={handleSelectIssue}
-              onSubmitPitchForProblem={handleSubmitPitchForProblem}
-            />
-          );
-        case 'problem_detail':
-          return (
-            <ProblemDetailStudent
-              problem={selectedIssue}
-              onBack={() => handleNavigate('explore_problems')}
-              onSubmitPitch={handleSubmitPitchForProblem}
-            />
-          );
-        case 'submit_pitch':
-          return (
-            <SubmitPitchWizard
-              selectedProblem={selectedProblemForPitch || selectedIssue}
-              onBack={() => handleNavigate('explore_problems')}
-              onSuccess={() => handleNavigate('my_pitches')}
-            />
-          );
-        case 'my_pitches':
-          return <MyPitches onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />;
-        case 'my_projects':
-          return <MyProjects />;
-        case 'opportunities':
-          return <OpportunitiesView />;
-        case 'certificates':
-          return <CertificatesView />;
-        case 'notifications':
-          return <NotificationsView />;
-        case 'profile':
-          return <ProfileView />;
-        default:
-          return (
-            <StudentDashboard
-              onNavigate={handleNavigate}
-              onSelectProblem={handleSelectIssue}
-              onSubmitPitchForProblem={handleSubmitPitchForProblem}
-            />
-          );
-      }
-    }
-
-    // 3. University Dashboard (Coordinator & Faculty Mentor) - All 16 screens
-    if (role === 'university_coordinator' || role === 'faculty_mentor') {
-      switch (currentView) {
-        case 'dashboard':
-          return (
-            <UniversityDashboard
-              onNavigate={handleNavigate}
-              onSelectIssue={handleSelectIssue}
-              onSelectPitch={handleSelectPitch}
-            />
-          );
-        case 'problem_pipeline':
-          return <ProblemPipeline onSelectIssue={handleSelectIssue} />;
-        case 'validation':
-          return <ValidationView onSelectIssue={handleSelectIssue} />;
-        case 'adopted_problems':
-          return <AdoptedProblems onSelectIssue={handleSelectIssue} onCreateOpenCall={() => handleNavigate('open_calls')} />;
-        case 'open_calls':
-          return <OpenCalls onSelectIssue={handleSelectIssue} onSelectPitch={handleSelectPitch} />;
-        case 'student_pitches':
-          return <StudentPitchesList onSelectPitch={handleSelectPitch} />;
-        case 'pitch_details':
-          return <PitchDetailsView pitch={selectedPitch} onBack={() => handleNavigate('student_pitches')} onRefresh={() => {}} />;
-        case 'review_board':
-          return <ReviewBoardView onSelectPitch={handleSelectPitch} />;
-        case 'projects':
-          return <ProjectsList onSelectProject={handleSelectProject} />;
-        case 'project_details':
-          return <ProjectDetailsView project={selectedProject} onBack={() => handleNavigate('projects')} />;
-        case 'mentorship':
-          return <MentorshipView />;
-        case 'analytics':
-          return <UniversityAnalytics />;
-        case 'reports':
-          return <UniversityReports />;
-        case 'profile':
-          return <UniversityProfile />;
-        case 'settings':
-          return <UniversitySettings />;
-        case 'notifications':
-          return <UniversityNotifications />;
-        case 'issue_detail':
-          return (
-            <IssueDetail
-              issue={selectedIssue}
-              onBack={() => handleNavigate('problem_pipeline')}
-              onRefresh={() => {}}
-            />
-          );
-        default:
-          return (
-            <UniversityDashboard
-              onNavigate={handleNavigate}
-              onSelectIssue={handleSelectIssue}
-              onSelectPitch={handleSelectPitch}
-            />
-          );
-      }
-    }
-
-    // 4. Government Dashboard
-    if (role === 'gov_admin' && !user?.is_superuser) {
-      switch (currentView) {
-        case 'dashboard':
-          return <OfficerDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />;
-        case 'issues_overview':
-          return <IssuesOverview onSelectIssue={handleSelectIssue} />;
-        case 'adoption_pipeline':
-          return <AdoptionPipeline />;
-        case 'projects':
-          return <ProjectsOverview />;
-        case 'analytics':
-          return <ImpactAnalytics />;
-        case 'reports':
-          return <ReportsDocuments />;
-        case 'issue_detail':
-          return (
-            <IssueDetail
-              issue={selectedIssue}
-              onBack={() => handleNavigate('issues_overview')}
-              onRefresh={() => {}}
-            />
-          );
-        case 'notifications':
-          return <NotificationsView />;
-        case 'profile':
-          return <ProfileView />;
-        default:
-          return <OfficerDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />;
-      }
-    }
-
-    // 5. Industry Dashboard
-    if (role === 'industry_partner') {
-      switch (currentView) {
-        case 'dashboard':
-          return <IndustryDashboard onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />;
-        case 'opportunities':
-        case 'funding':
-        case 'partnerships':
-          return <IndustryEngagementsView />;
-        case 'shortlisted_projects':
-        case 'mentorship':
-        case 'project_progress':
-          return <ProjectsOverview />;
-        case 'notifications':
-          return <NotificationsView />;
-        case 'profile':
-          return <IndustryProfile />;
-        default:
-          return <IndustryDashboard onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />;
-      }
-    }
-
-    // 6. Admin Dashboard (Super Admin)
-    switch (currentView) {
-      case 'dashboard':
-        return <OfficerDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />;
-      case 'user_management':
-        return <UserManagement />;
-      case 'organizations':
-      case 'university_management':
-      case 'industry_management':
-        return <OrganizationsManagement />;
-      case 'problem_management':
-      case 'content_moderation':
-        return <IssuesOverview onSelectIssue={handleSelectIssue} />;
-      case 'project_management':
-        return <ProjectsOverview />;
-      case 'platform_analytics':
-        return <ImpactAnalytics />;
-      case 'reports':
-        return <ReportsDocuments />;
-      case 'system_logs':
-        return <SystemLogsView />;
-      case 'notifications':
-        return <NotificationsView />;
-      case 'profile':
-        return <ProfileView />;
-      default:
-        return <OfficerDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />;
-    }
-  };
+  // Determine landing page tab based on path
+  let publicNavTab = 'landing';
+  if (location.pathname === '/problems') publicNavTab = 'problems';
+  else if (location.pathname === '/solutions') publicNavTab = 'solutions';
+  else if (location.pathname === '/how_it_works') publicNavTab = 'how_it_works';
+  else if (location.pathname === '/success_stories') publicNavTab = 'success_stories';
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Top Demo Role Switcher */}
-      <DemoRoleSwitcher onNavigatePublic={() => setShowPublicOnly(true)} />
+      <DemoRoleSwitcher onNavigatePublic={() => navigate('/')} />
 
       {/* Auth Modals */}
       <AuthModal
@@ -368,8 +169,7 @@ function MainApp() {
         initialTab={authModalTab}
         onClose={() => setIsAuthModalOpen(false)}
         onSuccess={() => {
-          setShowPublicOnly(false);
-          setCurrentView('dashboard');
+          navigate(`/${getBaseRole(role)}/dashboard`);
         }}
       />
 
@@ -378,32 +178,36 @@ function MainApp() {
         onClose={() => setIsLogoutModalOpen(false)}
       />
 
-      {/* Main View Condition: Public Landing vs Role Dashboard */}
-      {!isAuthenticated || showPublicOnly ? (
+      {/* Public Landing View vs Authenticated Dashboard View */}
+      {isPublicPage ? (
         <>
           <Navbar
             onOpenAuth={openAuth}
             onNavigate={(tab) => {
-              setPublicNavTab(tab);
-              if (tab === 'dashboard') setShowPublicOnly(false);
+              if (tab === 'landing') navigate('/');
+              else if (tab === 'dashboard') navigate(`/${getBaseRole(role)}/dashboard`);
+              else navigate(`/${tab}`);
             }}
             currentTab={publicNavTab}
           />
           <LandingPage
             onOpenAuth={openAuth}
-            onNavigateDashboard={() => setShowPublicOnly(false)}
+            onNavigateDashboard={() => navigate(`/${getBaseRole(role)}/dashboard`)}
             onSelectIssue={(issue) => {
               setSelectedIssue(issue);
               openAuth('login');
             }}
             currentTab={publicNavTab}
-            onNavigateTab={(tab) => setPublicNavTab(tab)}
+            onNavigateTab={(tab) => {
+              if (tab === 'landing') navigate('/');
+              else navigate(`/${tab}`);
+            }}
           />
         </>
       ) : (
         <div className="dashboard-container">
           <Sidebar
-            currentView={currentView}
+            currentView={location.pathname}
             onNavigate={handleNavigate}
             onOpenLogout={() => setIsLogoutModalOpen(true)}
           />
@@ -416,7 +220,171 @@ function MainApp() {
             />
 
             <main className="dashboard-content">
-              {renderDashboardView()}
+              <Routes>
+                {/* 1. Citizen Routes */}
+                <Route path="/citizen" element={<Navigate to="/citizen/dashboard" replace />} />
+                <Route
+                  path="/citizen/dashboard"
+                  element={<CitizenDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
+                />
+                <Route
+                  path="/citizen/report"
+                  element={<ReportIssue onBack={() => navigate('/citizen/dashboard')} onSuccess={() => navigate('/citizen/my-issues')} />}
+                />
+                <Route
+                  path="/citizen/my-issues"
+                  element={<MyIssues onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
+                />
+                <Route
+                  path="/citizen/issues/:id"
+                  element={<IssueDetail issue={selectedIssue} backLabel="Back to My Issues" onBack={() => navigate('/citizen/my-issues')} onRefresh={() => {}} />}
+                />
+                <Route path="/citizen/notifications" element={<NotificationsView />} />
+                <Route path="/citizen/profile" element={<ProfileView />} />
+                <Route path="/citizen/settings" element={<SettingsView />} />
+                <Route path="/citizen/my-feedback" element={<MyFeedbackView />} />
+                <Route path="/citizen/feedback" element={<Navigate to="/citizen/my-feedback" replace />} />
+
+                {/* 2. Student Routes */}
+                <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
+                <Route
+                  path="/student/dashboard"
+                  element={
+                    <StudentDashboard
+                      onNavigate={handleNavigate}
+                      onSelectProblem={handleSelectIssue}
+                      onSelectPitch={handleSelectPitch}
+                      onSubmitPitchForProblem={handleSubmitPitchForProblem}
+                    />
+                  }
+                />
+                <Route
+                  path="/student/explore"
+                  element={<ExploreProblems onSelectProblem={handleSelectIssue} onSubmitPitchForProblem={handleSubmitPitchForProblem} />}
+                />
+                <Route
+                  path="/student/problems/:id"
+                  element={<ProblemDetailStudent problem={selectedIssue} onBack={() => navigate('/student/explore')} onSubmitPitch={handleSubmitPitchForProblem} />}
+                />
+                <Route
+                  path="/student/submit-pitch"
+                  element={<SubmitPitchWizard selectedProblem={selectedProblemForPitch || selectedIssue} onBack={() => navigate('/student/explore')} onSuccess={() => navigate('/student/my-pitches')} />}
+                />
+                <Route
+                  path="/student/submit-pitch/:problemId"
+                  element={<SubmitPitchWizard selectedProblem={selectedProblemForPitch || selectedIssue} onBack={() => navigate('/student/explore')} onSuccess={() => navigate('/student/my-pitches')} />}
+                />
+                <Route
+                  path="/student/my-pitches"
+                  element={<MyPitches onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />}
+                />
+                <Route
+                  path="/student/pitches/:id"
+                  element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/student/my-pitches')} onRefresh={() => {}} />}
+                />
+                <Route path="/student/my-projects" element={<MyProjects />} />
+                <Route
+                  path="/student/projects/:id"
+                  element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/student/my-projects')} />}
+                />
+                <Route path="/student/opportunities" element={<OpportunitiesView />} />
+                <Route path="/student/certificates" element={<CertificatesView />} />
+                <Route path="/student/notifications" element={<NotificationsView />} />
+                <Route path="/student/profile" element={<ProfileView />} />
+
+                {/* 3. University Routes (Coordinator & Mentor) */}
+                <Route path="/university" element={<Navigate to="/university/dashboard" replace />} />
+                <Route
+                  path="/university/dashboard"
+                  element={<UniversityDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} onSelectPitch={handleSelectPitch} />}
+                />
+                <Route path="/university/problem-pipeline" element={<ProblemPipeline onSelectIssue={handleSelectIssue} />} />
+                <Route path="/university/validation" element={<ValidationView onSelectIssue={handleSelectIssue} />} />
+                <Route
+                  path="/university/adopted-problems"
+                  element={<AdoptedProblems onSelectIssue={handleSelectIssue} onCreateOpenCall={() => navigate('/university/open-calls')} />}
+                />
+                <Route path="/university/open-calls" element={<OpenCalls onSelectIssue={handleSelectIssue} onSelectPitch={handleSelectPitch} />} />
+                <Route path="/university/student-pitches" element={<StudentPitchesList onSelectPitch={handleSelectPitch} />} />
+                <Route
+                  path="/university/pitches/:id"
+                  element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/university/student-pitches')} onRefresh={() => {}} />}
+                />
+                <Route path="/university/review-board" element={<ReviewBoardView onSelectPitch={handleSelectPitch} />} />
+                <Route path="/university/projects" element={<ProjectsList onSelectProject={handleSelectProject} />} />
+                <Route
+                  path="/university/projects/:id"
+                  element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/university/projects')} />}
+                />
+                <Route path="/university/mentorship" element={<MentorshipView />} />
+                <Route path="/university/analytics" element={<UniversityAnalytics />} />
+                <Route path="/university/reports" element={<UniversityReports />} />
+                <Route path="/university/profile" element={<UniversityProfile />} />
+                <Route path="/university/settings" element={<UniversitySettings />} />
+                <Route path="/university/notifications" element={<UniversityNotifications />} />
+                <Route
+                  path="/university/issues/:id"
+                  element={<IssueDetail issue={selectedIssue} backLabel="Back to Problem Pipeline" onBack={() => navigate('/university/problem-pipeline')} onRefresh={() => {}} />}
+                />
+
+                {/* 4. Industry Routes */}
+                <Route path="/industry" element={<Navigate to="/industry/dashboard" replace />} />
+                <Route
+                  path="/industry/dashboard"
+                  element={<IndustryDashboard onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />}
+                />
+                <Route path="/industry/engagements" element={<IndustryEngagementsView />} />
+                <Route path="/industry/opportunities" element={<IndustryEngagementsView />} />
+                <Route path="/industry/funding" element={<IndustryEngagementsView />} />
+                <Route path="/industry/projects" element={<IndustryProjectsView onSelectPitch={handleSelectPitch} />} />
+                <Route
+                  path="/industry/projects/:id"
+                  element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/industry/projects')} />}
+                />
+                <Route path="/industry/notifications" element={<NotificationsView />} />
+                <Route path="/industry/profile" element={<IndustryProfile />} />
+                <Route
+                  path="/industry/pitches/:id"
+                  element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/industry/projects')} onRefresh={() => {}} />}
+                />
+
+                {/* 5. Government / Officer Routes */}
+                <Route path="/officer" element={<Navigate to="/officer/dashboard" replace />} />
+                <Route
+                  path="/officer/dashboard"
+                  element={<OfficerDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
+                />
+                <Route path="/officer/issues" element={<IssuesOverview onSelectIssue={handleSelectIssue} />} />
+                <Route path="/officer/adoption-pipeline" element={<AdoptionPipeline />} />
+                <Route path="/officer/projects" element={<ProjectsOverview />} />
+                <Route path="/officer/analytics" element={<ImpactAnalytics />} />
+                <Route path="/officer/reports" element={<ReportsDocuments />} />
+                <Route
+                  path="/officer/issues/:id"
+                  element={<IssueDetail issue={selectedIssue} backLabel="Back to Issues Overview" onBack={() => navigate('/officer/issues')} onRefresh={() => {}} />}
+                />
+                <Route path="/officer/notifications" element={<NotificationsView />} />
+                <Route path="/officer/profile" element={<ProfileView />} />
+
+                {/* 6. Admin Routes */}
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route
+                  path="/admin/dashboard"
+                  element={<AdminDashboard onNavigate={handleNavigate} />}
+                />
+                <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/organizations" element={<OrganizationsManagement />} />
+                <Route path="/admin/problems" element={<IssuesOverview onSelectIssue={handleSelectIssue} />} />
+                <Route path="/admin/projects" element={<ProjectsOverview />} />
+                <Route path="/admin/analytics" element={<ImpactAnalytics />} />
+                <Route path="/admin/reports" element={<ReportsDocuments />} />
+                <Route path="/admin/system-logs" element={<SystemLogsView />} />
+                <Route path="/admin/notifications" element={<NotificationsView />} />
+                <Route path="/admin/profile" element={<ProfileView />} />
+
+                {/* Catch-all fallback */}
+                <Route path="*" element={<Navigate to={role ? `/${getBaseRole(role)}/dashboard` : '/'} replace />} />
+              </Routes>
             </main>
           </div>
         </div>
@@ -429,7 +397,9 @@ export default function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <MainApp />
+        <BrowserRouter>
+          <MainApp />
+        </BrowserRouter>
       </AuthProvider>
     </ToastProvider>
   );

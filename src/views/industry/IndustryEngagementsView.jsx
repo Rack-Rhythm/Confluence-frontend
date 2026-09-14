@@ -15,7 +15,7 @@ export const IndustryEngagementsView = () => {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     issue_id: '',
-    engagement_type: 'csr_grant',
+    engagement_type: 'funding',
     proposal_notes: '',
   });
 
@@ -26,7 +26,7 @@ export const IndustryEngagementsView = () => {
     try {
       const [engRes, issRes] = await Promise.allSettled([
         engagementsAPI.getEngagements(),
-        issuesAPI.getIssues({ status: 'adopted' }),
+        issuesAPI.getIssues({ status: 'adopted,assigned' }),
       ]);
       if (engRes.status === 'fulfilled') {
         const raw = engRes.value;
@@ -49,18 +49,22 @@ export const IndustryEngagementsView = () => {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!form.issue_id) {
+      showToast('Please select an adopted challenge to attach this engagement.', 'error');
+      return;
+    }
     try {
       await engagementsAPI.createEngagement({
-        issue: form.issue_id ? parseInt(form.issue_id) : undefined,
+        issue: parseInt(form.issue_id, 10),
         engagement_type: form.engagement_type,
         proposal_notes: form.proposal_notes,
       });
-      showToast('Engagement successfully registered!', 'success');
+      showToast('Industry engagement registered successfully!', 'success');
       setShowModal(false);
-      setForm({ issue_id: '', engagement_type: 'csr_grant', proposal_notes: '' });
+      setForm({ issue_id: '', engagement_type: 'funding', proposal_notes: '' });
       loadData();
     } catch (err) {
-      showToast(err.response?.data?.detail || 'Failed to submit engagement', 'error');
+      showToast(err.response?.data?.detail || err.response?.data?.issue?.[0] || 'Failed to submit engagement', 'error');
     }
   };
 
@@ -104,7 +108,7 @@ export const IndustryEngagementsView = () => {
 
       {/* Filter Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {['all', 'csr_grant', 'mentorship', 'pilot_site', 'data_sharing', 'sponsorship'].map((t) => (
+        {['all', 'funding', 'mentorship', 'prototyping', 'technology_transfer'].map((t) => (
           <button
             key={t}
             onClick={() => setFilterType(t)}
@@ -199,7 +203,7 @@ export const IndustryEngagementsView = () => {
 
                 {/* Status transition actions */}
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
-                  {eng.status === 'proposed' && (
+                  {(eng.status === 'requested' || eng.status === 'proposed') && (
                     <>
                       <button
                         onClick={() => handleRespond(eng.id, 'accept')}
@@ -289,20 +293,20 @@ export const IndustryEngagementsView = () => {
                     fontSize: '0.875rem',
                   }}
                 >
-                  <option value="csr_grant">CSR Grant</option>
-                  <option value="mentorship">Technical Mentorship</option>
-                  <option value="pilot_site">Pilot Site Facility</option>
-                  <option value="data_sharing">Data Sharing</option>
-                  <option value="sponsorship">Equipment Sponsorship</option>
+                  <option value="funding">CSR / Grant Funding</option>
+                  <option value="mentorship">Mentorship & Advisory</option>
+                  <option value="prototyping">Prototyping & Lab Access</option>
+                  <option value="technology_transfer">Technology Transfer & Licensing</option>
                 </select>
               </div>
 
               <div>
                 <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
-                  Link to Problem Statement (Optional)
+                  Target Problem Statement (Required)
                 </label>
                 <select
                   value={form.issue_id}
+                  required
                   onChange={(e) => setForm({ ...form, issue_id: e.target.value })}
                   style={{
                     width: '100%',
@@ -312,7 +316,7 @@ export const IndustryEngagementsView = () => {
                     fontSize: '0.875rem',
                   }}
                 >
-                  <option value="">-- General CSR Track --</option>
+                  <option value="">-- Select an Adopted Challenge --</option>
                   {adoptedIssues.map((iss) => (
                     <option key={iss.id} value={iss.id}>
                       #{iss.id} - {iss.title} ({iss.district})

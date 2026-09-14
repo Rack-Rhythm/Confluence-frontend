@@ -15,24 +15,37 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 export const UniversityProfile = () => {
-  const { user } = useAuth();
-  const { addToast } = useToast();
+  const { user, updateProfile } = useAuth();
+  const { showToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || 'Prof. S. Soren',
+    name: user?.name || '',
     role: 'University Coordinator',
-    institution: user?.university_details?.name || user?.university?.name || 'Birsa Institute of Technology (BIT) Sindri',
-    email: user?.email || 's.soren@bitsindri.ac.in',
-    phone: user?.phone || '+91 94311 88990',
-    department: 'Computer Science & Engineering',
-    institute_code: user?.university_details?.code || 'BITS-DHN',
-    address: 'BIT Sindri Campus, Dhanbad, Jharkhand - 828123',
+    institution: user?.university_details?.name || user?.university?.name || 'Innovation & Incubation Centre',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    department: user?.department || 'Innovation & Incubation Cell',
+    institute_code: user?.university_details?.code || '',
+    address: user?.address || 'Institutional Campus',
   });
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setIsEditing(false);
-    addToast('Institutional coordinator profile updated successfully!', 'success');
+    setLoading(true);
+    try {
+      if (updateProfile) {
+        await updateProfile({
+          name: formData.name,
+          phone: formData.phone,
+        });
+      }
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to update university profile:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,7 +93,7 @@ export const UniversityProfile = () => {
               {formData.name.charAt(0)}
             </div>
             <button
-              onClick={() => addToast('Photo upload ready.', 'info')}
+              onClick={() => showToast('Photo upload ready.', 'info')}
               style={{
                 position: 'absolute',
                 bottom: 0,

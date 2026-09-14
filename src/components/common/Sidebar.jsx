@@ -34,10 +34,105 @@ import {
   TerminalSquare,
   HelpCircle,
 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+
+export const getViewPath = (role, id) => {
+  const map = {
+    citizen: {
+      dashboard: '/citizen/dashboard',
+      report_problem: '/citizen/report',
+      my_issues: '/citizen/my-issues',
+      notifications: '/citizen/notifications',
+      profile: '/citizen/profile',
+      settings: '/citizen/settings',
+    },
+    student: {
+      dashboard: '/student/dashboard',
+      explore_problems: '/student/explore',
+      my_pitches: '/student/my-pitches',
+      my_projects: '/student/my-projects',
+      opportunities: '/student/opportunities',
+      certificates: '/student/certificates',
+      notifications: '/student/notifications',
+      profile: '/student/profile',
+    },
+    university_coordinator: {
+      dashboard: '/university/dashboard',
+      problem_pipeline: '/university/problem-pipeline',
+      validation: '/university/validation',
+      adopted_problems: '/university/adopted-problems',
+      open_calls: '/university/open-calls',
+      student_pitches: '/university/student-pitches',
+      review_board: '/university/review-board',
+      projects: '/university/projects',
+      mentorship: '/university/mentorship',
+      analytics: '/university/analytics',
+      reports: '/university/reports',
+      notifications: '/university/notifications',
+      profile: '/university/profile',
+      settings: '/university/settings',
+    },
+    faculty_mentor: {
+      dashboard: '/university/dashboard',
+      problem_pipeline: '/university/problem-pipeline',
+      validation: '/university/validation',
+      adopted_problems: '/university/adopted-problems',
+      open_calls: '/university/open-calls',
+      student_pitches: '/university/student-pitches',
+      review_board: '/university/review-board',
+      projects: '/university/projects',
+      mentorship: '/university/mentorship',
+      analytics: '/university/analytics',
+      reports: '/university/reports',
+      notifications: '/university/notifications',
+      profile: '/university/profile',
+      settings: '/university/settings',
+    },
+    gov_admin: {
+      dashboard: '/officer/dashboard',
+      issues_overview: '/officer/issues',
+      adoption_pipeline: '/officer/adoption-pipeline',
+      projects: '/officer/projects',
+      analytics: '/officer/analytics',
+      reports: '/officer/reports',
+      notifications: '/officer/notifications',
+      profile: '/officer/profile',
+    },
+    industry_partner: {
+      dashboard: '/industry/dashboard',
+      opportunities: '/industry/engagements',
+      funding: '/industry/engagements',
+      partnerships: '/industry/engagements',
+      shortlisted_projects: '/industry/projects',
+      mentorship: '/industry/projects',
+      project_progress: '/industry/projects',
+      notifications: '/industry/notifications',
+      profile: '/industry/profile',
+    },
+    admin: {
+      dashboard: '/admin/dashboard',
+      user_management: '/admin/users',
+      organizations: '/admin/organizations',
+      university_management: '/admin/organizations',
+      industry_management: '/admin/organizations',
+      problem_management: '/admin/problems',
+      content_moderation: '/admin/problems',
+      project_management: '/admin/projects',
+      platform_analytics: '/admin/analytics',
+      reports: '/admin/reports',
+      system_logs: '/admin/system-logs',
+      notifications: '/admin/notifications',
+      profile: '/admin/profile',
+    },
+  };
+  return map[role]?.[id] || `/${role}/dashboard`;
+};
 
 export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificationsCount = 3 }) => {
   const { user, role } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const getSidebarConfig = () => {
     // 1. Citizen Dashboard Sidebar
@@ -169,7 +264,8 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
 
   const renderNavBtn = (item) => {
     const Icon = item.icon;
-    const isActive = currentView === item.id;
+    const itemPath = getViewPath(role, item.id);
+    const isActive = location.pathname === itemPath || currentView === item.id || (itemPath !== `/${role}/dashboard` && location.pathname.startsWith(itemPath));
 
     if (item.isAction) {
       return (
@@ -199,7 +295,10 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
     return (
       <button
         key={item.id}
-        onClick={() => onNavigate(item.id)}
+        onClick={() => {
+          navigate(itemPath);
+          if (onNavigate) onNavigate(item.id, itemPath);
+        }}
         style={{
           width: '100%',
           display: 'flex',

@@ -17,8 +17,8 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 import { useToast } from '../../context/ToastContext';
 
 export const ReviewBoardView = ({ onSelectPitch }) => {
-  const { addToast } = useToast();
-  const [activeTab, setActiveTab] = useState('pending'); // pending, discussion, finalized
+  const { showToast } = useToast();
+  const [activeTab, setActiveTab] = useState('all'); // all, pending, discussion, finalized
   const [pitches, setPitches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,7 +73,7 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
 
   const handleScheduleSubmit = (e) => {
     e.preventDefault();
-    addToast('Review session scheduled and invitations sent to panel members!', 'success');
+    showToast('Review session scheduled and invitations sent to panel members!', 'success');
     setIsScheduleOpen(false);
   };
 
@@ -113,6 +113,7 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
       >
         <div style={{ display: 'flex', gap: '1.25rem' }}>
           {[
+            { id: 'all', label: 'All Pitches', count: pitches.length },
             { id: 'pending', label: 'Pending Review', count: pendingPitches.length },
             { id: 'discussion', label: 'In Discussion', count: discussionPitches.length },
             { id: 'finalized', label: 'Finalized', count: finalizedPitches.length },

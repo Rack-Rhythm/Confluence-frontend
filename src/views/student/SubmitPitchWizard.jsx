@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -7,14 +7,19 @@ import {
   Users,
   FileCode,
   ShieldCheck,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { pitchesAPI } from '../../api/pitches';
+import { issuesAPI } from '../../api/issues';
 import { useToast } from '../../context/ToastContext';
 
 export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
+  const { problemId } = useParams();
+  const navigate = useNavigate();
   const { showToast } = useToast();
+  const [problem, setProblem] = useState(selectedProblem || null);
+  const [adoptedList, setAdoptedList] = useState([]);
   const [step, setStep] = useState(1);
 
   const [title, setTitle] = useState('');
@@ -24,14 +29,45 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
   const [teamEmails, setTeamEmails] = useState('student2@bitsindri.ac.in');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (!selectedProblem && problemId) {
+      issuesAPI.getIssue(problemId)
+        .then((data) => {
+          setProblem(data);
+          if (data.category) setCategory(data.category);
+        })
+        .catch((err) => console.error('Failed to load problem for pitch:', err));
+    } else if (selectedProblem) {
+      setProblem(selectedProblem);
+      if (selectedProblem.category) setCategory(selectedProblem.category);
+    } else {
+      issuesAPI.getIssues({ status: 'adopted,assigned' })
+        .then((res) => {
+          const list = Array.isArray(res) ? res : res.results || [];
+          setAdoptedList(list);
+          if (list.length > 0) {
+            setProblem(list[0]);
+            if (list[0].category) setCategory(list[0].category);
+          }
+        })
+        .catch((err) => console.error('Failed to load adopted problems for pitch:', err));
+    }
+  }, [problemId, selectedProblem]);
+
   const handleSubmit = async () => {
     if (!title || !publicSummary || !confidentialPackage) {
       showToast('Please fill in all mandatory fields.', 'error');
       return;
     }
 
+    const resolvedIssueId = problem?.id || (problemId ? parseInt(problemId, 10) : null);
+    if (!resolvedIssueId) {
+      showToast('Please select a valid problem statement before submitting.', 'error');
+      return;
+    }
+
     const payload = {
-      issue: selectedProblem?.id || 1,
+      issue: resolvedIssueId,
       title,
       public_summary: publicSummary,
       confidential_package: confidentialPackage,
@@ -142,7 +178,7 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
               Step 1: Problem & Pitch Overview
             </h3>
 
-            {selectedProblem && (
+            {problem ? (
               <div
                 style={{
                   background: '#F8FAFC',
@@ -152,15 +188,40 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
                   marginBottom: '1.25rem',
                 }}
               >
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', marginBottom: '2px' }}>
-                  TARGET PROBLEM
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>
+                    TARGET PROBLEM
+                  </div>
+                  {adoptedList.length > 1 && (
+                    <select
+                      value={problem.id}
+                      onChange={(e) => {
+                        const sel = adoptedList.find((i) => i.id === parseInt(e.target.value, 10));
+                        if (sel) {
+                          setProblem(sel);
+                          if (sel.category) setCategory(sel.category);
+                        }
+                      }}
+                      style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFFFFF' }}
+                    >
+                      {adoptedList.map((iss) => (
+                        <option key={iss.id} value={iss.id}>
+                          Change: {iss.title.slice(0, 35)}...
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
-                  {selectedProblem.title}
+                  {problem.title}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                  📍 {selectedProblem.district}
+                  📍 {problem.district} • {problem.category?.toUpperCase()}
                 </div>
+              </div>
+            ) : (
+              <div style={{ padding: '1rem', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', marginBottom: '1.25rem', color: '#DC2626', fontSize: '0.85rem' }}>
+                No active open call problem selected. Please browse open calls from the explore page.
               </div>
             )}
 

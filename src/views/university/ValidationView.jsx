@@ -3,8 +3,10 @@ import { CheckCircle, XCircle, Sparkles, Check, AlertCircle, Eye, Layers } from 
 import { issuesAPI } from '../../api/issues';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 export const ValidationView = ({ onSelectIssue }) => {
+  const { role } = useAuth();
   const { showToast } = useToast();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -165,7 +167,7 @@ export const ValidationView = ({ onSelectIssue }) => {
                       <CategoryPill category={issue.category} />
                     </td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button
                           onClick={() => onSelectIssue(issue)}
                           className="btn btn-outline btn-sm"
@@ -173,7 +175,7 @@ export const ValidationView = ({ onSelectIssue }) => {
                         >
                           Review
                         </button>
-                        {issue.status === 'submitted' && (
+                        {issue.status === 'submitted' && (role === 'gov_admin' || role === 'admin') && (
                           <>
                             <button
                               onClick={() => handleValidate(issue.id)}
@@ -190,6 +192,11 @@ export const ValidationView = ({ onSelectIssue }) => {
                               Reject
                             </button>
                           </>
+                        )}
+                        {issue.status === 'submitted' && role !== 'gov_admin' && role !== 'admin' && (
+                          <span style={{ fontSize: '0.725rem', color: '#64748B', fontStyle: 'italic', paddingRight: '4px' }}>
+                            Awaiting Gov Validation
+                          </span>
                         )}
                       </div>
                     </td>

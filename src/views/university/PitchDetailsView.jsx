@@ -16,59 +16,90 @@ import {
   Send,
   Star,
 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { pitchesAPI } from '../../api/pitches';
+import { engagementsAPI } from '../../api/engagements';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { addToast } = useToast();
+  const targetId = pitch?.id || id;
   const [activeTab, setActiveTab] = useState('overview'); // overview, tech_details, team, documents, comments
   const [currentPitch, setCurrentPitch] = useState(pitch || {});
+  const [loading, setLoading] = useState(!pitch?.id && !!id);
   const [actionLoading, setActionLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [scoringState, setScoringState] = useState({});
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: 'Prof. S. Soren',
-      role: 'University Coordinator',
-      text: 'Methodology is strong. Sensor calibration for high-salinity water should be documented before prototype review.',
-      time: '1 day ago',
-      relevance_score: 8,
-      mentor_notes: 'Encourage testing with regional water samples',
-      is_shared_with_students: true,
-    },
-  ]);
+  const [comments, setComments] = useState([]);
+  const [existingEngagement, setExistingEngagement] = useState(null);
+  const [showSponsorModal, setShowSponsorModal] = useState(false);
+  const [sponsorForm, setSponsorForm] = useState({
+    engagement_type: 'funding',
+    proposal_notes: '',
+  });
+
+  const fetchPitchAndEngagement = async () => {
+    if (!targetId) return;
+    try {
+      const data = await pitchesAPI.getPitch(targetId);
+      if (data) {
+        setCurrentPitch(data);
+        if (Array.isArray(data.community_feedback) && data.community_feedback.length > 0) {
+          setComments(data.community_feedback.map((fb) => ({
+            id: fb.id,
+            author: fb.citizen_details?.name || 'Citizen Contributor',
+            role: 'Community Feedback',
+            text: fb.feedback_text,
+            time: fb.created_at ? new Date(fb.created_at).toLocaleDateString() : 'Recent',
+            relevance_score: fb.relevance_score,
+            mentor_notes: fb.mentor_notes,
+            is_shared_with_students: fb.is_shared_with_students,
+          })));
+        }
+
+        if (user?.role === 'industry_partner') {
+          try {
+            const engList = await engagementsAPI.getEngagements();
+            const allEng = Array.isArray(engList) ? engList : engList.results || [];
+            const match = allEng.find((e) => e.pitch === data.id || e.issue === data.issue);
+            setExistingEngagement(match || null);
+          } catch (e) {
+            console.error('Failed to load industry engagements:', e);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load pitch details:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (pitch?.id) {
-      pitchesAPI.getPitch(pitch.id)
-        .then((data) => {
-          if (data) {
-            setCurrentPitch(data);
-            if (Array.isArray(data.community_feedback) && data.community_feedback.length > 0) {
-              setComments(data.community_feedback.map((fb) => ({
-                id: fb.id,
-                author: fb.citizen_details?.name || 'Citizen Contributor',
-                role: 'Community Feedback',
-                text: fb.feedback_text,
-                time: fb.created_at ? new Date(fb.created_at).toLocaleDateString() : 'Recent',
-                relevance_score: fb.relevance_score,
-                mentor_notes: fb.mentor_notes,
-                is_shared_with_students: fb.is_shared_with_students,
-              })));
-            }
-          }
-        })
-        .catch((err) => console.error('Failed to load pitch details:', err));
+    if (targetId) {
+      if (!pitch?.id) setLoading(true);
+      fetchPitchAndEngagement();
     }
-  }, [pitch?.id]);
+  }, [targetId, user?.role]);
 
-  if (!pitch) {
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem', color: '#64748B' }}>
+        Loading pitch details #{targetId}...
+      </div>
+    );
+  }
+
+  if (!currentPitch || !currentPitch.id) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-        <p style={{ color: '#64748B' }}>No pitch selected.</p>
-        <button onClick={onBack} className="btn btn-outline" style={{ marginTop: '1rem' }}>
+        <p style={{ color: '#64748B' }}>No pitch found.</p>
+        <button onClick={() => (onBack ? onBack() : navigate(-1))} className="btn btn-outline" style={{ marginTop: '1rem' }}>
           Back to Pitches
         </button>
       </div>
@@ -99,9 +130,40 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
     }
   };
 
+  const handleProposeSponsorship = async (e) => {
+    e.preventDefault();
+    if (!currentPitch.issue) {
+      addToast('Cannot link engagement: issue reference missing', 'error');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const org = user?.organization_name || user?.organization_details?.name || 'Tata Steel Foundation & CSR';
+      await engagementsAPI.createEngagement({
+        issue: currentPitch.issue,
+        pitch: currentPitch.id,
+        engagement_type: sponsorForm.engagement_type,
+        proposal_notes: sponsorForm.proposal_notes || `Corporate CSR Sponsorship proposal from ${org} for pitch #${currentPitch.id}.`,
+      });
+      addToast('CSR sponsorship proposal submitted successfully!', 'success');
+      setShowSponsorModal(false);
+      setSponsorForm({ engagement_type: 'funding', proposal_notes: '' });
+      fetchPitchAndEngagement();
+    } catch (err) {
+      console.error('Failed to propose sponsorship:', err);
+      const msg = err.response?.data?.detail || err.response?.data?.issue?.[0] || err.message || 'Failed to submit engagement';
+      addToast(msg, 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
+
+    const authorDisplayName = user?.name || user?.email || 'Prof. S. Soren';
+    const authorRoleLabel = user?.role ? user.role.replace('_', ' ') : 'University Coordinator';
 
     try {
       if (currentPitch.id) {
@@ -110,8 +172,8 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
           ...prev,
           {
             id: res?.id || Date.now(),
-            author: res?.citizen_details?.name || 'Review Board',
-            role: 'Reviewer Note',
+            author: res?.citizen_details?.name || authorDisplayName,
+            role: authorRoleLabel,
             text: res?.feedback_text || commentText,
             time: 'Just now',
             relevance_score: res?.relevance_score,
@@ -124,8 +186,8 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
           ...prev,
           {
             id: Date.now(),
-            author: 'Prof. S. Soren',
-            role: 'University Coordinator',
+            author: authorDisplayName,
+            role: authorRoleLabel,
             text: commentText,
             time: 'Just now',
           },
@@ -139,8 +201,8 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
         ...prev,
         {
           id: Date.now(),
-          author: 'Prof. S. Soren',
-          role: 'University Coordinator',
+          author: authorDisplayName,
+          role: authorRoleLabel,
           text: commentText,
           time: 'Just now',
         },
@@ -174,12 +236,43 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
     }
   };
 
+  const handleDownloadDeliverable = (docName) => {
+    const content = `CONFLUENCE INNOVATION PLATFORM
+Verified Intellectual Property & Project Deliverable
+------------------------------------------------------
+Document: ${docName}
+Pitch ID: #${currentPitch.id}
+Solution: ${currentPitch.title}
+Student Innovators: ${teamName}
+University: ${uniName}
+SHA-256 Checksum: ${currentPitch.submission_hash || currentPitch.sha256_hash || 'Verified'}
+Date Generated: ${new Date().toLocaleDateString()}
+
+Status: Verified by Confluence Technical Review Board
+This artifact is cryptographically stamped and licensed under Jharkhand Innovation Council Open Call Guidelines.
+`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = docName.endsWith('.pdf') || docName.endsWith('.xlsx') ? `${docName}.txt` : docName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addToast(`Downloading ${docName}...`, 'success');
+  };
+
   const title = currentPitch.title || currentPitch.executive_summary || 'Smart Water Monitoring System';
   const authorName = currentPitch.student_team_details?.[0]?.name || currentPitch.student_team_details?.[0]?.email || currentPitch.author?.name || currentPitch.student_name || 'Ananya Verma';
   const uniName = currentPitch.university_details?.name || currentPitch.student_team_details?.[0]?.university_details?.name || 'Birsa Institute of Technology (BIT) Sindri';
   const mentorName = currentPitch.assigned_mentor_details?.name || 'Dr. A. K. Singh (Faculty Mentor)';
   const teamName = currentPitch.team_name || (currentPitch.student_team_details?.length ? `Team ${currentPitch.student_team_details[0]?.name?.split(' ')[0] || 'Innovators'}` : 'Team AquaTech');
   const category = currentPitch.category || 'water';
+  const isConfidentialProtected =
+    !currentPitch.confidential_package ||
+    (typeof currentPitch.confidential_package === 'string' &&
+      currentPitch.confidential_package.startsWith('[PROTECTED'));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -319,17 +412,63 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
           {/* Tab 2: Technical Details */}
           {activeTab === 'tech_details' && (
             <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
-                Technical Specification & IP Package
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
+                  Technical Specification & IP Package
+                </h3>
+                {isConfidentialProtected ? (
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#DC2626', background: '#FEF2F2', padding: '3px 10px', borderRadius: '999px', border: '1px solid #FCA5A5' }}>
+                    🔒 Confidential Dual-Package (Protected)
+                  </span>
+                ) : (
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', background: '#ECFDF5', padding: '3px 10px', borderRadius: '999px', border: '1px solid #A7F3D0' }}>
+                    🔓 Confidential Dual-Package (Unlocked)
+                  </span>
+                )}
+              </div>
+
+              {/* Cryptographic SHA-256 IP Timestamp */}
               <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#2563EB', marginBottom: '4px' }}>
                   🔒 Cryptographic SHA-256 IP Timestamp
                 </div>
                 <div style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#475569', wordBreak: 'break-all' }}>
-                  {currentPitch.sha256_hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}
+                  {currentPitch.submission_hash || currentPitch.sha256_hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}
                 </div>
               </div>
+
+              {/* Confidential IP Package Section */}
+              {isConfidentialProtected ? (
+                <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '12px', padding: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#B45309', fontWeight: 800, fontSize: '0.95rem', marginBottom: '6px' }}>
+                    <ShieldCheck size={18} /> Dual-Package Confidentiality Protection
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: '#78350F', lineHeight: 1.5, margin: 0 }}>
+                    Proprietary circuit design, hardware BOM costing, and firmware source code are protected under institutional IP bylaws.
+                    Full disclosure is unlocked for submitting student innovators, faculty mentors, university review boards, and verified Industry Co-development Partners with an active CSR engagement.
+                  </p>
+                  {user?.role === 'industry_partner' && (
+                    <button
+                      onClick={() => setShowSponsorModal(true)}
+                      className="btn btn-primary btn-sm"
+                      style={{ marginTop: '0.85rem' }}
+                    >
+                      Propose CSR Sponsorship to Unlock IP
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: '12px', padding: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#15803D', fontWeight: 800, fontSize: '0.95rem', marginBottom: '6px' }}>
+                    <ShieldCheck size={18} /> Confidential Intellectual Property Package (Unlocked)
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#166534', whiteSpace: 'pre-wrap', fontFamily: 'monospace', background: '#FFFFFF', padding: '1rem', borderRadius: '8px', border: '1px solid #BBF7D0', marginTop: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                    {typeof currentPitch.confidential_package === 'object'
+                      ? JSON.stringify(currentPitch.confidential_package, null, 2)
+                      : (currentPitch.confidential_package || 'Confidential schematics, PCB layout gerbers, and BOM cost breakdown.')}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem' }}>Hardware Stack</h4>
@@ -415,7 +554,11 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
                       <div style={{ fontSize: '0.725rem', color: '#64748B' }}>{doc.size} • {doc.date}</div>
                     </div>
                   </div>
-                  <button className="btn btn-outline btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button
+                    onClick={() => handleDownloadDeliverable(doc.name)}
+                    className="btn btn-outline btn-sm"
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
                     <Download size={14} /> Download
                   </button>
                 </div>
@@ -625,40 +768,205 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
           </div>
 
           {/* Action Decision Buttons */}
-          <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
-              University Review Actions
-            </h4>
+          {/* Action Decision Buttons / Role-Aware Panel */}
+          {user?.role === 'industry_partner' ? (
+            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
+                Corporate CSR & Co-Development
+              </h4>
 
-            <button
-              onClick={() => handleReviewAction('select_winner')}
-              disabled={actionLoading || currentPitch.status === 'selected'}
-              className="btn btn-blue"
-              style={{ width: '100%', borderRadius: '10px' }}
-            >
-              {currentPitch.status === 'selected' ? '✓ Selected as Winner' : 'Select as Winner'}
-            </button>
+              {existingEngagement ? (
+                <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2563EB', textTransform: 'uppercase' }}>
+                      {existingEngagement.engagement_type?.replace('_', ' ')}
+                    </span>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                      color: existingEngagement.status === 'active' || existingEngagement.status === 'accepted' ? '#059669' : '#D97706',
+                      background: existingEngagement.status === 'active' || existingEngagement.status === 'accepted' ? '#ECFDF5' : '#FEF3C7',
+                    }}>
+                      ● {existingEngagement.status?.toUpperCase()}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>
+                    {user?.organization_name || user?.organization_details?.name || 'Tata Steel Foundation & CSR'}
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: '#475569', margin: 0, lineHeight: 1.4 }}>
+                    {existingEngagement.proposal_notes || 'Active industry CSR partnership on this innovation track.'}
+                  </p>
+                  {(existingEngagement.status === 'active' || existingEngagement.status === 'accepted') && (
+                    <button
+                      onClick={() => navigate('/industry/projects')}
+                      className="btn btn-outline btn-sm"
+                      style={{ marginTop: '0.5rem' }}
+                    >
+                      View in Co-Development Projects
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: '0.825rem', color: '#64748B', lineHeight: 1.5, marginBottom: '0.85rem' }}>
+                    Support this technical solution with CSR grant funding, prototyping laboratory access, or technology transfer.
+                  </p>
+                  <button
+                    onClick={() => setShowSponsorModal(true)}
+                    className="btn btn-primary"
+                    style={{ width: '100%', borderRadius: '10px' }}
+                  >
+                    Propose CSR Sponsorship
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (user?.role === 'university_coordinator' || user?.role === 'faculty_mentor') ? (
+            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
+                University Review Actions
+              </h4>
 
-            <button
-              onClick={() => handleReviewAction('reject')}
-              disabled={actionLoading || currentPitch.status === 'rejected'}
-              style={{
-                width: '100%',
-                padding: '0.65rem',
-                borderRadius: '10px',
-                border: '1px solid #FCA5A5',
-                background: '#FEF2F2',
-                color: '#DC2626',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                cursor: currentPitch.status === 'rejected' ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {currentPitch.status === 'rejected' ? 'Rejected' : 'Reject Proposal'}
-            </button>
-          </div>
+              <button
+                onClick={() => handleReviewAction('select_winner')}
+                disabled={actionLoading || currentPitch.status === 'selected'}
+                className="btn btn-blue"
+                style={{ width: '100%', borderRadius: '10px' }}
+              >
+                {currentPitch.status === 'selected' ? '✓ Selected as Winner' : 'Select as Winner'}
+              </button>
+
+              <button
+                onClick={() => handleReviewAction('reject')}
+                disabled={actionLoading || currentPitch.status === 'rejected'}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem',
+                  borderRadius: '10px',
+                  border: '1px solid #FCA5A5',
+                  background: '#FEF2F2',
+                  color: '#DC2626',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: currentPitch.status === 'rejected' ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {currentPitch.status === 'rejected' ? 'Rejected' : 'Reject Proposal'}
+              </button>
+            </div>
+          ) : (
+            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
+                Pitch Review Status
+              </h4>
+              <p style={{ fontSize: '0.825rem', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                Status: <strong style={{ color: '#0F172A', textTransform: 'capitalize' }}>{currentPitch.status}</strong>
+              </p>
+              <p style={{ fontSize: '0.825rem', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                Under review by university coordinators and faculty evaluation committees.
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Sponsor Modal */}
+      {showSponsorModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '520px',
+              width: '100%',
+              padding: '2rem',
+              background: '#FFFFFF',
+              borderRadius: '16px',
+            }}
+          >
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
+              Propose Corporate CSR Sponsorship
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.25rem' }}>
+              Pitch #{currentPitch.id}: {title}
+            </p>
+
+            <form onSubmit={handleProposeSponsorship} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                  Engagement Type
+                </label>
+                <select
+                  value={sponsorForm.engagement_type}
+                  onChange={(e) => setSponsorForm({ ...sponsorForm, engagement_type: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  <option value="funding">CSR Grant / Direct Funding</option>
+                  <option value="mentorship">Industrial Mentorship & Advisory</option>
+                  <option value="prototyping">Prototyping Lab & Testing Facility</option>
+                  <option value="technology_transfer">Technology Transfer & Licensing</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                  Sponsorship Details & Deliverables
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Details of grant commitment, target testing sites, equipment provision..."
+                  value={sponsorForm.proposal_notes}
+                  onChange={(e) => setSponsorForm({ ...sponsorForm, proposal_notes: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowSponsorModal(false)}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="btn btn-primary"
+                >
+                  {actionLoading ? 'Submitting...' : 'Submit CSR Proposal'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

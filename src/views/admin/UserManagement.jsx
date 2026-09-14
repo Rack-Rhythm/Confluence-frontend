@@ -6,17 +6,24 @@ import { useToast } from '../../context/ToastContext';
 export const UserManagement = () => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
+  const [usersList, setUsersList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Representative user directory matching backend seed accounts
-  const [usersList, setUsersList] = useState([
-    { id: 1, name: 'Director HTE (Gov Admin)', email: 'admin@jharkhand.gov.in', role: 'gov_admin', university: 'Dept. of Higher Education', is_staff: true },
-    { id: 2, name: 'Rameshwar Munda', email: 'citizen@jharkhand.in', role: 'citizen', phone: '+91 94311 22334', university: 'Dhanbad District' },
-    { id: 3, name: 'Prof. S. Soren', email: 'coordinator@bitsindri.ac.in', role: 'university_coordinator', phone: '+91 94311 55667', university: 'BIT Sindri' },
-    { id: 4, name: 'Dr. A. K. Singh', email: 'mentor@bitsindri.ac.in', role: 'faculty_mentor', university: 'BIT Sindri (Civil & Env)' },
-    { id: 5, name: 'Priya Sharma', email: 'student1@bitsindri.ac.in', role: 'student', university: 'BIT Sindri' },
-    { id: 6, name: 'Amit Kumar Mahto', email: 'student2@bitsindri.ac.in', role: 'student', university: 'BIT Sindri' },
-    { id: 7, name: 'Vikram Sengupta', email: 'csr@tatasteel.com', role: 'industry_partner', organization: 'Tata Steel Foundation' },
-  ]);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const res = await authAPI.getUsers();
+        const list = Array.isArray(res) ? res : res.results || [];
+        setUsersList(list);
+      } catch (err) {
+        console.error('Failed to fetch live users:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const tabs = [
     { id: 'all', label: `All Users (${usersList.length})` },

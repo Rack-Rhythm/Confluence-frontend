@@ -31,7 +31,7 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newEngagement, setNewEngagement] = useState({
     issue_id: '',
-    engagement_type: 'csr_grant',
+    engagement_type: 'funding',
     proposal_notes: '',
   });
 
@@ -47,7 +47,7 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
       const [engRes, pitchesRes, issuesRes] = await Promise.allSettled([
         engagementsAPI.getEngagements(),
         pitchesAPI.getPitches(),
-        issuesAPI.getIssues({ status: 'adopted' }),
+        issuesAPI.getIssues({ status: 'adopted,assigned' }),
       ]);
 
       if (engRes.status === 'fulfilled') {
@@ -75,18 +75,22 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
 
   const handleCreateEngagement = async (e) => {
     e.preventDefault();
+    if (!newEngagement.issue_id) {
+      showToast('Please select a target problem to attach your CSR sponsorship.', 'error');
+      return;
+    }
     try {
       await engagementsAPI.createEngagement({
-        issue: newEngagement.issue_id ? parseInt(newEngagement.issue_id) : undefined,
+        issue: parseInt(newEngagement.issue_id, 10),
         engagement_type: newEngagement.engagement_type,
         proposal_notes: newEngagement.proposal_notes,
       });
       showToast('Industry CSR initiative registered successfully!', 'success');
       setShowCreateModal(false);
-      setNewEngagement({ issue_id: '', engagement_type: 'csr_grant', proposal_notes: '' });
+      setNewEngagement({ issue_id: '', engagement_type: 'funding', proposal_notes: '' });
       loadData();
     } catch (err) {
-      showToast(err.response?.data?.detail || 'Failed to register engagement.', 'error');
+      showToast(err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Failed to register engagement.', 'error');
     }
   };
 
@@ -102,7 +106,7 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
     }
   };
 
-  const activeEngagements = engagements.filter((e) => e.status === 'active' || e.status === 'accepted' || e.status === 'proposed');
+  const activeEngagements = engagements.filter((e) => ['active', 'accepted', 'requested', 'proposed'].includes(e.status));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -286,7 +290,11 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
                           ● {eng.status?.toUpperCase()}
                         </span>
                       </div>
-                      <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '2px' }}>
+                      <h4
+                        onClick={() => onNavigate && onNavigate('opportunities')}
+                        style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '2px', cursor: 'pointer' }}
+                        title="Click to manage engagement"
+                      >
                         {eng.issue_title || `${partnerName} Innovation Support`}
                       </h4>
                       <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
@@ -316,7 +324,7 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
 
                       {/* Action buttons */}
                       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        {eng.status === 'proposed' && (
+                        {(eng.status === 'requested' || eng.status === 'proposed') && (
                           <>
                             <button
                               onClick={() => handleRespond(eng.id, 'accept')}

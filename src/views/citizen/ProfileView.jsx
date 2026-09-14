@@ -10,7 +10,7 @@ export const ProfileView = () => {
 
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [location, setLocation] = useState(user?.district || 'Dhanbad, Jharkhand');
+  const [location, setLocation] = useState(user?.district || '');
   const [loading, setLoading] = useState(false);
 
   const handleSave = async (e) => {
@@ -20,6 +20,7 @@ export const ProfileView = () => {
       await updateProfile({
         name,
         phone,
+        district: location,
       });
       setIsEditing(false);
     } catch (err) {

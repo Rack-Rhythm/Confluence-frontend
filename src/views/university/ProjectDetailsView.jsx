@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -14,12 +14,18 @@ import {
   Plus,
   X,
 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { pitchesAPI } from '../../api/pitches';
 import { useToast } from '../../context/ToastContext';
 
 export const ProjectDetailsView = ({ project, onBack }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { addToast } = useToast();
+  const [currentProject, setCurrentProject] = useState(project || null);
+  const [loading, setLoading] = useState(!project && !!id);
   const [activeTab, setActiveTab] = useState('overview'); // overview, milestones, team, resources, reports
-  const [progress, setProgress] = useState(project?.progress || 45);
+  const [progress, setProgress] = useState(project?.progress || 65);
   const [milestones, setMilestones] = useState([
     { id: 1, title: 'Hardware Architecture & Schematic Verification', status: 'completed', date: '10 Aug 2024' },
     { id: 2, title: 'Sensor Integration & Edge AI Firmware Flashing', status: 'in_progress', date: '25 Aug 2024' },
@@ -30,16 +36,64 @@ export const ProjectDetailsView = ({ project, onBack }) => {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updateNotes, setUpdateNotes] = useState('');
 
-  if (!project) {
+  useEffect(() => {
+    if (!project && id) {
+      setLoading(true);
+      pitchesAPI.getPitch(id)
+        .then((pitchData) => {
+          if (pitchData) {
+            const lc = pitchData.project_lifecycle || {};
+            setCurrentProject({
+              id: pitchData.id,
+              pitchId: pitchData.id,
+              name: pitchData.title,
+              title: pitchData.title,
+              problem: pitchData.issue_details?.title || pitchData.title,
+              university: pitchData.university_details?.name || 'Partner University',
+              mentor: pitchData.assigned_mentor_details?.name || 'Assigned Faculty Mentor',
+              team: pitchData.student_team_details?.map(s => s.name).join(', ') || 'Innovation Team',
+              status: lc.outcome_status || 'In Progress',
+              progress: 65,
+              deliverables: lc.deliverables || 'Prototype and Documentation',
+              ...lc
+            });
+            if (Array.isArray(lc.milestones) && lc.milestones.length > 0) {
+              setMilestones(lc.milestones.map((m, idx) => ({
+                id: m.id || idx + 1,
+                title: m.title || `Milestone ${idx + 1}`,
+                status: m.completed ? 'completed' : 'in_progress',
+                date: m.due_date || 'Upcoming'
+              })));
+            }
+          }
+        })
+        .catch(err => console.error('Failed to load project details:', err))
+        .finally(() => setLoading(false));
+    } else if (project) {
+      setCurrentProject(project);
+    }
+  }, [id, project]);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem', color: '#64748B' }}>
+        Loading project milestones #{id}...
+      </div>
+    );
+  }
+
+  if (!currentProject) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
         <p style={{ color: '#64748B' }}>No project selected.</p>
-        <button onClick={onBack} className="btn btn-outline" style={{ marginTop: '1rem' }}>
+        <button onClick={() => (onBack ? onBack() : navigate(-1))} className="btn btn-outline" style={{ marginTop: '1rem' }}>
           Back to Projects
         </button>
       </div>
     );
   }
+
+  project = currentProject;
 
   const handleToggleMilestone = (id) => {
     const updated = milestones.map((m) => {
@@ -64,7 +118,32 @@ export const ProjectDetailsView = ({ project, onBack }) => {
     addToast('Project progress log saved successfully!', 'success');
   };
 
-  const title = project.title || project.executive_summary || 'Drone Crop Monitoring & Yield Optimization';
+  const handleDownloadReport = (docName) => {
+    const content = `CONFLUENCE INNOVATION PLATFORM
+Engineering Milestone & Progress Artifact
+------------------------------------------------------
+Artifact: ${docName}
+Project: ${currentProject?.title || 'Technical Innovation Project'}
+University: ${currentProject?.university || 'Partner Technical University'}
+Innovation Team: ${currentProject?.team || 'Student Engineering Team'}
+Status: ${currentProject?.status || 'Active Co-Development'}
+Date: ${new Date().toLocaleDateString()}
+
+Verified and timestamped through Confluence Lifecycle Pipeline.
+`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = docName.endsWith('.pdf') || docName.endsWith('.csv') ? `${docName}.txt` : docName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addToast(`Downloading ${docName}...`, 'success');
+  };
+
+  const title = project?.title || project?.executive_summary || 'Drone Crop Monitoring & Yield Optimization';
   const category = project.category || 'Agriculture';
   const mentor = project.mentor_name || 'Dr. P. Mishra';
   const industryPartner = project.industry_partner || 'AgriTech Solutions Pvt. Ltd.';
@@ -355,7 +434,11 @@ export const ProjectDetailsView = ({ project, onBack }) => {
                       <div style={{ fontSize: '0.725rem', color: '#64748B' }}>{doc.size} • {doc.date}</div>
                     </div>
                   </div>
-                  <button className="btn btn-outline btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button
+                    onClick={() => handleDownloadReport(doc.name)}
+                    className="btn btn-outline btn-sm"
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
                     <Download size={14} /> Download
                   </button>
                 </div>

@@ -11,6 +11,11 @@ export const engagementsAPI = {
     return response.data;
   },
 
+  getEngagement: async (id) => {
+    const response = await apiClient.get(`/engagements/${id}/`);
+    return response.data;
+  },
+
   respondEngagement: async (id, action, response_notes = '') => {
     // action: 'accept' | 'decline' | 'activate' | 'complete'
     const response = await apiClient.post(`/engagements/${id}/respond/`, {

@@ -70,9 +70,30 @@ export const OfficerDashboard = ({ onNavigate, onSelectIssue }) => {
   const maxCategoryCount = Math.max(...categories.map((c) => c.count), 1);
 
   // Compute live trends line from issues status distribution
-  const total = overview.total_issues_reported || 1;
-  const validated = overview.validated_issues || 0;
-  const resolved = overview.resolved_issues || 0;
+  const trendIntervals = 5;
+  const now = Date.now();
+  const msInterval = 7 * 24 * 60 * 60 * 1000;
+  const trendData = [];
+  for (let i = trendIntervals; i >= 0; i--) {
+    const periodEnd = now - i * msInterval;
+    const reported = recentIssues.filter((iss) => new Date(iss.created_at).getTime() <= periodEnd).length;
+    const resolved = recentIssues.filter((iss) => iss.status === 'resolved' && new Date(iss.updated_at || iss.created_at).getTime() <= periodEnd).length;
+    trendData.push({ reported, resolved });
+  }
+
+  const maxTrend = Math.max(1, ...trendData.map((d) => Math.max(d.reported, d.resolved)));
+  const trendPoints = trendData.map((d, idx) => {
+    const x = 30 + idx * 88;
+    const yRep = 180 - Math.round((d.reported / maxTrend) * 130);
+    const yRes = 180 - Math.round((d.resolved / maxTrend) * 130);
+    return { x, yRep, yRes, ...d };
+  });
+
+  const dReported = trendPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.yRep}`).join(' ');
+  const dResolved = trendPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.yRes}`).join(' ');
+  const areaReported = `${dReported} L ${trendPoints[trendPoints.length - 1].x} 180 L ${trendPoints[0].x} 180 Z`;
+  const areaResolved = `${dResolved} L ${trendPoints[trendPoints.length - 1].x} 180 L ${trendPoints[0].x} 180 Z`;
+  const lastPoint = trendPoints[trendPoints.length - 1];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -206,29 +227,33 @@ export const OfficerDashboard = ({ onNavigate, onSelectIssue }) => {
 
               {/* Dynamic Path based on live counts */}
               <path
-                d="M 20 160 Q 120 110, 240 130 T 360 80 T 480 40 L 480 190 L 20 190 Z"
+                d={areaReported}
                 fill="url(#gradReported)"
               />
               <path
-                d="M 20 160 Q 120 110, 240 130 T 360 80 T 480 40"
+                d={dReported}
                 fill="none"
                 stroke="#2563EB"
                 strokeWidth="3"
               />
 
               <path
-                d="M 20 180 Q 120 160, 240 150 T 360 120 T 480 80 L 480 190 L 20 190 Z"
+                d={areaResolved}
                 fill="url(#gradResolved)"
               />
               <path
-                d="M 20 180 Q 120 160, 240 150 T 360 120 T 480 80"
+                d={dResolved}
                 fill="none"
                 stroke="#10B981"
                 strokeWidth="3"
               />
 
-              <circle cx="480" cy="40" r="5" fill="#2563EB" stroke="#FFFFFF" strokeWidth="2" />
-              <circle cx="480" cy="80" r="5" fill="#10B981" stroke="#FFFFFF" strokeWidth="2" />
+              {lastPoint && (
+                <>
+                  <circle cx={lastPoint.x} cy={lastPoint.yRep} r="5" fill="#2563EB" stroke="#FFFFFF" strokeWidth="2" />
+                  <circle cx={lastPoint.x} cy={lastPoint.yRes} r="5" fill="#10B981" stroke="#FFFFFF" strokeWidth="2" />
+                </>
+              )}
             </svg>
           </div>
 

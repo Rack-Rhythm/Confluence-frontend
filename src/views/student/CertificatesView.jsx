@@ -22,7 +22,35 @@ export const CertificatesView = () => {
   }, []);
 
   const handleDownload = (certTitle, hash) => {
-    showToast(`Downloading verified certificate for "${certTitle}" with SHA-256 validation...`, 'success');
+    const certificateContent = `================================================================================
+GOVERNMENT OF JHARKHAND & CONFLUENCE INNOVATION PORTAL
+CERTIFICATE OF RECOGNITION & PRIOR-ART VERIFICATION
+================================================================================
+
+Recipient: ${user?.name || user?.email || 'Student Innovator'}
+Project / Pitch: ${certTitle}
+Issued By: Department of Higher Education & University Innovation Board
+Date of Issuance: ${new Date().toLocaleDateString()}
+
+CRYPTOGRAPHIC AUTHENTICATION:
+SHA-256 Prior-Art Stamped Hash:
+${hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}
+
+Official Verification Status: Cryptographically Signed & Immutable
+Verified on Confluence Platform (Gov of Jharkhand)
+================================================================================`;
+
+    const blob = new Blob([certificateContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${certTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}_Certificate.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(`Downloaded verified certificate for "${certTitle}"!`, 'success');
   };
 
   // Generate dynamic certificates from actual user pitches

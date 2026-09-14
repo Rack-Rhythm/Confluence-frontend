@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   MapPin,
@@ -12,22 +12,69 @@ import {
   ShieldCheck,
   ThumbsUp,
 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { issuesAPI } from '../../api/issues';
 import { useToast } from '../../context/ToastContext';
 
-export const IssueDetail = ({ issue, onBack, onRefresh }) => {
+export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { showToast } = useToast();
+  const [currentIssue, setCurrentIssue] = useState(initialIssue || null);
+  const [loading, setLoading] = useState(!initialIssue && !!id);
   const [resolutionFeedback, setResolutionFeedback] = useState('');
-  const [confirmedResolved, setConfirmedResolved] = useState(issue?.citizen_verified_resolved || false);
+  const [confirmedResolved, setConfirmedResolved] = useState(initialIssue?.citizen_verified_resolved || false);
   const [submittingResolution, setSubmittingResolution] = useState(false);
 
-  if (!issue) return null;
+  useEffect(() => {
+    if (!initialIssue && id) {
+      setLoading(true);
+      issuesAPI
+        .getIssue(id)
+        .then((data) => {
+          setCurrentIssue(data);
+          setConfirmedResolved(data.citizen_verified_resolved || false);
+        })
+        .catch((err) => console.error('Failed to load issue by id:', err))
+        .finally(() => setLoading(false));
+    } else if (initialIssue) {
+      setCurrentIssue(initialIssue);
+      setConfirmedResolved(initialIssue.citizen_verified_resolved || false);
+    }
+  }, [id, initialIssue]);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#64748B' }}>
+        Loading problem details #{id}...
+      </div>
+    );
+  }
+
+  if (!currentIssue) {
+    return (
+      <div className="card" style={{ maxWidth: '600px', margin: '3rem auto', textAlign: 'center', padding: '2.5rem' }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>
+          Problem Statement Not Found
+        </h3>
+        <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
+          The requested societal issue could not be loaded.
+        </p>
+        <button onClick={() => (onBack ? onBack() : navigate(-1))} className="btn btn-primary" style={{ borderRadius: '8px' }}>
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  const activeIssue = currentIssue;
+  const issue = currentIssue;
 
   const handleConfirmResolution = async (confirmed) => {
     setSubmittingResolution(true);
     try {
-      await issuesAPI.confirmResolution(issue.id, confirmed, resolutionFeedback);
+      await issuesAPI.confirmResolution(activeIssue.id, confirmed, resolutionFeedback);
       setConfirmedResolved(confirmed);
       showToast(confirmed ? 'Resolution confirmed! Thank you for your feedback.' : 'Feedback recorded.', 'success');
       if (onRefresh) onRefresh();
@@ -38,11 +85,16 @@ export const IssueDetail = ({ issue, onBack, onRefresh }) => {
     }
   };
 
+  const handleBack = () => {
+    if (onBack) onBack();
+    else navigate(-1);
+  };
+
   return (
     <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Back button */}
       <button
-        onClick={onBack}
+        onClick={handleBack}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -53,7 +105,7 @@ export const IssueDetail = ({ issue, onBack, onRefresh }) => {
           width: 'fit-content',
         }}
       >
-        <ArrowLeft size={16} /> Back to My Issues
+        <ArrowLeft size={16} /> {backLabel || 'Back to Issues'}
       </button>
 
       {/* Main Issue Header */}

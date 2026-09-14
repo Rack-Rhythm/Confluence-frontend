@@ -23,16 +23,28 @@ export const authAPI = {
 
   getUniversities: async () => {
     const response = await apiClient.get('/auth/universities/');
-    return response.data;
+    const data = response.data;
+    return Array.isArray(data) ? data : (data?.results || []);
   },
 
   getOrganizations: async () => {
     const response = await apiClient.get('/auth/organizations/');
-    return response.data;
+    const data = response.data;
+    return Array.isArray(data) ? data : (data?.results || []);
   },
 
   refreshToken: async (refresh) => {
     const response = await apiClient.post('/auth/token/refresh/', { refresh });
+    return response.data;
+  },
+
+  getUsers: async (params) => {
+    const response = await apiClient.get('/users/', { params });
+    return response.data;
+  },
+
+  getUser: async (id) => {
+    const response = await apiClient.get(`/users/${id}/`);
     return response.data;
   },
 };

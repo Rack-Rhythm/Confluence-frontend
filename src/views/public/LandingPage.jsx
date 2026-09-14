@@ -779,7 +779,12 @@ export const LandingPage = ({
 
             {/* Pagination Controls */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '2.5rem' }}>
-              <button className="btn btn-outline btn-sm" style={{ borderRadius: '8px', padding: '6px 10px' }}>
+              <button
+                onClick={() => setSolutionPage(Math.max(1, solutionPage - 1))}
+                className="btn btn-outline btn-sm"
+                style={{ borderRadius: '8px', padding: '6px 10px' }}
+                title="Previous page"
+              >
                 <ChevronLeft size={16} />
               </button>
               {[1, 2, 3, 4].map((p) => (
@@ -801,7 +806,12 @@ export const LandingPage = ({
                   {p}
                 </button>
               ))}
-              <button className="btn btn-outline btn-sm" style={{ borderRadius: '8px', padding: '6px 10px' }}>
+              <button
+                onClick={() => setSolutionPage(Math.min(4, solutionPage + 1))}
+                className="btn btn-outline btn-sm"
+                style={{ borderRadius: '8px', padding: '6px 10px' }}
+                title="Next page"
+              >
                 <ChevronRight size={16} />
               </button>
             </div>

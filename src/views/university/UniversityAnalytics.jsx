@@ -28,7 +28,7 @@ export const UniversityAnalytics = () => {
         const [issuesRes, pitchesRes, analyticsRes] = await Promise.allSettled([
           issuesAPI.getIssues(),
           pitchesAPI.getPitches(),
-          analyticsAPI.getSummary(),
+          analyticsAPI.getSummary({ time_range: timeRange }),
         ]);
 
         if (issuesRes.status === 'fulfilled') {
@@ -52,19 +52,53 @@ export const UniversityAnalytics = () => {
     };
 
     fetchData();
-  }, []);
+  }, [timeRange]);
 
-  const totalAdopted = analytics?.overview?.adopted_issues ?? (issues.filter((i) => ['adopted', 'assigned', 'resolved'].includes(i.status)).length || 8);
-  const totalPitches = analytics?.overview?.total_pitches_submitted ?? (pitches.length || 24);
-  const totalProjects = analytics?.overview?.assigned_solutions ?? (pitches.filter((p) => p.status === 'shortlisted' || p.status === 'selected' || p.status === 'merged').length || 10);
-  const deployedSolutions = analytics?.overview?.resolved_issues ?? (issues.filter((i) => i.status === 'resolved').length || 3);
+  const totalAdopted = analytics?.overview?.adopted_issues ?? issues.filter((i) => ['adopted', 'assigned', 'resolved'].includes(i.status)).length;
+  const totalPitches = analytics?.overview?.total_pitches_submitted ?? pitches.length;
+  const totalProjects = analytics?.overview?.assigned_solutions ?? pitches.filter((p) => p.status === 'shortlisted' || p.status === 'selected' || p.status === 'merged').length;
+  const deployedSolutions = analytics?.overview?.resolved_issues ?? issues.filter((i) => i.status === 'resolved').length;
+
+  // Derive dynamic monthly breakdown from live issues and pitches
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const now = new Date();
+  const monthlyData = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const mIdx = d.getMonth();
+    const yr = d.getFullYear();
+    const mName = monthNames[mIdx];
+
+    const adoptedInMonth = issues.filter((iss) => {
+      const dt = new Date(iss.created_at);
+      return dt.getMonth() === mIdx && dt.getFullYear() === yr && ['adopted', 'assigned', 'resolved'].includes(iss.status);
+    }).length;
+
+    const pitchesInMonth = pitches.filter((p) => {
+      const dt = new Date(p.created_at);
+      return dt.getMonth() === mIdx && dt.getFullYear() === yr;
+    }).length;
+
+    const projectsInMonth = pitches.filter((p) => {
+      const dt = new Date(p.created_at);
+      return dt.getMonth() === mIdx && dt.getFullYear() === yr && ['selected', 'merged'].includes(p.status);
+    }).length;
+
+    monthlyData.push({
+      month: mName,
+      adopted: adoptedInMonth,
+      pitches: pitchesInMonth,
+      projects: projectsInMonth,
+    });
+  }
+  const maxMonthlyVal = Math.max(1, ...monthlyData.map((m) => Math.max(m.adopted, m.pitches, m.projects)));
 
   const categories = analytics?.categories || [
-    { category: 'water', count: 28 },
-    { category: 'agriculture', count: 22 },
-    { category: 'environment', count: 18 },
-    { category: 'transport', count: 12 },
-    { category: 'healthcare', count: 10 },
+    { category: 'water', count: issues.filter((i) => i.category === 'water').length },
+    { category: 'urban_infra', count: issues.filter((i) => i.category === 'urban_infra').length },
+    { category: 'environment', count: issues.filter((i) => i.category === 'environment').length },
+    { category: 'transport', count: issues.filter((i) => i.category === 'transport').length },
+    { category: 'public_admin', count: issues.filter((i) => i.category === 'public_admin').length },
   ];
 
   const totalCatSum = categories.reduce((sum, c) => sum + c.count, 0) || 1;
@@ -166,21 +200,36 @@ export const UniversityAnalytics = () => {
 
           {/* Bar Chart Visualization */}
           <div style={{ height: '220px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '1rem', padding: '0 0.5rem', borderBottom: '1px solid #E2E8F0' }}>
-            {[
-              { month: 'Jan', adopted: 30, pitches: 55, projects: 20 },
-              { month: 'Feb', adopted: 45, pitches: 70, projects: 35 },
-              { month: 'Mar', adopted: 40, pitches: 65, projects: 40 },
-              { month: 'Apr', adopted: 60, pitches: 85, projects: 50 },
-              { month: 'May', adopted: 50, pitches: 75, projects: 45 },
-              { month: 'Jun', adopted: 70, pitches: 95, projects: 60 },
-              { month: 'Jul', adopted: 65, pitches: 80, projects: 55 },
-              { month: 'Aug', adopted: 80, pitches: 100, projects: 70 },
-            ].map((d, i) => (
+            {monthlyData.map((d, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '170px' }}>
-                  <div style={{ width: '8px', height: `${d.adopted * 1.5}px`, background: '#2563EB', borderRadius: '3px 3px 0 0' }} />
-                  <div style={{ width: '8px', height: `${d.pitches * 1.5}px`, background: '#8B5CF6', borderRadius: '3px 3px 0 0' }} />
-                  <div style={{ width: '8px', height: `${d.projects * 1.5}px`, background: '#10B981', borderRadius: '3px 3px 0 0' }} />
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '170px' }}>
+                  <div
+                    title={`Adopted: ${d.adopted}`}
+                    style={{
+                      width: '10px',
+                      height: `${Math.max(6, Math.round((d.adopted / maxMonthlyVal) * 140))}px`,
+                      background: '#2563EB',
+                      borderRadius: '3px 3px 0 0',
+                    }}
+                  />
+                  <div
+                    title={`Pitches: ${d.pitches}`}
+                    style={{
+                      width: '10px',
+                      height: `${Math.max(6, Math.round((d.pitches / maxMonthlyVal) * 140))}px`,
+                      background: '#8B5CF6',
+                      borderRadius: '3px 3px 0 0',
+                    }}
+                  />
+                  <div
+                    title={`Projects: ${d.projects}`}
+                    style={{
+                      width: '10px',
+                      height: `${Math.max(6, Math.round((d.projects / maxMonthlyVal) * 140))}px`,
+                      background: '#10B981',
+                      borderRadius: '3px 3px 0 0',
+                    }}
+                  />
                 </div>
                 <span style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>{d.month}</span>
               </div>

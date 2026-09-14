@@ -26,7 +26,7 @@ export const MyProjects = () => {
       const data = await pitchesAPI.getPitches({ mine: 1 });
       const raw = Array.isArray(data) ? data : data.results || [];
       // Filter pitches that have lifecycle or are selected
-      const selected = raw.filter((p) => p.status === 'selected' || p.status === 'merged' || p.lifecycle);
+      const selected = raw.filter((p) => p.status === 'selected' || p.status === 'merged' || p.project_lifecycle || p.lifecycle);
       setPitches(selected);
     } catch (err) {
       console.error('Failed to load projects:', err);
@@ -40,17 +40,8 @@ export const MyProjects = () => {
   }, []);
 
   const handleMilestoneToggle = async (pitch, milestoneId) => {
-    const currentLifecycle = pitch.lifecycle || {
-      id: pitch.id,
-      milestones: [
-        { id: 1, title: 'Field Recordings with Tribal Elders', due_date: '2026-10-15', completed: true },
-        { id: 2, title: 'Phonetic Engine Integration & UX Testing', due_date: '2026-11-30', completed: true },
-        { id: 3, title: 'Pilot in 10 Anganwadis across Khunti', due_date: '2026-12-20', completed: false },
-      ],
-      deliverables: 'v1.2 Signed APK, Phonetic Dictionary JSON',
-      test_results: 'Lab test accuracy: 98.4%',
-      outcome_status: 'in_progress',
-    };
+    const currentLifecycle = pitch.project_lifecycle || pitch.lifecycle;
+    if (!currentLifecycle || !currentLifecycle.milestones) return;
 
     const updatedMilestones = currentLifecycle.milestones.map((m) =>
       m.id === milestoneId ? { ...m, completed: !m.completed } : m
@@ -73,7 +64,7 @@ export const MyProjects = () => {
       }
       loadProjects();
     } catch (err) {
-      showToast('Milestone updated locally.', 'info');
+      showToast('Failed to update milestone.', 'error');
     }
   };
 
@@ -104,111 +95,113 @@ export const MyProjects = () => {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {pitches.map((pitch) => {
-            const lc = pitch.lifecycle || {
-              id: pitch.id,
-              milestones: [
-                { id: 1, title: 'Field Recordings with Tribal Elders', due_date: '2026-10-15', completed: true },
-                { id: 2, title: 'Phonetic Engine Integration & UX Testing', due_date: '2026-11-30', completed: true },
-                { id: 3, title: 'Pilot in 10 Anganwadis across Khunti', due_date: '2026-12-20', completed: false },
-              ],
-              deliverables: 'v1.2 Signed APK, Phonetic Dictionary JSON',
-              test_results: 'Lab test accuracy: 98.4%',
-              outcome_status: 'in_progress',
-            };
-
-            const completedCount = lc.milestones.filter((m) => m.completed).length;
-            const progressPct = Math.round((completedCount / (lc.milestones.length || 1)) * 100);
+            const lc = pitch.project_lifecycle || pitch.lifecycle;
+            const hasMilestones = lc && Array.isArray(lc.milestones) && lc.milestones.length > 0;
+            const completedCount = hasMilestones ? lc.milestones.filter((m) => m.completed).length : 0;
+            const progressPct = hasMilestones ? Math.round((completedCount / lc.milestones.length) * 100) : 0;
 
             return (
               <div key={pitch.id} className="card" style={{ padding: '2rem' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                   <div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981', background: '#ECFDF5', padding: '3px 10px', borderRadius: '999px' }}>
-                      ● ACTIVE LIFECYCLE
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: hasMilestones ? '#10B981' : '#F59E0B', background: hasMilestones ? '#ECFDF5' : '#FFFBEB', padding: '3px 10px', borderRadius: '999px' }}>
+                      {hasMilestones ? '● ACTIVE LIFECYCLE' : '● PENDING LIFECYCLE INITIALIZATION'}
                     </span>
                     <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', marginTop: '0.5rem' }}>
                       {pitch.title}
                     </h2>
                     <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                      Assigned Mentor: {pitch.assigned_mentor_details?.name || pitch.assigned_mentor?.name || 'Dr. A. K. Singh (Civil & Env)'}
+                      Assigned Mentor: {pitch.assigned_mentor_details?.name || pitch.assigned_mentor?.name || 'Pending mentor allocation'}
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2563EB' }}>
-                      {progressPct}%
+                  {hasMilestones && (
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2563EB' }}>
+                        {progressPct}%
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Milestones Complete</div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Milestones Complete</div>
-                  </div>
+                  )}
                 </div>
 
-                {/* Progress bar */}
-                <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '999px', overflow: 'hidden', marginBottom: '1.75rem' }}>
-                  <div style={{ width: `${progressPct}%`, height: '100%', background: '#2563EB', transition: 'width 0.4s ease' }} />
-                </div>
+                {hasMilestones ? (
+                  <>
+                    {/* Progress bar */}
+                    <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '999px', overflow: 'hidden', marginBottom: '1.75rem' }}>
+                      <div style={{ width: `${progressPct}%`, height: '100%', background: '#2563EB', transition: 'width 0.4s ease' }} />
+                    </div>
 
-                {/* Milestones Checklist */}
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem' }}>
-                  Engineering Milestones
-                </h3>
+                    {/* Milestones Checklist */}
+                    <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem' }}>
+                      Engineering Milestones
+                    </h3>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                  {lc.milestones.map((m) => (
-                    <div
-                      key={m.id}
-                      onClick={() => handleMilestoneToggle(pitch, m.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.85rem 1rem',
-                        borderRadius: '12px',
-                        border: m.completed ? '1px solid #A7F3D0' : '1px solid #E2E8F0',
-                        background: m.completed ? '#F0FDF4' : '#FFFFFF',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                      {lc.milestones.map((m) => (
                         <div
+                          key={m.id}
+                          onClick={() => handleMilestoneToggle(pitch, m.id)}
                           style={{
-                            width: '22px',
-                            height: '22px',
-                            borderRadius: '6px',
-                            border: m.completed ? 'none' : '2px solid #CBD5E1',
-                            background: m.completed ? '#10B981' : 'transparent',
-                            color: '#FFFFFF',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.75rem',
+                            justifyContent: 'space-between',
+                            padding: '0.85rem 1rem',
+                            borderRadius: '12px',
+                            border: m.completed ? '1px solid #A7F3D0' : '1px solid #E2E8F0',
+                            background: m.completed ? '#F0FDF4' : '#FFFFFF',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
                           }}
                         >
-                          {m.completed && '✓'}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div
+                              style={{
+                                width: '22px',
+                                height: '22px',
+                                borderRadius: '6px',
+                                border: m.completed ? 'none' : '2px solid #CBD5E1',
+                                background: m.completed ? '#10B981' : 'transparent',
+                                color: '#FFFFFF',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem',
+                              }}
+                            >
+                              {m.completed && '✓'}
+                            </div>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: m.completed ? '#065F46' : '#0F172A', textDecoration: m.completed ? 'line-through' : 'none' }}>
+                              {m.title}
+                            </span>
+                          </div>
+
+                          <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                            Target: {m.due_date}
+                          </span>
                         </div>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: m.completed ? '#065F46' : '#0F172A', textDecoration: m.completed ? 'line-through' : 'none' }}>
-                          {m.title}
-                        </span>
-                      </div>
-
-                      <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                        Target: {m.due_date}
-                      </span>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                {/* Deliverables & Test Results details */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '0.8rem' }}>
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#64748B', marginBottom: '2px' }}>DELIVERABLES</div>
-                    <div style={{ color: '#0F172A', fontWeight: 600 }}>{lc.deliverables || 'CAD drawings, Firmware v1.2, Lab report'}</div>
+                    {/* Deliverables & Test Results details */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '0.8rem' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#64748B', marginBottom: '2px' }}>DELIVERABLES</div>
+                        <div style={{ color: '#0F172A', fontWeight: 600 }}>{lc.deliverables || 'Pending submission'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#64748B', marginBottom: '2px' }}>TEST RESULTS</div>
+                        <div style={{ color: '#0F172A', fontWeight: 600 }}>{lc.test_results || 'Testing in progress'}</div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '12px', border: '1px dashed #CBD5E1', textAlign: 'center', marginTop: '1rem' }}>
+                    <p style={{ fontSize: '0.875rem', color: '#64748B', margin: 0 }}>
+                      Lifecycle not yet initialized by your university coordinator. Once milestones and deliverables are assigned, you can track them here.
+                    </p>
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#64748B', marginBottom: '2px' }}>TEST RESULTS</div>
-                    <div style={{ color: '#0F172A', fontWeight: 600 }}>{lc.test_results || 'Passed 98% efficiency validation in lab test.'}</div>
-                  </div>
-                </div>
+                )}
               </div>
             );
           })}

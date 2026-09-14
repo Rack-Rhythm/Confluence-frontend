@@ -10,19 +10,37 @@ import {
 import { useToast } from '../../context/ToastContext';
 
 export const UniversitySettings = () => {
-  const { addToast } = useToast();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('general'); // general, notifications, security, appearance
-  const [settings, setSettings] = useState({
-    notify_issues: true,
-    notify_submissions: true,
-    notify_milestones: true,
-    language: 'English',
-    timezone: '(GMT+05:30) India Standard Time',
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('confluence_uni_settings');
+      return saved ? JSON.parse(saved) : {
+        notify_issues: true,
+        notify_submissions: true,
+        notify_milestones: true,
+        language: 'English',
+        timezone: '(GMT+05:30) India Standard Time',
+      };
+    } catch {
+      return {
+        notify_issues: true,
+        notify_submissions: true,
+        notify_milestones: true,
+        language: 'English',
+        timezone: '(GMT+05:30) India Standard Time',
+      };
+    }
   });
 
   const handleSave = (e) => {
     e.preventDefault();
-    addToast('Preferences and notifications saved successfully!', 'success');
+    try {
+      localStorage.setItem('confluence_uni_settings', JSON.stringify(settings));
+    } catch (err) {
+      console.error(err);
+    }
+    showToast('Preferences saved successfully to this browser!', 'success');
   };
 
   return (

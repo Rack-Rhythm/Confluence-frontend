@@ -246,7 +246,11 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
-            {myIssues.length === 0 ? (
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94A3B8', fontSize: '0.85rem' }}>
+                Loading your issues...
+              </div>
+            ) : myIssues.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94A3B8', fontSize: '0.85rem' }}>
                 You haven't reported any issues yet. Click "+ Report a New Problem" to begin!
               </div>
@@ -299,7 +303,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               Issue Map
             </h3>
             <button
-              onClick={() => onNavigate('track_status')}
+              onClick={() => onNavigate('my_issues')}
               style={{ fontSize: '0.775rem', fontWeight: 700, color: '#2563EB', display: 'flex', alignItems: 'center', gap: '2px' }}
             >
               View Map <ChevronRight size={14} />

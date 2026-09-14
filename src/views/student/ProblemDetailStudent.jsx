@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   MapPin,
@@ -12,17 +12,59 @@ import {
   Lock,
 } from 'lucide-react';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
+import { useParams, useNavigate } from 'react-router-dom';
 import { issuesAPI } from '../../api/issues';
 import { useToast } from '../../context/ToastContext';
 
 export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { showToast } = useToast();
+  const [currentProblem, setCurrentProblem] = useState(problem || null);
+  const [loading, setLoading] = useState(!problem && !!id);
   const [activeTab, setActiveTab] = useState('overview');
   const [nominationRationale, setNominationRationale] = useState('');
   const [showNominateModal, setShowNominateModal] = useState(false);
   const [nominating, setNominating] = useState(false);
 
-  if (!problem) return null;
+  useEffect(() => {
+    if (!problem && id) {
+      setLoading(true);
+      issuesAPI
+        .getIssue(id)
+        .then((res) => setCurrentProblem(res))
+        .catch((err) => console.error('Failed to load student problem:', err))
+        .finally(() => setLoading(false));
+    } else if (problem) {
+      setCurrentProblem(problem);
+    }
+  }, [id, problem]);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#64748B' }}>
+        Loading societal challenge #{id}...
+      </div>
+    );
+  }
+
+  if (!currentProblem) {
+    return (
+      <div className="card" style={{ maxWidth: '600px', margin: '3rem auto', textAlign: 'center', padding: '2.5rem' }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>
+          Problem Not Found
+        </h3>
+        <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
+          The requested problem challenge could not be found or has been archived.
+        </p>
+        <button onClick={() => (onBack ? onBack() : navigate(-1))} className="btn btn-primary" style={{ borderRadius: '8px' }}>
+          Back to Explore
+        </button>
+      </div>
+    );
+  }
+
+  problem = currentProblem;
 
   const handleNominate = async (e) => {
     e.preventDefault();

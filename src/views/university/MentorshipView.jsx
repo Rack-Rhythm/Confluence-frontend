@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { pitchesAPI } from '../../api/pitches';
+import { authAPI } from '../../api/auth';
 import { useToast } from '../../context/ToastContext';
 
 export const MentorshipView = () => {
@@ -18,6 +19,7 @@ export const MentorshipView = () => {
   const [activeTab, setActiveTab] = useState('mentors'); // mentors, teams, sessions
   const [searchQuery, setSearchQuery] = useState('');
   const [pitches, setPitches] = useState([]);
+  const [liveMentors, setLiveMentors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,36 +30,55 @@ export const MentorshipView = () => {
     scheduled_date: '2024-09-22',
   });
 
-  const fetchPitches = async () => {
+  const fetchPitchesAndMentors = async () => {
     setLoading(true);
     try {
-      const res = await pitchesAPI.getPitches();
-      const list = Array.isArray(res) ? res : res.results || [];
-      setPitches(list);
-      if (list.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          pitch_id: list[0].id,
-          team_name: list[0].title || 'Student Pitch',
-        }));
+      const [pitchesRes, mentorsRes] = await Promise.allSettled([
+        pitchesAPI.getPitches(),
+        authAPI.getUsers({ role: 'faculty_mentor' }),
+      ]);
+
+      if (pitchesRes.status === 'fulfilled') {
+        const list = Array.isArray(pitchesRes.value) ? pitchesRes.value : pitchesRes.value.results || [];
+        setPitches(list);
+        if (list.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            pitch_id: list[0].id,
+            team_name: list[0].title || 'Student Pitch',
+          }));
+        }
+      }
+
+      if (mentorsRes.status === 'fulfilled') {
+        const raw = mentorsRes.value;
+        const mList = Array.isArray(raw) ? raw : raw.results || [];
+        setLiveMentors(mList);
       }
     } catch (err) {
-      console.error('Failed to load pitches for mentorship:', err);
+      console.error('Failed to load pitches and mentors:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPitches();
+    fetchPitchesAndMentors();
   }, []);
 
-  const mentors = [
-    { id: '#M01', mentorId: 3, name: 'Dr. A. K. Singh', department: 'Civil & Environmental Engineering', teams: 4, sessions: 6 },
-    { id: '#M02', mentorId: 4, name: 'Dr. P. Mishra', department: 'Agriculture & Biosystems', teams: 3, sessions: 4 },
-    { id: '#M03', mentorId: 5, name: 'Dr. R. Patnaik', department: 'Electronics & Communication', teams: 5, sessions: 8 },
-    { id: '#M04', mentorId: 6, name: 'Dr. S. Mohapatra', department: 'Mechanical Engineering', teams: 2, sessions: 3 },
-  ];
+  const mentors = liveMentors.length > 0
+    ? liveMentors.map((m) => ({
+        id: `#M0${m.id}`,
+        mentorId: m.id,
+        name: m.name,
+        department: m.university_details?.name || m.university?.name || 'Faculty of Engineering',
+        teams: pitches.filter((p) => p.assigned_mentor_id === m.id).length || 1,
+        sessions: 4,
+      }))
+    : [
+        { id: '#M01', mentorId: 3, name: 'Dr. A. K. Singh (Civil & Env)', department: 'BIT Sindri', teams: 2, sessions: 6 },
+        { id: '#M02', mentorId: 4, name: 'Dr. P. Mishra (Biosystems)', department: 'Birsa Agricultural University', teams: 1, sessions: 4 },
+      ];
 
   const studentTeams = pitches.length > 0
     ? pitches.map((p, idx) => {
@@ -92,7 +113,7 @@ export const MentorshipView = () => {
           mentor_id: parseInt(formData.mentor_id, 10) || 3,
         });
         addToast(`Assigned ${formData.mentor_name} to ${formData.team_name} successfully!`, 'success');
-        fetchPitches();
+        fetchPitchesAndMentors();
       } else {
         addToast(`Assigned ${formData.mentor_name} to ${formData.team_name}!`, 'success');
       }

@@ -4,28 +4,42 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 export const IndustryProfile = () => {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { showToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const org = user?.organization_details || {};
   const [formData, setFormData] = useState({
-    name: user?.name || 'Vikram Sengupta',
+    name: user?.name || '',
     role: 'CSR & Innovation Director',
-    organization: org.name || 'Tata Steel Foundation & CSR',
+    organization: org.name || 'Corporate Innovation Partner',
     org_type: org.org_type?.toUpperCase() || 'CSR FOUNDATION',
-    email: user?.email || 'csr@tatasteel.com',
-    phone: user?.phone || '+91 657 242 8000',
-    website: org.website || 'https://www.tatasteel.com',
-    district: org.district || 'East Singhbhum (Jamshedpur)',
-    address: 'Tata Steel Works, Bistupur, Jamshedpur, Jharkhand - 831001',
-    csr_reg: 'CSR00004128 / MCA-JH',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    website: org.website || '',
+    district: org.district || user?.district || '',
+    address: org.address || 'Jharkhand Regional Office',
+    csr_reg: org.csr_registration_number || 'CSR Registration Verified',
   });
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setIsEditing(false);
-    showToast('Corporate partner profile updated successfully!', 'success');
+    setLoading(true);
+    try {
+      if (updateProfile) {
+        await updateProfile({
+          name: formData.name,
+          phone: formData.phone,
+          district: formData.district,
+        });
+      }
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to update industry profile:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -184,24 +198,24 @@ export const IndustryProfile = () => {
         </form>
       </div>
 
-      {/* CSR Focus Areas in Jharkhand */}
+      {/* CSR Focus Areas */}
       <div className="card" style={{ padding: '1.75rem' }}>
         <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>
-          Mandated Thematic Areas in Jharkhand
+          Mandated Thematic Areas {org.name ? `(${org.name})` : 'in Jharkhand'}
         </h3>
         <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1rem' }}>
-          Priority focus areas supported by state university incubation cells:
+          Priority focus areas supported by incubation cells and institutional grants:
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem' }}>
-          {[
+          {(Array.isArray(org.focus_areas) && org.focus_areas.length > 0 ? org.focus_areas : [
             'Clean Drinking Water & IoT Testing',
             'Mining Slag & Industrial Recycling',
             'Tribal Agriculture & Solar Cold Stores',
             'Smart Rural Microgrids',
             'Assistive Tech for Divyangjan',
             'Forest Produce & Lac Value Addition',
-          ].map((theme, idx) => (
+          ]).map((theme, idx) => (
             <div
               key={idx}
               style={{
