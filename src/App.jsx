@@ -6,6 +6,7 @@ import {
   Navigate,
   useNavigate,
   useLocation,
+  useParams,
 } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -56,6 +57,7 @@ import { UniversityReports } from './views/university/UniversityReports';
 import { UniversityProfile } from './views/university/UniversityProfile';
 import { UniversitySettings } from './views/university/UniversitySettings';
 import { UniversityNotifications } from './views/university/UniversityNotifications';
+import { UniversityChallengeView } from './views/university/UniversityChallengeView';
 
 // Government & Shared views
 import { OfficerDashboard } from './views/officer/OfficerDashboard';
@@ -85,6 +87,54 @@ export const getBaseRole = (r) => {
   if (r === 'citizen') return 'citizen';
   if (r === 'admin') return 'admin';
   return r || 'citizen';
+};
+
+// Universal Deep-Link Routers (Section 44 & 56, Issues 44 & 56)
+const UniversalChallengeRoute = () => {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const role = user?.role;
+  if (role === 'student') return <Navigate to={`/student/problems/${id}`} replace />;
+  if (role === 'university_coordinator' || role === 'faculty_mentor') return <Navigate to={`/university/challenges/${id}`} replace />;
+  if (role === 'gov_admin') return <Navigate to={`/officer/issues/${id}`} replace />;
+  return <Navigate to={`/citizen/issues/${id}`} replace />;
+};
+
+const UniversalChallengeSolutionsRoute = () => {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const role = user?.role;
+  if (role === 'student') return <Navigate to={`/student/problems/${id}`} replace />;
+  if (role === 'university_coordinator' || role === 'faculty_mentor') return <Navigate to={`/university/challenges/${id}`} replace />;
+  if (role === 'gov_admin') return <Navigate to={`/officer/issues/${id}`} replace />;
+  return <Navigate to={`/citizen/issues/${id}`} replace />;
+};
+
+const UniversalChallengeSolutionDetailRoute = () => {
+  const { solutionId } = useParams();
+  const { user } = useAuth();
+  const role = user?.role;
+  if (role === 'university_coordinator' || role === 'faculty_mentor') return <Navigate to={`/university/pitches/${solutionId}`} replace />;
+  if (role === 'industry_partner') return <Navigate to={`/industry/pitches/${solutionId}`} replace />;
+  return <Navigate to={`/student/pitches/${solutionId}`} replace />;
+};
+
+const UniversalSolutionRoute = () => {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const role = user?.role;
+  if (role === 'university_coordinator' || role === 'faculty_mentor') return <Navigate to={`/university/pitches/${id}`} replace />;
+  if (role === 'industry_partner') return <Navigate to={`/industry/pitches/${id}`} replace />;
+  return <Navigate to={`/student/pitches/${id}`} replace />;
+};
+
+const UniversalProjectRoute = () => {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const role = user?.role;
+  if (role === 'student') return <Navigate to={`/student/projects/${id}`} replace />;
+  if (role === 'industry_partner') return <Navigate to={`/industry/projects/${id}`} replace />;
+  return <Navigate to={`/university/projects/${id}`} replace />;
 };
 
 function MainApp() {
@@ -221,6 +271,13 @@ function MainApp() {
 
             <main className="dashboard-content">
               <Routes>
+                {/* Universal Deep-Link Canonical Routes (Section 44 & 56, Issues 44 & 56) */}
+                <Route path="/challenges/:id" element={<UniversalChallengeRoute />} />
+                <Route path="/challenges/:id/solutions" element={<UniversalChallengeSolutionsRoute />} />
+                <Route path="/challenges/:id/solutions/:solutionId" element={<UniversalChallengeSolutionDetailRoute />} />
+                <Route path="/solutions/:id" element={<UniversalSolutionRoute />} />
+                <Route path="/projects/:id" element={<UniversalProjectRoute />} />
+
                 {/* 1. Citizen Routes */}
                 <Route path="/citizen" element={<Navigate to="/citizen/dashboard" replace />} />
                 <Route
@@ -323,8 +380,12 @@ function MainApp() {
                 <Route path="/university/settings" element={<UniversitySettings />} />
                 <Route path="/university/notifications" element={<UniversityNotifications />} />
                 <Route
+                  path="/university/challenges/:id"
+                  element={<UniversityChallengeView onBack={() => navigate('/university/adopted-problems')} onSelectPitch={handleSelectPitch} />}
+                />
+                <Route
                   path="/university/issues/:id"
-                  element={<IssueDetail issue={selectedIssue} backLabel="Back to Problem Pipeline" onBack={() => navigate('/university/problem-pipeline')} onRefresh={() => {}} />}
+                  element={<UniversityChallengeView onBack={() => navigate('/university/problem-pipeline')} onSelectPitch={handleSelectPitch} />}
                 />
 
                 {/* 4. Industry Routes */}

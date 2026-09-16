@@ -8,7 +8,7 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }
   const getSearchPlaceholder = () => {
     switch (role) {
       case 'citizen':
-        return 'Search my issues...';
+        return 'Search issues, locations, or keywords...';
       case 'student':
         return 'Search problems, projects, opportunities...';
       case 'university_coordinator':

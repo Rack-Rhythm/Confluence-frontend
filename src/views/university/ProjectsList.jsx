@@ -23,34 +23,62 @@ export const ProjectsList = ({ onSelectProject }) => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const [pitchesRes, issuesRes] = await Promise.allSettled([
+        const [projRes, pitchesRes] = await Promise.allSettled([
+          pitchesAPI.getProjects(),
           pitchesAPI.getPitches(),
-          issuesAPI.getIssues(),
         ]);
 
-        let rawPitches = [];
-        if (pitchesRes.status === 'fulfilled') {
-          const raw = pitchesRes.value;
-          rawPitches = Array.isArray(raw) ? raw : raw.results || [];
+        let realProjects = [];
+        if (projRes.status === 'fulfilled') {
+          const rawP = projRes.value;
+          realProjects = Array.isArray(rawP) ? rawP : rawP.results || [];
         }
 
-        // Map live pitches or adopted issues into projects
-        const liveProjects = rawPitches.map((p, idx) => {
-          const stages = ['Prototype', 'Development', 'Testing', 'Deployed'];
-          const stageIdx = (p.id || idx) % 4;
-          const stage = p.stage || stages[stageIdx];
-          const progressVals = [25, 45, 75, 100];
-          const progress = p.progress_pct || progressVals[stageIdx];
+        if (realProjects.length > 0) {
+          const formatted = realProjects.map((p) => {
+            let stage = 'Prototype';
+            if (['pilot'].includes(p.status)) stage = 'Development';
+            else if (['deployment_ready'].includes(p.status)) stage = 'Testing';
+            else if (['deployed', 'awaiting_citizen_verification', 'verified'].includes(p.status)) stage = 'Deployed';
 
-          return {
-            ...p,
-            stage,
-            progress,
-            team_name: p.team_name || (idx % 2 === 0 ? 'Team SkyVision' : 'Team CleanCity'),
-          };
-        });
+            return {
+              ...p,
+              id: p.id,
+              pitchId: p.solution,
+              title: p.title,
+              problem: p.challenge_details?.title || p.title,
+              category: p.challenge_details?.category || 'Engineering',
+              stage,
+              progress: p.progress_pct ?? 35,
+              team_name: p.team_details?.map((t) => t.name).filter(Boolean).join(', ') || 'Innovation Team',
+            };
+          });
+          setProjects(formatted);
+        } else {
+          // Fallback to pitches if no projects created yet
+          let rawPitches = [];
+          if (pitchesRes.status === 'fulfilled') {
+            const raw = pitchesRes.value;
+            rawPitches = Array.isArray(raw) ? raw : raw.results || [];
+          }
 
-        setProjects(liveProjects);
+          const liveProjects = rawPitches.map((p, idx) => {
+            const stages = ['Prototype', 'Development', 'Testing', 'Deployed'];
+            const stageIdx = (p.id || idx) % 4;
+            const stage = p.stage || stages[stageIdx];
+            const progressVals = [25, 45, 75, 100];
+            const progress = p.progress_pct || progressVals[stageIdx];
+
+            return {
+              ...p,
+              stage,
+              progress,
+              team_name: p.team_name || (idx % 2 === 0 ? 'Team SkyVision' : 'Team CleanCity'),
+            };
+          });
+
+          setProjects(liveProjects);
+        }
       } catch (err) {
         console.error('Failed to load projects:', err);
       } finally {

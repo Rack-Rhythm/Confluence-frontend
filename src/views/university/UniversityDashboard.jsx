@@ -9,6 +9,12 @@ import {
   School,
   ChevronRight,
   ShieldCheck,
+  AlertTriangle,
+  FileCheck,
+  UserCheck,
+  Award,
+  AlertOctagon,
+  ArrowRight,
 } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
 import { pitchesAPI } from '../../api/pitches';
@@ -21,16 +27,18 @@ export const UniversityDashboard = ({ onNavigate, onSelectIssue, onSelectPitch }
   const [issues, setIssues] = useState([]);
   const [pitches, setPitches] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [actionInbox, setActionInbox] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [issuesRes, pitchesRes, analyticsRes] = await Promise.allSettled([
+        const [issuesRes, pitchesRes, analyticsRes, inboxRes] = await Promise.allSettled([
           issuesAPI.getIssues(),
           pitchesAPI.getPitches(),
           analyticsAPI.getSummary(),
+          issuesAPI.getActionInbox(),
         ]);
 
         if (issuesRes.status === 'fulfilled') {
@@ -45,6 +53,10 @@ export const UniversityDashboard = ({ onNavigate, onSelectIssue, onSelectPitch }
 
         if (analyticsRes.status === 'fulfilled') {
           setAnalytics(analyticsRes.value);
+        }
+
+        if (inboxRes.status === 'fulfilled') {
+          setActionInbox(inboxRes.value);
         }
       } catch (err) {
         console.error('Failed to load university dashboard:', err);
@@ -138,6 +150,238 @@ export const UniversityDashboard = ({ onNavigate, onSelectIssue, onSelectPitch }
               ● University Innovation Cell Active
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Action Inbox Section (Issue 25) */}
+      <div
+        className="card"
+        style={{
+          background: '#FFFFFF',
+          borderRadius: '16px',
+          border: '1px solid #E2E8F0',
+          padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            marginBottom: '1.25rem',
+            borderBottom: '1px solid #F1F5F9',
+            paddingBottom: '1rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: '#EEF2FF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#4F46E5',
+              }}
+            >
+              <Inbox size={22} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  Action Inbox
+                </h2>
+                {actionInbox?.total_pending_actions > 0 ? (
+                  <span
+                    style={{
+                      background: '#EF4444',
+                      color: '#FFFFFF',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                    }}
+                  >
+                    {actionInbox.total_pending_actions} Pending
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      background: '#ECFDF5',
+                      color: '#059669',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                    }}
+                  >
+                    All Caught Up
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '2px 0 0 0' }}>
+                Priority queue of decisions requiring university coordinator review and approval.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 5 Action Buckets Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1rem',
+          }}
+        >
+          {[
+            {
+              key: 'challenges_awaiting_review',
+              title: 'Challenges for Review',
+              subtitle: 'Awaiting adoption or review',
+              count: actionInbox?.buckets?.challenges_awaiting_review?.count ?? 0,
+              icon: FileCheck,
+              color: '#2563EB',
+              bg: '#EFF6FF',
+              border: '#BFDBFE',
+              navTarget: 'challenges',
+              btnLabel: 'Review Challenges',
+            },
+            {
+              key: 'nominations_awaiting_decision',
+              title: 'Student Nominations',
+              subtitle: 'Awaiting endorsement',
+              count: actionInbox?.buckets?.nominations_awaiting_decision?.count ?? 0,
+              icon: UserCheck,
+              color: '#D97706',
+              bg: '#FFFBEB',
+              border: '#FDE68A',
+              navTarget: 'challenges',
+              btnLabel: 'View Nominations',
+            },
+            {
+              key: 'solutions_awaiting_review',
+              title: 'Solutions Under Review',
+              subtitle: 'Pitches awaiting decision',
+              count: actionInbox?.buckets?.solutions_awaiting_review?.count ?? 0,
+              icon: Lightbulb,
+              color: '#7C3AED',
+              bg: '#F5F3FF',
+              border: '#DDD6FE',
+              navTarget: 'solutions',
+              btnLabel: 'Evaluate Pitches',
+            },
+            {
+              key: 'milestones_awaiting_approval',
+              title: 'Milestone Approvals',
+              subtitle: 'Verification & sign-off',
+              count: actionInbox?.buckets?.milestones_awaiting_approval?.count ?? 0,
+              icon: Award,
+              color: '#059669',
+              bg: '#ECFDF5',
+              border: '#A7F3D0',
+              navTarget: 'projects',
+              btnLabel: 'Inspect Milestones',
+            },
+            {
+              key: 'citizen_verification_failures',
+              title: 'Citizen Disputes',
+              subtitle: 'Verification failed / disputed',
+              count: actionInbox?.buckets?.citizen_verification_failures?.count ?? 0,
+              icon: AlertOctagon,
+              color: '#DC2626',
+              bg: '#FEF2F2',
+              border: '#FECACA',
+              navTarget: 'challenges',
+              btnLabel: 'Resolve Disputes',
+            },
+          ].map((bucket) => {
+            const IconComp = bucket.icon;
+            const hasItems = bucket.count > 0;
+            return (
+              <div
+                key={bucket.key}
+                style={{
+                  background: hasItems ? bucket.bg : '#F8FAFC',
+                  border: `1px solid ${hasItems ? bucket.border : '#E2E8F0'}`,
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                    <div
+                      style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '8px',
+                        background: hasItems ? '#FFFFFF' : '#F1F5F9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: hasItems ? bucket.color : '#94A3B8',
+                      }}
+                    >
+                      <IconComp size={18} />
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '1.1rem',
+                        fontWeight: 800,
+                        color: hasItems ? bucket.color : '#64748B',
+                        background: hasItems ? '#FFFFFF' : '#F1F5F9',
+                        padding: '2px 10px',
+                        borderRadius: '8px',
+                        boxShadow: hasItems ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                      }}
+                    >
+                      {bucket.count}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.2rem' }}>
+                    {bucket.title}
+                  </div>
+                  <div style={{ fontSize: '0.725rem', color: '#64748B', lineHeight: 1.3, marginBottom: '0.9rem' }}>
+                    {bucket.subtitle}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => onNavigate(bucket.navTarget)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.45rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: hasItems ? bucket.color : '#E2E8F0',
+                    color: hasItems ? '#FFFFFF' : '#475569',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                >
+                  <span>{bucket.btnLabel}</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 

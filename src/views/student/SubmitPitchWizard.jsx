@@ -26,6 +26,9 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
   const [category, setCategory] = useState(selectedProblem?.category || 'water');
   const [publicSummary, setPublicSummary] = useState('');
   const [confidentialPackage, setConfidentialPackage] = useState('');
+  const [repositoryUrl, setRepositoryUrl] = useState('');
+  const [demoUrl, setDemoUrl] = useState('');
+  const [documentationUrl, setDocumentationUrl] = useState('');
   const [teamEmails, setTeamEmails] = useState('student2@bitsindri.ac.in');
   const [loading, setLoading] = useState(false);
 
@@ -71,13 +74,16 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
       title,
       public_summary: publicSummary,
       confidential_package: confidentialPackage,
+      repository_url: repositoryUrl,
+      demo_url: demoUrl,
+      documentation_url: documentationUrl,
       team_member_ids: [],
     };
 
     setLoading(true);
     try {
       const created = await pitchesAPI.createPitch(payload);
-      showToast('Pitch submitted successfully! SHA-256 Prior-Art Hash generated.', 'success');
+      showToast('Solution proposal submitted successfully! SHA-256 Prior-Art Hash generated.', 'success');
       if (onSuccess) onSuccess(created);
     } catch (err) {
       const msg = err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Failed to submit pitch. Ensure the issue has been adopted by a university.';
@@ -345,6 +351,40 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
                 value={confidentialPackage}
                 onChange={(e) => setConfidentialPackage(e.target.value)}
                 required
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">GitHub / Repository URL (Optional)</label>
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="https://github.com/team/smart-filtration"
+                  value={repositoryUrl}
+                  onChange={(e) => setRepositoryUrl(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Live Prototype / Demo URL (Optional)</label>
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="https://demo.jalshuddhi.org"
+                  value={demoUrl}
+                  onChange={(e) => setDemoUrl(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Architecture / Documentation URL (Optional)</label>
+              <input
+                type="url"
+                className="form-input"
+                placeholder="https://docs.jalshuddhi.org/architecture.pdf"
+                value={documentationUrl}
+                onChange={(e) => setDocumentationUrl(e.target.value)}
               />
             </div>
 

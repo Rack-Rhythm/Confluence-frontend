@@ -35,6 +35,8 @@ import { pitchesAPI } from '../../api/pitches';
 import { analyticsAPI } from '../../api/analytics';
 import { IssueCard } from '../../components/common/IssueCard';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
+import { HowItWorksView } from './HowItWorksView';
+import { ConfluenceScrollWorld } from '../../components/common/ConfluenceScrollWorld';
 import { useAuth } from '../../context/AuthContext';
 
 export const LandingPage = ({
@@ -821,135 +823,10 @@ export const LandingPage = ({
 
       {/* ================= PAGE 4: HOW IT WORKS ================= */}
       {currentTab === 'how_it_works' && (
-        <section style={{ padding: '3.5rem 0 5rem', flex: 1 }}>
-          <div className="container">
-            <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-              <h1 style={{ fontSize: '2.25rem', fontWeight: 900, color: '#0F172A', marginBottom: '0.35rem' }}>
-                How Confluence Works
-              </h1>
-              <p style={{ fontSize: '1rem', color: '#64748B' }}>
-                From a real problem to a real solution — together.
-              </p>
-            </div>
-
-            {/* 5-Step Process with Connecting Arrows */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.25rem', position: 'relative', marginBottom: '4.5rem' }}>
-              {[
-                { step: '1', title: 'Report', desc: 'Citizen reports a real problem in their community.', icon: Users, color: '#2563EB', bg: '#EFF6FF' },
-                { step: '2', title: 'Validate', desc: 'Universities review, validate, and adopt the problem.', icon: ShieldCheck, color: '#10B981', bg: '#ECFDF5' },
-                { step: '3', title: 'Innovate', desc: 'Students develop solutions with faculty mentorship.', icon: Lightbulb, color: '#8B5CF6', bg: '#F5F3FF' },
-                { step: '4', title: 'Partner', desc: 'Industry supports with funding and technical guidance.', icon: Briefcase, color: '#F59E0B', bg: '#FFFBEB' },
-                { step: '5', title: 'Implement', desc: 'Solutions are deployed to create real grassroots impact.', icon: Award, color: '#059669', bg: '#F0FDF4' },
-              ].map((st, idx) => {
-                const Icon = st.icon;
-                return (
-                  <div
-                    key={idx}
-                    style={{
-                      background: '#FFFFFF',
-                      borderRadius: '18px',
-                      border: '1px solid #E2E8F0',
-                      padding: '2rem 1.25rem',
-                      textAlign: 'center',
-                      position: 'relative',
-                    }}
-                    className="card-hover-lift"
-                  >
-                    <div
-                      style={{
-                        width: '54px',
-                        height: '54px',
-                        borderRadius: '50%',
-                        background: st.bg,
-                        color: st.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto 1.25rem',
-                        boxShadow: `0 4px 14px ${st.color}25`,
-                      }}
-                    >
-                      <Icon size={26} />
-                    </div>
-
-                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: st.color, marginBottom: '2px' }}>
-                      {st.step}. {st.title}
-                    </div>
-                    <p style={{ fontSize: '0.8rem', color: '#64748B', lineHeight: 1.5, marginTop: '4px' }}>
-                      {st.desc}
-                    </p>
-
-                    {/* Arrow for steps 1-4 */}
-                    {idx < 4 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          right: '-16px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          zIndex: 3,
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '50%',
-                          background: '#FFFFFF',
-                          border: '1px solid #E2E8F0',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#94A3B8',
-                        }}
-                      >
-                        <ArrowRight size={14} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Bottom Collaborative Banner */}
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #FEF3C7 0%, #D1FAE5 100%)',
-                borderRadius: '24px',
-                border: '1px solid #A7F3D0',
-                padding: '2.5rem 3rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '2rem',
-              }}
-            >
-              <div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#065F46', marginBottom: '0.5rem' }}>
-                  Collaborating for a Brighter Tomorrow
-                </h3>
-                <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem' }}>
-                  {[
-                    { label: 'People', icon: Users },
-                    { label: 'Communities', icon: Building2 },
-                    { label: 'Ideas', icon: Lightbulb },
-                    { label: 'Impact', icon: Award },
-                  ].map((it, idx) => {
-                    const Icon = it.icon;
-                    return (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700, color: '#047857' }}>
-                        <Icon size={16} /> {it.label}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div style={{ maxWidth: '300px', textAlign: 'right' }}>
-                <p style={{ fontSize: '0.95rem', fontStyle: 'italic', color: '#065F46', fontWeight: 600 }}>
-                  “Real change happens when people work together.” 🌿
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <HowItWorksView
+          onOpenAuth={onOpenAuth}
+          onNavigateTab={onNavigateTab}
+        />
       )}
 
       {/* ================= PAGE 5: SUCCESS STORIES ================= */}

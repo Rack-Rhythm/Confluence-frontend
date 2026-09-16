@@ -15,10 +15,17 @@ import {
   Download,
   Send,
   Star,
+  Award,
+  AlertTriangle,
+  Play,
+  RefreshCw,
+  UserPlus,
+  FileEdit,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { pitchesAPI } from '../../api/pitches';
 import { engagementsAPI } from '../../api/engagements';
+import { authAPI } from '../../api/auth';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -29,7 +36,7 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
   const { user } = useAuth();
   const { addToast } = useToast();
   const targetId = pitch?.id || id;
-  const [activeTab, setActiveTab] = useState('overview'); // overview, tech_details, team, documents, comments
+  const [activeTab, setActiveTab] = useState('overview'); // overview, tech_details, team, documents, comments, evaluations
   const [currentPitch, setCurrentPitch] = useState(pitch || {});
   const [loading, setLoading] = useState(!pitch?.id && !!id);
   const [actionLoading, setActionLoading] = useState(false);
@@ -42,6 +49,28 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
     engagement_type: 'funding',
     proposal_notes: '',
   });
+
+  // Multi-criteria Evaluation (Issue 30)
+  const [evaluations, setEvaluations] = useState([]);
+  const [showEvalModal, setShowEvalModal] = useState(false);
+  const [evalForm, setEvalForm] = useState({
+    technical_feasibility: 15,
+    social_impact: 15,
+    cost_feasibility: 10,
+    scalability: 10,
+    sustainability: 8,
+    innovation: 8,
+    implementation_readiness: 8,
+    recommendation: 'select',
+    comments: '',
+  });
+
+  // Review actions (Issue 27, 28, 29)
+  const [showRequestChangesModal, setShowRequestChangesModal] = useState(false);
+  const [requestChangesText, setRequestChangesText] = useState('');
+  const [showAssignMentorModal, setShowAssignMentorModal] = useState(false);
+  const [availableMentors, setAvailableMentors] = useState([]);
+  const [selectedMentorId, setSelectedMentorId] = useState('');
 
   const fetchPitchAndEngagement = async () => {
     if (!targetId) return;
@@ -60,6 +89,24 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
             mentor_notes: fb.mentor_notes,
             is_shared_with_students: fb.is_shared_with_students,
           })));
+        }
+
+        try {
+          const evList = await pitchesAPI.getEvaluations(targetId);
+          setEvaluations(Array.isArray(evList) ? evList : evList?.results || []);
+        } catch (e) {
+          console.error('Failed to load evaluations:', e);
+        }
+
+        if (user?.role === 'university_coordinator' || user?.role === 'faculty_mentor') {
+          try {
+            const mList = await authAPI.getUsers({ role: 'faculty_mentor' });
+            const rawM = Array.isArray(mList) ? mList : mList?.results || [];
+            setAvailableMentors(rawM);
+            if (rawM.length > 0 && !selectedMentorId) setSelectedMentorId(rawM[0].id);
+          } catch (e) {
+            console.error('Failed to load faculty mentors:', e);
+          }
         }
 
         if (user?.role === 'industry_partner') {
@@ -125,6 +172,100 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
       console.error('Failed to execute review action:', err);
       const errMsg = err.response?.data?.error || err.message || 'Action failed';
       addToast(`Action failed: ${errMsg}`, 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleStartReview = async () => {
+    setActionLoading(true);
+    try {
+      await pitchesAPI.reviewAction(currentPitch.id, { action: 'start_review' });
+      setCurrentPitch((prev) => ({ ...prev, status: 'under_review' }));
+      addToast('Solution marked as Under Review!', 'success');
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      addToast(err.response?.data?.error || 'Failed to start review.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRequestChanges = async (e) => {
+    e.preventDefault();
+    if (!requestChangesText.trim()) {
+      addToast('Please provide feedback explaining requested changes.', 'error');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await pitchesAPI.reviewAction(currentPitch.id, {
+        action: 'request_changes',
+        review_feedback: requestChangesText.trim(),
+      });
+      setCurrentPitch((prev) => ({ ...prev, status: 'changes_requested', review_feedback: requestChangesText }));
+      addToast('Changes requested. Student team notified for revision!', 'success');
+      setShowRequestChangesModal(false);
+      setRequestChangesText('');
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      addToast(err.response?.data?.error || 'Failed to request changes.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAssignMentor = async (e) => {
+    e.preventDefault();
+    if (!selectedMentorId) {
+      addToast('Please select a faculty mentor.', 'error');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await pitchesAPI.reviewAction(currentPitch.id, {
+        action: 'assign_mentor',
+        mentor_id: parseInt(selectedMentorId, 10),
+      });
+      const assigned = availableMentors.find((m) => String(m.id) === String(selectedMentorId));
+      setCurrentPitch((prev) => ({
+        ...prev,
+        assigned_mentor: parseInt(selectedMentorId, 10),
+        assigned_mentor_details: assigned || prev.assigned_mentor_details,
+      }));
+      addToast(`Assigned ${assigned?.name || 'Faculty Mentor'} to solution!`, 'success');
+      setShowAssignMentorModal(false);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      addToast(err.response?.data?.error || 'Failed to assign mentor.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSubmitEvaluation = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      const res = await pitchesAPI.submitEvaluation(currentPitch.id, {
+        technical_feasibility: parseInt(evalForm.technical_feasibility, 10) || 0,
+        social_impact: parseInt(evalForm.social_impact, 10) || 0,
+        cost_feasibility: parseInt(evalForm.cost_feasibility, 10) || 0,
+        scalability: parseInt(evalForm.scalability, 10) || 0,
+        sustainability: parseInt(evalForm.sustainability, 10) || 0,
+        innovation: parseInt(evalForm.innovation, 10) || 0,
+        implementation_readiness: parseInt(evalForm.implementation_readiness, 10) || 0,
+        recommendation: evalForm.recommendation,
+        comments: evalForm.comments,
+      });
+      addToast(`Evaluation submitted! Total Score: ${res.total_score}/100`, 'success');
+      setShowEvalModal(false);
+      const evList = await pitchesAPI.getEvaluations(currentPitch.id);
+      setEvaluations(Array.isArray(evList) ? evList : evList?.results || []);
+      setCurrentPitch((prev) => ({ ...prev, status: 'under_review' }));
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      addToast(err.response?.data?.error || 'Failed to submit evaluation.', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -337,6 +478,7 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
           { id: 'team', label: 'Team' },
           { id: 'documents', label: 'Documents' },
           { id: 'comments', label: `Comments (${comments.length})` },
+          { id: 'evaluations', label: `Evaluations (${evaluations.length})` },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -714,6 +856,121 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
               </form>
             </div>
           )}
+
+          {/* Tab 6: Evaluations (Issue 30) */}
+          {activeTab === 'evaluations' && (
+            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    Solution Multi-Criteria Evaluations
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '2px 0 0 0' }}>
+                    Standardized evaluation scorecard across 7 rigorous criteria totaling 100 points.
+                  </p>
+                </div>
+                {(user?.role === 'university_coordinator' || user?.role === 'faculty_mentor') && (
+                  <button
+                    type="button"
+                    onClick={() => setShowEvalModal(true)}
+                    className="btn btn-primary"
+                    style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem', borderRadius: '8px' }}
+                  >
+                    + Submit Evaluation
+                  </button>
+                )}
+              </div>
+
+              {evaluations.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#94A3B8', fontSize: '0.85rem' }}>
+                  No evaluations submitted yet for this solution.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {evaluations.map((ev) => (
+                    <div
+                      key={ev.id}
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E2E8F0',
+                        borderRadius: '12px',
+                        padding: '1.25rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.75rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>
+                            {ev.reviewer_details?.name || 'Review Board Evaluator'}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: '#64748B', marginLeft: '0.5rem' }}>
+                            {new Date(ev.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <span
+                            style={{
+                              fontSize: '1rem',
+                              fontWeight: 800,
+                              color: '#2563EB',
+                              background: '#EFF6FF',
+                              padding: '2px 10px',
+                              borderRadius: '8px',
+                            }}
+                          >
+                            Score: {ev.total_score} / 100
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              background: ev.recommendation === 'select' ? '#ECFDF5' : ev.recommendation === 'reject' ? '#FEF2F2' : '#FFFBEB',
+                              color: ev.recommendation === 'select' ? '#059669' : ev.recommendation === 'reject' ? '#DC2626' : '#D97706',
+                            }}
+                          >
+                            {ev.recommendation?.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 7-Criteria Breakdown Bar Grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem', background: '#F8FAFC', padding: '0.85rem', borderRadius: '8px' }}>
+                        {[
+                          { label: 'Technical Feasibility', score: ev.technical_feasibility, max: 20 },
+                          { label: 'Social Impact', score: ev.social_impact, max: 20 },
+                          { label: 'Cost Feasibility', score: ev.cost_feasibility, max: 15 },
+                          { label: 'Scalability', score: ev.scalability, max: 15 },
+                          { label: 'Sustainability', score: ev.sustainability, max: 10 },
+                          { label: 'Innovation', score: ev.innovation, max: 10 },
+                          { label: 'Implementation Readiness', score: ev.implementation_readiness, max: 10 },
+                        ].map((crit) => (
+                          <div key={crit.label} style={{ fontSize: '0.75rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '2px' }}>
+                              <span>{crit.label}</span>
+                              <strong style={{ color: '#0F172A' }}>{crit.score}/{crit.max}</strong>
+                            </div>
+                            <div style={{ width: '100%', height: '5px', background: '#E2E8F0', borderRadius: '999px', overflow: 'hidden' }}>
+                              <div style={{ width: `${(crit.score / crit.max) * 100}%`, height: '100%', background: '#3B82F6', borderRadius: '999px' }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {ev.comments && (
+                        <p style={{ fontSize: '0.85rem', color: '#334155', margin: 0, fontStyle: 'italic', lineHeight: 1.4 }}>
+                          "{ev.comments}"
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right Info Sidebar & Action Controls */}
@@ -824,37 +1081,158 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
               )}
             </div>
           ) : (user?.role === 'university_coordinator' || user?.role === 'faculty_mentor') ? (
-            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
-                University Review Actions
-              </h4>
+            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.2rem' }}>
+                  University Review Actions
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+                  Review and progress this solution through institutional milestones.
+                </p>
+              </div>
 
-              <button
-                onClick={() => handleReviewAction('select_winner')}
-                disabled={actionLoading || currentPitch.status === 'selected'}
-                className="btn btn-blue"
-                style={{ width: '100%', borderRadius: '10px' }}
-              >
-                {currentPitch.status === 'selected' ? '✓ Selected as Winner' : 'Select as Winner'}
-              </button>
+              {/* Status Banner */}
+              <div style={{
+                padding: '0.65rem 0.85rem',
+                borderRadius: '8px',
+                background: currentPitch.status === 'selected' ? '#ECFDF5' : currentPitch.status === 'rejected' ? '#FEF2F2' : currentPitch.status === 'changes_requested' ? '#FFFBEB' : '#F1F5F9',
+                border: `1px solid ${currentPitch.status === 'selected' ? '#A7F3D0' : currentPitch.status === 'rejected' ? '#FECACA' : currentPitch.status === 'changes_requested' ? '#FDE68A' : '#E2E8F0'}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>Status:</span>
+                <span style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: currentPitch.status === 'selected' ? '#059669' : currentPitch.status === 'rejected' ? '#DC2626' : currentPitch.status === 'changes_requested' ? '#D97706' : '#2563EB'
+                }}>
+                  {currentPitch.status?.replace('_', ' ')}
+                </span>
+              </div>
 
+              {/* Start Review (if submitted/resubmitted) */}
+              {['submitted', 'resubmitted'].includes(currentPitch.status) && (
+                <button
+                  onClick={handleStartReview}
+                  disabled={actionLoading}
+                  className="btn btn-primary"
+                  style={{ width: '100%', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  <Play size={15} /> Start Review
+                </button>
+              )}
+
+              {/* Score Evaluation */}
               <button
-                onClick={() => handleReviewAction('reject')}
-                disabled={actionLoading || currentPitch.status === 'rejected'}
+                onClick={() => setShowEvalModal(true)}
+                disabled={actionLoading}
+                className="btn btn-secondary"
                 style={{
                   width: '100%',
-                  padding: '0.65rem',
                   borderRadius: '10px',
-                  border: '1px solid #FCA5A5',
-                  background: '#FEF2F2',
-                  color: '#DC2626',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  cursor: currentPitch.status === 'rejected' ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  border: '1px solid #CBD5E1',
+                  background: '#FFFFFF',
+                  color: '#0F172A',
+                  fontWeight: 700
                 }}
               >
-                {currentPitch.status === 'rejected' ? 'Rejected' : 'Reject Proposal'}
+                <Award size={15} color="#F59E0B" /> Score Evaluation (/100)
               </button>
+
+              {/* Request Changes */}
+              <button
+                onClick={() => setShowRequestChangesModal(true)}
+                disabled={actionLoading || currentPitch.status === 'selected' || currentPitch.status === 'rejected'}
+                className="btn btn-outline"
+                style={{
+                  width: '100%',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  borderColor: '#F59E0B',
+                  color: '#D97706',
+                  fontWeight: 700
+                }}
+              >
+                <FileEdit size={15} /> Request Changes
+              </button>
+
+              {/* University Coordinator restricted actions */}
+              {(user?.role === 'university_coordinator' || user?.is_staff) && (
+                <>
+                  <div style={{ height: '1px', background: '#E2E8F0', margin: '0.25rem 0' }} />
+
+                  {/* Assign Faculty Mentor */}
+                  <button
+                    onClick={() => setShowAssignMentorModal(true)}
+                    disabled={actionLoading}
+                    className="btn btn-outline"
+                    style={{
+                      width: '100%',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    <UserPlus size={15} /> {currentPitch.assigned_mentor ? 'Reassign Mentor' : 'Assign Faculty Mentor'}
+                  </button>
+
+                  {/* Select as Winner */}
+                  <button
+                    onClick={() => handleReviewAction('select_winner')}
+                    disabled={actionLoading || currentPitch.status === 'selected'}
+                    className="btn btn-blue"
+                    style={{
+                      width: '100%',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      background: '#10B981',
+                      borderColor: '#10B981',
+                      color: '#FFFFFF'
+                    }}
+                  >
+                    <CheckCircle2 size={15} /> {currentPitch.status === 'selected' ? '✓ Selected Winner' : 'Select as Winner'}
+                  </button>
+
+                  {/* Reject */}
+                  <button
+                    onClick={() => handleReviewAction('reject')}
+                    disabled={actionLoading || currentPitch.status === 'rejected'}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem',
+                      borderRadius: '10px',
+                      border: '1px solid #FCA5A5',
+                      background: '#FEF2F2',
+                      color: '#DC2626',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: currentPitch.status === 'rejected' ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <XCircle size={15} /> {currentPitch.status === 'rejected' ? 'Rejected' : 'Reject Proposal'}
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -961,6 +1339,390 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
                   className="btn btn-primary"
                 >
                   {actionLoading ? 'Submitting...' : 'Submit CSR Proposal'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Evaluation Scorecard Modal (Issue 30) */}
+      {showEvalModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '680px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: '2rem',
+              borderRadius: '16px',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  Multi-Criteria Evaluation Scorecard
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0.25rem 0 0 0' }}>
+                  Institutional assessment across 7 standardized criteria (Total 100 points).
+                </p>
+              </div>
+              <div style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '12px',
+                background: '#EFF6FF',
+                border: '1px solid #BFDBFE',
+                textAlign: 'right'
+              }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#1E40AF', display: 'block' }}>TOTAL SCORE</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1D4ED8' }}>
+                  {(parseInt(evalForm.technical_feasibility, 10) || 0) +
+                    (parseInt(evalForm.social_impact, 10) || 0) +
+                    (parseInt(evalForm.cost_feasibility, 10) || 0) +
+                    (parseInt(evalForm.scalability, 10) || 0) +
+                    (parseInt(evalForm.sustainability, 10) || 0) +
+                    (parseInt(evalForm.innovation, 10) || 0) +
+                    (parseInt(evalForm.implementation_readiness, 10) || 0)}
+                  <span style={{ fontSize: '0.85rem', color: '#64748B' }}> / 100</span>
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitEvaluation} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                    <span>Technical Feasibility</span>
+                    <span style={{ color: '#2563EB', fontWeight: 700 }}>{evalForm.technical_feasibility} / 20</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    value={evalForm.technical_feasibility}
+                    onChange={(e) => setEvalForm({ ...evalForm, technical_feasibility: parseInt(e.target.value, 10) })}
+                    style={{ width: '100%', accentColor: '#2563EB' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                    <span>Social Impact</span>
+                    <span style={{ color: '#2563EB', fontWeight: 700 }}>{evalForm.social_impact} / 20</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    value={evalForm.social_impact}
+                    onChange={(e) => setEvalForm({ ...evalForm, social_impact: parseInt(e.target.value, 10) })}
+                    style={{ width: '100%', accentColor: '#2563EB' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                    <span>Cost Feasibility</span>
+                    <span style={{ color: '#2563EB', fontWeight: 700 }}>{evalForm.cost_feasibility} / 15</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="15"
+                    value={evalForm.cost_feasibility}
+                    onChange={(e) => setEvalForm({ ...evalForm, cost_feasibility: parseInt(e.target.value, 10) })}
+                    style={{ width: '100%', accentColor: '#2563EB' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                    <span>Scalability</span>
+                    <span style={{ color: '#2563EB', fontWeight: 700 }}>{evalForm.scalability} / 15</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="15"
+                    value={evalForm.scalability}
+                    onChange={(e) => setEvalForm({ ...evalForm, scalability: parseInt(e.target.value, 10) })}
+                    style={{ width: '100%', accentColor: '#2563EB' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                    <span>Sustainability</span>
+                    <span style={{ color: '#2563EB', fontWeight: 700 }}>{evalForm.sustainability} / 10</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={evalForm.sustainability}
+                    onChange={(e) => setEvalForm({ ...evalForm, sustainability: parseInt(e.target.value, 10) })}
+                    style={{ width: '100%', accentColor: '#2563EB' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                    <span>Innovation & Novelty</span>
+                    <span style={{ color: '#2563EB', fontWeight: 700 }}>{evalForm.innovation} / 10</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={evalForm.innovation}
+                    onChange={(e) => setEvalForm({ ...evalForm, innovation: parseInt(e.target.value, 10) })}
+                    style={{ width: '100%', accentColor: '#2563EB' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                  <span>Implementation Readiness</span>
+                  <span style={{ color: '#2563EB', fontWeight: 700 }}>{evalForm.implementation_readiness} / 10</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={evalForm.implementation_readiness}
+                  onChange={(e) => setEvalForm({ ...evalForm, implementation_readiness: parseInt(e.target.value, 10) })}
+                  style={{ width: '100%', accentColor: '#2563EB' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                  Formal Recommendation
+                </label>
+                <select
+                  value={evalForm.recommendation}
+                  onChange={(e) => setEvalForm({ ...evalForm, recommendation: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                    background: '#FFFFFF',
+                  }}
+                >
+                  <option value="select">Recommend for Selection / Grant</option>
+                  <option value="revise">Request Revisions & Improvements</option>
+                  <option value="reject">Recommend Rejection</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                  Evaluator Feedback & Qualitative Notes
+                </label>
+                <textarea
+                  required
+                  rows="3"
+                  value={evalForm.comments}
+                  onChange={(e) => setEvalForm({ ...evalForm, comments: e.target.value })}
+                  placeholder="Provide technical rationale, strengths, vulnerabilities, or required milestone conditions..."
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEvalModal(false)}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="btn btn-primary"
+                >
+                  {actionLoading ? 'Saving Scorecard...' : 'Submit Evaluation Score'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Request Changes Modal (Issue 27) */}
+      {showRequestChangesModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '520px',
+              width: '100%',
+              padding: '2rem',
+              borderRadius: '16px',
+            }}
+          >
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem' }}>
+              Request Changes / Revisions
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+              Specify the revisions required. The student team will receive this feedback and can submit an updated pitch revision.
+            </p>
+
+            <form onSubmit={handleRequestChanges} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                  Revision Requirements & Feedback
+                </label>
+                <textarea
+                  required
+                  rows="4"
+                  value={requestChangesText}
+                  onChange={(e) => setRequestChangesText(e.target.value)}
+                  placeholder="e.g. Please refine the bill of materials, clarify solar battery storage capacity, and add a risk mitigation plan."
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowRequestChangesModal(false)}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="btn btn-primary"
+                  style={{ background: '#D97706', borderColor: '#D97706' }}
+                >
+                  {actionLoading ? 'Submitting...' : 'Send Revision Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Mentor Modal (Issue 29) */}
+      {showAssignMentorModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '500px',
+              width: '100%',
+              padding: '2rem',
+              borderRadius: '16px',
+            }}
+          >
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem' }}>
+              Assign Faculty Mentor
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+              Assign an accredited faculty mentor from this institution to guide the student team and evaluate deliverables.
+            </p>
+
+            <form onSubmit={handleAssignMentor} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                  Select Faculty Mentor
+                </label>
+                {availableMentors.length === 0 ? (
+                  <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', color: '#64748B' }}>
+                    No faculty mentors found for this institution. Ensure mentors are registered with the faculty mentor role.
+                  </div>
+                ) : (
+                  <select
+                    value={selectedMentorId}
+                    onChange={(e) => setSelectedMentorId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.875rem',
+                      background: '#FFFFFF',
+                    }}
+                  >
+                    <option value="">-- Choose a Faculty Mentor --</option>
+                    {availableMentors.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name || m.username || `User #${m.id}`} ({m.email || m.department || 'Faculty Mentor'})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAssignMentorModal(false)}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading || !selectedMentorId}
+                  className="btn btn-primary"
+                >
+                  {actionLoading ? 'Assigning...' : 'Confirm Assignment'}
                 </button>
               </div>
             </form>

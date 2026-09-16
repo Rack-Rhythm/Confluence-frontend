@@ -59,35 +59,41 @@ export const getViewPath = (role, id) => {
     },
     university_coordinator: {
       dashboard: '/university/dashboard',
+      challenges: '/university/adopted-problems',
+      solutions: '/university/student-pitches',
+      review_board: '/university/review-board',
+      projects: '/university/projects',
+      people: '/university/mentorship',
+      reports: '/university/reports',
+      notifications: '/university/notifications',
+      profile: '/university/profile',
+      settings: '/university/settings',
       problem_pipeline: '/university/problem-pipeline',
       validation: '/university/validation',
       adopted_problems: '/university/adopted-problems',
       open_calls: '/university/open-calls',
       student_pitches: '/university/student-pitches',
-      review_board: '/university/review-board',
-      projects: '/university/projects',
       mentorship: '/university/mentorship',
       analytics: '/university/analytics',
-      reports: '/university/reports',
-      notifications: '/university/notifications',
-      profile: '/university/profile',
-      settings: '/university/settings',
     },
     faculty_mentor: {
       dashboard: '/university/dashboard',
+      challenges: '/university/adopted-problems',
+      solutions: '/university/student-pitches',
+      review_board: '/university/review-board',
+      projects: '/university/projects',
+      people: '/university/mentorship',
+      reports: '/university/reports',
+      notifications: '/university/notifications',
+      profile: '/university/profile',
+      settings: '/university/settings',
       problem_pipeline: '/university/problem-pipeline',
       validation: '/university/validation',
       adopted_problems: '/university/adopted-problems',
       open_calls: '/university/open-calls',
       student_pitches: '/university/student-pitches',
-      review_board: '/university/review-board',
-      projects: '/university/projects',
       mentorship: '/university/mentorship',
       analytics: '/university/analytics',
-      reports: '/university/reports',
-      notifications: '/university/notifications',
-      profile: '/university/profile',
-      settings: '/university/settings',
     },
     gov_admin: {
       dashboard: '/officer/dashboard',
@@ -151,15 +157,16 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
       };
     }
 
-    // 2. Student Dashboard Sidebar
+    // 2. Student Dashboard Sidebar (Section 72)
     if (role === 'student') {
       return {
         main: [
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'explore_problems', label: 'Explore Problems', icon: Compass },
-          { id: 'my_pitches', label: 'My Pitches', icon: Lightbulb },
+          { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+          { id: 'explore_problems', label: 'Challenges', icon: Compass },
+          { id: 'my_pitches', label: 'My Solutions', icon: Lightbulb },
           { id: 'my_projects', label: 'My Projects', icon: Rocket },
           { id: 'opportunities', label: 'Opportunities', icon: Target },
+          { id: 'certificates', label: 'Certificates', icon: GraduationCap },
           { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadNotificationsCount },
           { id: 'profile', label: 'Profile', icon: User },
         ],
@@ -169,24 +176,18 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
       };
     }
 
-    // 3. University Dashboard Sidebar
+    // 3. University Dashboard Sidebar (Section 73)
     if (role === 'university_coordinator' || role === 'faculty_mentor') {
       return {
         main: [
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'problem_pipeline', label: 'Problem Pipeline', icon: Inbox },
-          { id: 'validation', label: 'Validation', icon: CheckCircle },
-          { id: 'adopted_problems', label: 'Adopted Problems', icon: BookmarkCheck },
-          { id: 'open_calls', label: 'Open Calls', icon: Megaphone },
-          { id: 'student_pitches', label: 'Student Pitches', icon: Lightbulb },
-          { id: 'review_board', label: 'Review Board', icon: Scale },
+          { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+          { id: 'challenges', label: 'Challenges', icon: BookmarkCheck },
+          { id: 'solutions', label: 'Solutions', icon: Lightbulb },
           { id: 'projects', label: 'Projects', icon: Rocket },
-          { id: 'mentorship', label: 'Mentorship', icon: Handshake },
-          { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+          { id: 'people', label: 'People', icon: Users },
           { id: 'reports', label: 'Reports', icon: FileSpreadsheet },
           { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadNotificationsCount },
           { id: 'profile', label: 'Profile', icon: User },
-          { id: 'settings', label: 'Settings', icon: Sliders },
         ],
         account: [
           { id: 'logout', label: 'Logout', icon: LogOut, isAction: true },

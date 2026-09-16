@@ -11,6 +11,8 @@ import {
   Building,
   ShieldCheck,
   ThumbsUp,
+  AlertTriangle,
+  XCircle,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
@@ -27,6 +29,12 @@ export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel 
   const [confirmedResolved, setConfirmedResolved] = useState(initialIssue?.citizen_verified_resolved || false);
   const [submittingResolution, setSubmittingResolution] = useState(false);
 
+  // Failed verification state (Issue 37)
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [whatIsStillWrong, setWhatIsStillWrong] = useState('');
+  const [evidenceUrl, setEvidenceUrl] = useState('');
+
   useEffect(() => {
     if (!initialIssue && id) {
       setLoading(true);
@@ -36,7 +44,106 @@ export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel 
           setCurrentIssue(data);
           setConfirmedResolved(data.citizen_verified_resolved || false);
         })
-        .catch((err) => console.error('Failed to load issue by id:', err))
+        .catch((err) => {
+          console.warn('API lookup failed, checking fallback sample issues:', err);
+          const sampleIssues = [
+            {
+              id: 'sample-1',
+              title: 'Severe Potholes on Main Road Causing Accidents',
+              category: 'urban_infra',
+              district: 'Bokaro',
+              address: 'Near City Mall, Main Arterial Road',
+              description:
+                'Large potholes on the main road near City Mall are causing accidents frequently. The road needs urgent repair before the situation worsens.',
+              expected_outcome: 'Smooth road resurfacing and structural repair of asphalt layer.',
+              status: 'submitted',
+              created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              photo_url: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800',
+              latitude: 23.6693,
+              longitude: 86.1511,
+            },
+            {
+              id: 'sample-2',
+              title: 'Garbage Overflowing Near Bus Stand',
+              category: 'water',
+              district: 'Dhanbad',
+              address: 'Central Bus Stand, Station Road',
+              description:
+                'Garbage bins near the bus stand are overflowing for several days, causing a foul smell and creating health hazards for nearby residents.',
+              expected_outcome: 'Prompt waste clearance, segregated dustbins, and daily municipal sanitation sweeps.',
+              status: 'validated',
+              created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+              photo_url: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800',
+              latitude: 23.7957,
+              longitude: 86.4304,
+            },
+            {
+              id: 'sample-3',
+              title: 'Street Lights Not Working in Locality',
+              category: 'public_admin',
+              district: 'Ranchi',
+              address: 'Harmu Housing Colony, Sector 2',
+              description:
+                'Multiple street lights have been non-functional for over a week, making the area unsafe during night hours.',
+              expected_outcome: 'Installation of high-efficiency LED street lights and automated solar sensor switches.',
+              status: 'adopted',
+              created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+              photo_url: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800',
+              latitude: 23.3441,
+              longitude: 85.3096,
+            },
+            {
+              id: 'sample-4',
+              title: 'Waterbody Polluted with Plastic Waste',
+              category: 'environment',
+              district: 'Jamshedpur',
+              address: 'Dimna Lake Catchment Zone',
+              description:
+                'The nearby lake is filled with plastic and other waste, affecting local wildlife and creating an unhealthy environment.',
+              expected_outcome: 'Ecological lake bio-remediation, trash booms, and community plastic disposal kiosks.',
+              status: 'submitted',
+              created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+              photo_url: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800',
+              latitude: 22.8046,
+              longitude: 86.2029,
+            },
+            {
+              id: 'sample-5',
+              title: 'Broken Footpath Creates Difficulty for Pedestrians',
+              category: 'urban_infra',
+              district: 'Ranchi',
+              address: 'Ranchi Junction Outer Approach Road',
+              description:
+                'The footpath near the railway station is damaged, making it difficult for pedestrians, especially senior citizens and divyang individuals.',
+              expected_outcome: 'Tactile paving, ramped curbs, and durable paver block restoration.',
+              status: 'assigned',
+              created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+              photo_url: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800',
+              latitude: 23.356,
+              longitude: 85.324,
+            },
+            {
+              id: 'sample-6',
+              title: 'Bus Stop Needs Shelter Facility',
+              category: 'transport',
+              district: 'Dhanbad',
+              address: 'Bank More Commercial Junction',
+              description:
+                'The bus stop near the market area does not have a shelter. People, especially students and daily commuters, face difficulties during rain and extreme heat.',
+              expected_outcome: 'Modular covered passenger shelter with solar lighting and digital route displays.',
+              status: 'validated',
+              created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+              photo_url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800',
+              latitude: 23.8101,
+              longitude: 86.4412,
+            },
+          ];
+          const match = sampleIssues.find((s) => String(s.id) === String(id));
+          if (match) {
+            setCurrentIssue(match);
+            setConfirmedResolved(false);
+          }
+        })
         .finally(() => setLoading(false));
     } else if (initialIssue) {
       setCurrentIssue(initialIssue);
@@ -74,12 +181,34 @@ export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel 
   const handleConfirmResolution = async (confirmed) => {
     setSubmittingResolution(true);
     try {
-      await issuesAPI.confirmResolution(activeIssue.id, confirmed, resolutionFeedback);
-      setConfirmedResolved(confirmed);
-      showToast(confirmed ? 'Resolution confirmed! Thank you for your feedback.' : 'Feedback recorded.', 'success');
+      if (confirmed) {
+        await issuesAPI.confirmResolution(activeIssue.id, true, {
+          feedback: resolutionFeedback,
+          reason: resolutionFeedback,
+        });
+        setConfirmedResolved(true);
+        showToast('Resolution confirmed! Challenge marked as resolved.', 'success');
+      } else {
+        if (!rejectReason.trim() && !whatIsStillWrong.trim()) {
+          showToast('Please provide a reason explaining what is still wrong.', 'error');
+          setSubmittingResolution(false);
+          return;
+        }
+        await issuesAPI.confirmResolution(activeIssue.id, false, {
+          reason: rejectReason || whatIsStillWrong,
+          what_is_still_wrong: whatIsStillWrong || rejectReason,
+          evidence: evidenceUrl,
+          photo_video_url: evidenceUrl,
+        });
+        setConfirmedResolved(false);
+        setShowRejectForm(false);
+        showToast('Challenge marked as Not Resolved and reopened for team investigation.', 'info');
+      }
+      const refreshed = await issuesAPI.getIssue(activeIssue.id);
+      setCurrentIssue(refreshed);
       if (onRefresh) onRefresh();
     } catch (err) {
-      showToast('Failed to record resolution confirmation.', 'error');
+      showToast(err.response?.data?.error || 'Failed to record resolution confirmation.', 'error');
     } finally {
       setSubmittingResolution(false);
     }
@@ -138,35 +267,44 @@ export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel 
 
       {/* Content Grid: Photos + Quick Info */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.85fr', gap: '1.5rem' }}>
-        {/* Left Column: Photo & Details */}
+        {/* Left Column: Media & Description */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Main Photo Card */}
-          <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+          <div className="card" style={{ padding: '0.75rem', overflow: 'hidden' }}>
             <img
-              src={issue.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800'}
-              alt={issue.title}
-              style={{ width: '100%', height: '340px', objectFit: 'cover' }}
+              src={
+                issue.photo_url ||
+                issue.photo ||
+                'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800'
+              }
+              alt="Issue evidence"
+              style={{
+                width: '100%',
+                maxHeight: '340px',
+                objectFit: 'cover',
+                borderRadius: '12px',
+              }}
             />
           </div>
 
-          {/* Description Section */}
-          <div className="card">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.75rem' }}>
-              Description
+          {/* Detailed Description */}
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.75rem' }}>
+              Problem Statement
             </h3>
-            <p style={{ fontSize: '0.9rem', color: '#334155', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.9rem', color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
               {issue.description}
             </p>
 
             {issue.expected_outcome && (
-              <>
-                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.5rem' }}>
-                  Expected Outcome & Remediation
+              <div style={{ marginTop: '1.25rem', borderTop: '1px solid #F1F5F9', paddingTop: '1rem' }}>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748B', marginBottom: '0.35rem' }}>
+                  EXPECTED CIVIC OUTCOME
                 </h4>
-                <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.875rem', color: '#0F172A', fontWeight: 500 }}>
                   {issue.expected_outcome}
                 </p>
-              </>
+              </div>
             )}
           </div>
 

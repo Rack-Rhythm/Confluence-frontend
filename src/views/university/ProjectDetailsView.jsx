@@ -13,71 +13,185 @@ import {
   Download,
   Plus,
   X,
+  Send,
+  AlertTriangle,
+  ShieldCheck,
+  Award,
+  ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { pitchesAPI } from '../../api/pitches';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 export const ProjectDetailsView = ({ project, onBack }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const [currentProject, setCurrentProject] = useState(project || null);
-  const [loading, setLoading] = useState(!project && !!id);
-  const [activeTab, setActiveTab] = useState('overview'); // overview, milestones, team, resources, reports
-  const [progress, setProgress] = useState(project?.progress || 65);
-  const [milestones, setMilestones] = useState([
-    { id: 1, title: 'Hardware Architecture & Schematic Verification', status: 'completed', date: '10 Aug 2024' },
-    { id: 2, title: 'Sensor Integration & Edge AI Firmware Flashing', status: 'in_progress', date: '25 Aug 2024' },
-    { id: 3, title: 'Field Pilot Testing with Gram Panchayat / District Agronomist', status: 'pending', date: '15 Sep 2024' },
-    { id: 4, title: 'Final Deployment & Public Verification Dashboard Handover', status: 'pending', date: '30 Oct 2024' },
-  ]);
+  const { user } = useAuth();
 
+  const [currentProject, setCurrentProject] = useState(project || null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview'); // overview, milestones, team, resources, reports
+  const [progress, setProgress] = useState(project?.progress || 0);
+  const [milestones, setMilestones] = useState([]);
+
+  // Discussions (Issue 40)
+  const [discussions, setDiscussions] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [loadingDiscussions, setLoadingDiscussions] = useState(false);
+
+  // Modals
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updateNotes, setUpdateNotes] = useState('');
 
-  useEffect(() => {
-    if (!project && id) {
-      setLoading(true);
-      pitchesAPI.getPitch(id)
-        .then((pitchData) => {
-          if (pitchData) {
-            const lc = pitchData.project_lifecycle || {};
-            setCurrentProject({
-              id: pitchData.id,
-              pitchId: pitchData.id,
-              name: pitchData.title,
-              title: pitchData.title,
-              problem: pitchData.issue_details?.title || pitchData.title,
-              university: pitchData.university_details?.name || 'Partner University',
-              mentor: pitchData.assigned_mentor_details?.name || 'Assigned Faculty Mentor',
-              team: pitchData.student_team_details?.map(s => s.name).join(', ') || 'Innovation Team',
-              status: lc.outcome_status || 'In Progress',
-              progress: 65,
-              deliverables: lc.deliverables || 'Prototype and Documentation',
-              ...lc
-            });
-            if (Array.isArray(lc.milestones) && lc.milestones.length > 0) {
-              setMilestones(lc.milestones.map((m, idx) => ({
-                id: m.id || idx + 1,
-                title: m.title || `Milestone ${idx + 1}`,
-                status: m.completed ? 'completed' : 'in_progress',
-                date: m.due_date || 'Upcoming'
-              })));
-            }
-          }
-        })
-        .catch(err => console.error('Failed to load project details:', err))
-        .finally(() => setLoading(false));
-    } else if (project) {
-      setCurrentProject(project);
+  // Milestone Evidence Modal (Students)
+  const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState(false);
+  const [selectedMilestone, setSelectedMilestone] = useState(null);
+  const [evidenceText, setEvidenceText] = useState('');
+  const [submittingEvidence, setSubmittingEvidence] = useState(false);
+
+  // Milestone Review Modal (Mentors)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewFeedback, setReviewFeedback] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Deployment Gate Modal (Students)
+  const [isDeploymentModalOpen, setIsDeploymentModalOpen] = useState(false);
+  const [deploymentEvidenceText, setDeploymentEvidenceText] = useState('');
+  const [submittingDeployment, setSubmittingDeployment] = useState(false);
+
+  // Deployment Approval (Mentors)
+  const [approvingDeployment, setApprovingDeployment] = useState(false);
+
+  const isMentorOrCoordinator =
+    user?.role === 'university_coordinator' ||
+    user?.role === 'faculty_mentor' ||
+    user?.role === 'coordinator' ||
+    user?.role === 'mentor' ||
+    user?.role === 'gov_admin' ||
+    user?.role === 'admin';
+
+  const isStudentOrTeam =
+    user?.role === 'student' ||
+    !user?.role ||
+    user?.role === 'user';
+
+  const loadProjectData = async () => {
+    const targetId = project?.id || id;
+    if (!targetId) {
+      setLoading(false);
+      return;
     }
-  }, [id, project]);
+
+    try {
+      setLoading(true);
+      // Attempt 1: Fetch from real Project endpoint
+      try {
+        const projData = await pitchesAPI.getProject(targetId);
+        if (projData && projData.id) {
+          setCurrentProject(projData);
+          const mls = projData.milestones || [];
+          setMilestones(mls);
+
+          const approvedCount = mls.filter((m) => m.status === 'APPROVED').length;
+          const pct = mls.length > 0 ? Math.round((approvedCount / mls.length) * 100) : 35;
+          setProgress(pct);
+          if (projData.discussions) {
+            setDiscussions(projData.discussions);
+          } else {
+            loadDiscussions(targetId);
+          }
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        // Not a direct Project ID, attempt pitch fetch fallback
+      }
+
+      // Attempt 2: Fetch via Pitch endpoint
+      const pitchData = await pitchesAPI.getPitch(targetId);
+      if (pitchData) {
+        const lc = pitchData.project_lifecycle || {};
+        const fallbackProject = {
+          id: pitchData.id,
+          pitchId: pitchData.id,
+          solution_title: pitchData.title,
+          challenge_title: pitchData.issue_details?.title || pitchData.title,
+          university_name: pitchData.university_details?.name || 'Partner Technical University',
+          mentor_name: pitchData.assigned_mentor_details?.name || 'Assigned Faculty Mentor',
+          team_members_detail: pitchData.student_team_details || [],
+          deployment_status: lc.outcome_status ? lc.outcome_status.toUpperCase().replace(' ', '_') : 'PROTOTYPE',
+          progress: 50,
+          milestones: lc.milestones || [],
+        };
+        setCurrentProject(fallbackProject);
+        setMilestones(
+          (lc.milestones || []).map((m, idx) => ({
+            id: m.id || idx + 1,
+            order: idx + 1,
+            title: m.title || `Milestone ${idx + 1}`,
+            status: m.completed ? 'APPROVED' : 'IN_PROGRESS',
+            due_date: m.due_date || 'Upcoming',
+            evidence: m.evidence || '',
+          }))
+        );
+        loadDiscussions(targetId);
+      }
+    } catch (err) {
+      console.error('Failed to load project details:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDiscussions = async (projId) => {
+    const target = projId || currentProject?.id || id;
+    if (!target) return;
+    try {
+      setLoadingDiscussions(true);
+      const data = await pitchesAPI.getProjectDiscussions(target);
+      if (Array.isArray(data)) {
+        setDiscussions(data);
+      } else if (data && Array.isArray(data.results)) {
+        setDiscussions(data.results);
+      }
+    } catch (err) {
+      console.warn('Could not load discussions:', err);
+    } finally {
+      setLoadingDiscussions(false);
+    }
+  };
+
+  const handlePostDiscussion = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    try {
+      setSubmittingComment(true);
+      const targetId = currentProject?.id || id;
+      const created = await pitchesAPI.postProjectDiscussion(targetId, newComment.trim());
+      setDiscussions((prev) => [created, ...prev]);
+      setNewComment('');
+      addToast('Discussion comment posted!', 'success');
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to post discussion comment.', 'error');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProjectData();
+  }, [id, project?.id]);
 
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem', color: '#64748B' }}>
-        Loading project milestones #{id}...
+        <Clock size={32} className="animate-spin" style={{ margin: '0 auto 1rem auto', color: '#2563EB' }} />
+        <p>Loading project milestones & deployment gate #{project?.id || id}...</p>
       </div>
     );
   }
@@ -85,7 +199,7 @@ export const ProjectDetailsView = ({ project, onBack }) => {
   if (!currentProject) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-        <p style={{ color: '#64748B' }}>No project selected.</p>
+        <p style={{ color: '#64748B' }}>No project record found.</p>
         <button onClick={() => (onBack ? onBack() : navigate(-1))} className="btn btn-outline" style={{ marginTop: '1rem' }}>
           Back to Projects
         </button>
@@ -93,29 +207,116 @@ export const ProjectDetailsView = ({ project, onBack }) => {
     );
   }
 
-  project = currentProject;
+  const title = currentProject.solution_title || currentProject.title || 'Technical Innovation Project';
+  const problemTitle = currentProject.challenge_title || currentProject.problem || title;
+  const universityName = currentProject.university_name || currentProject.university || 'Partner University';
+  const mentorName = currentProject.mentor_name || currentProject.mentor || 'Assigned Faculty Mentor';
+  const teamList = currentProject.team_members_detail?.map((t) => t.name).join(', ') || currentProject.team || 'Student Engineering Team';
+  const deploymentStatus = currentProject.deployment_status || 'CREATED';
 
-  const handleToggleMilestone = (id) => {
-    const updated = milestones.map((m) => {
-      if (m.id === id) {
-        const nextStatus = m.status === 'completed' ? 'in_progress' : m.status === 'in_progress' ? 'completed' : 'in_progress';
-        return { ...m, status: nextStatus };
-      }
-      return m;
-    });
-    setMilestones(updated);
-
-    // Recalculate progress percentage dynamically
-    const completedCount = updated.filter((m) => m.status === 'completed').length;
-    const newProgress = Math.round((completedCount / updated.length) * 100);
-    setProgress(newProgress);
-    addToast('Milestone status updated and project progress synced!', 'success');
+  // --- Handlers ---
+  const handleOpenEvidenceModal = (milestone) => {
+    setSelectedMilestone(milestone);
+    setEvidenceText(milestone.evidence || '');
+    setIsEvidenceModalOpen(true);
   };
 
-  const handleUpdateProgressSubmit = (e) => {
+  const handleSubmitEvidence = async (e) => {
     e.preventDefault();
-    setIsUpdateModalOpen(false);
-    addToast('Project progress log saved successfully!', 'success');
+    if (!evidenceText.trim()) {
+      addToast('Please provide evidence links or documentation notes.', 'error');
+      return;
+    }
+
+    try {
+      setSubmittingEvidence(true);
+      if (currentProject.id && selectedMilestone.id) {
+        await pitchesAPI.updateProjectMilestone(currentProject.id, selectedMilestone.id, {
+          evidence: evidenceText,
+          status: 'SUBMITTED',
+        });
+        addToast('Milestone evidence submitted for mentor review!', 'success');
+        setIsEvidenceModalOpen(false);
+        loadProjectData();
+      }
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to submit milestone evidence.', 'error');
+    } finally {
+      setSubmittingEvidence(false);
+    }
+  };
+
+  const handleOpenReviewModal = (milestone) => {
+    setSelectedMilestone(milestone);
+    setReviewFeedback(milestone.reviewer_feedback || '');
+    setIsReviewModalOpen(true);
+  };
+
+  const handleReviewAction = async (action) => {
+    try {
+      setSubmittingReview(true);
+      await pitchesAPI.reviewProjectMilestone(currentProject.id, selectedMilestone.id, {
+        action,
+        feedback: reviewFeedback,
+      });
+      addToast(
+        action === 'approve'
+          ? 'Milestone approved successfully!'
+          : 'Changes requested from student team.',
+        'success'
+      );
+      setIsReviewModalOpen(false);
+      loadProjectData();
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to review milestone.', 'error');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleSubmitDeployment = async (e) => {
+    e.preventDefault();
+    if (!deploymentEvidenceText.trim()) {
+      addToast('Please provide deployment evidence (links, GitHub release, live telemetry).', 'error');
+      return;
+    }
+
+    try {
+      setSubmittingDeployment(true);
+      await pitchesAPI.submitDeployment(currentProject.id, {
+        deployment_evidence: deploymentEvidenceText,
+      });
+      addToast('Deployment evidence submitted! Awaiting mentor gate verification.', 'success');
+      setIsDeploymentModalOpen(false);
+      loadProjectData();
+    } catch (err) {
+      console.error(err);
+      addToast(err.response?.data?.error || 'Failed to submit deployment evidence.', 'error');
+    } finally {
+      setSubmittingDeployment(false);
+    }
+  };
+
+  const handleApproveDeployment = async () => {
+    if (!window.confirm('Are you sure you want to approve this project for field deployment? This will transition the challenge to citizen verification.')) {
+      return;
+    }
+
+    try {
+      setApprovingDeployment(true);
+      await pitchesAPI.approveDeployment(currentProject.id, {
+        notes: 'Mentor verified pilot deployment deliverables and field testing requirements.',
+      });
+      addToast('Deployment verified & approved! Citizen verification initiated.', 'success');
+      loadProjectData();
+    } catch (err) {
+      console.error(err);
+      addToast(err.response?.data?.error || 'Failed to approve deployment gate.', 'error');
+    } finally {
+      setApprovingDeployment(false);
+    }
   };
 
   const handleDownloadReport = (docName) => {
@@ -123,10 +324,12 @@ export const ProjectDetailsView = ({ project, onBack }) => {
 Engineering Milestone & Progress Artifact
 ------------------------------------------------------
 Artifact: ${docName}
-Project: ${currentProject?.title || 'Technical Innovation Project'}
-University: ${currentProject?.university || 'Partner Technical University'}
-Innovation Team: ${currentProject?.team || 'Student Engineering Team'}
-Status: ${currentProject?.status || 'Active Co-Development'}
+Project: ${title}
+Challenge: ${problemTitle}
+University: ${universityName}
+Faculty Mentor: ${mentorName}
+Innovation Team: ${teamList}
+Deployment Status: ${deploymentStatus}
 Date: ${new Date().toLocaleDateString()}
 
 Verified and timestamped through Confluence Lifecycle Pipeline.
@@ -143,17 +346,34 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
     addToast(`Downloading ${docName}...`, 'success');
   };
 
-  const title = project?.title || project?.executive_summary || 'Drone Crop Monitoring & Yield Optimization';
-  const category = project.category || 'Agriculture';
-  const mentor = project.mentor_name || 'Dr. P. Mishra';
-  const industryPartner = project.industry_partner || 'AgriTech Solutions Pvt. Ltd.';
+  const getStatusBadgeStyle = (st) => {
+    switch (st?.toUpperCase()) {
+      case 'APPROVED':
+      case 'VERIFIED':
+      case 'DEPLOYED':
+        return { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' };
+      case 'SUBMITTED':
+      case 'DEPLOYMENT_READY':
+      case 'AWAITING_CITIZEN_VERIFICATION':
+        return { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' };
+      case 'CHANGES_REQUESTED':
+      case 'REOPENED':
+        return { bg: '#FEF2F2', text: '#DC2626', border: '#FECACA' };
+      case 'IN_PROGRESS':
+      case 'PILOT':
+      case 'PROTOTYPE':
+        return { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' };
+      default:
+        return { bg: '#F8FAFC', text: '#64748B', border: '#E2E8F0' };
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* 1. Header & Back */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <button
-          onClick={onBack}
+          onClick={() => (onBack ? onBack() : navigate(-1))}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -163,36 +383,108 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
             fontSize: '0.875rem',
             background: 'transparent',
             cursor: 'pointer',
+            border: 'none',
           }}
         >
           <ArrowLeft size={16} /> Back to Projects
         </button>
 
-        <span
-          style={{
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            padding: '4px 10px',
-            borderRadius: '999px',
-            background: '#EFF6FF',
-            color: '#2563EB',
-          }}
-        >
-          ● Stage: {project.stage || 'In Development'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              padding: '4px 12px',
+              borderRadius: '999px',
+              background: getStatusBadgeStyle(deploymentStatus).bg,
+              color: getStatusBadgeStyle(deploymentStatus).text,
+              border: `1px solid ${getStatusBadgeStyle(deploymentStatus).border}`,
+            }}
+          >
+            ● State: {deploymentStatus.replace(/_/g, ' ')}
+          </span>
+        </div>
       </div>
 
-      {/* 2. Title */}
+      {/* 2. Deployment Gate Action Banner (Issue 35) */}
+      <div
+        className="card"
+        style={{
+          padding: '1.25rem 1.5rem',
+          borderLeft: `4px solid ${
+            deploymentStatus === 'VERIFIED'
+              ? '#10B981'
+              : deploymentStatus === 'DEPLOYMENT_READY'
+              ? '#F59E0B'
+              : '#2563EB'
+          }`,
+          background: '#FFFFFF',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {deploymentStatus === 'VERIFIED' ? (
+            <CheckCircle2 size={32} color="#10B981" />
+          ) : deploymentStatus === 'AWAITING_CITIZEN_VERIFICATION' ? (
+            <Clock size={32} color="#F59E0B" />
+          ) : (
+            <ShieldCheck size={32} color="#2563EB" />
+          )}
+          <div>
+            <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              Deployment Verification Gate
+            </h4>
+            <p style={{ fontSize: '0.825rem', color: '#64748B', margin: '2px 0 0 0' }}>
+              {deploymentStatus === 'VERIFIED' && 'Citizen verified resolution. Field deployment is fully ratified and resolved.'}
+              {deploymentStatus === 'AWAITING_CITIZEN_VERIFICATION' && 'Mentor approved deployment. Awaiting final citizen confirmation on the public resolution portal.'}
+              {deploymentStatus === 'DEPLOYMENT_READY' && 'Student team submitted deployment evidence. Faculty mentor verification required.'}
+              {deploymentStatus === 'REOPENED' && 'Citizen rejected previous deployment verification. Revisions and re-testing needed.'}
+              {['CREATED', 'PLANNING', 'PROTOTYPE', 'PILOT'].includes(deploymentStatus) && 'In active development. Complete milestones and submit evidence to open the deployment gate.'}
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {/* Student action: Submit deployment evidence */}
+          {!['DEPLOYED', 'AWAITING_CITIZEN_VERIFICATION', 'VERIFIED'].includes(deploymentStatus) && (
+            <button
+              onClick={() => setIsDeploymentModalOpen(true)}
+              className="btn btn-outline btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
+            >
+              <Send size={14} /> Submit Deployment Evidence
+            </button>
+          )}
+
+          {/* Mentor action: Approve deployment gate */}
+          {isMentorOrCoordinator && deploymentStatus === 'DEPLOYMENT_READY' && (
+            <button
+              onClick={handleApproveDeployment}
+              disabled={approvingDeployment}
+              className="btn btn-blue btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
+            >
+              <ShieldCheck size={14} /> {approvingDeployment ? 'Approving...' : 'Approve Deployment Gate'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Title & Subtitle */}
       <div>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A' }}>
           {title}
         </h1>
-        <p style={{ fontSize: '0.85rem', color: '#64748B', marginTop: '2px' }}>
-          University Lab Research to Field Deployment Pipeline
+        <p style={{ fontSize: '0.875rem', color: '#64748B', marginTop: '2px' }}>
+          Challenge: <strong style={{ color: '#334155' }}>{problemTitle}</strong> • {universityName}
         </p>
       </div>
 
-      {/* 3. Navigation Tabs */}
+      {/* 4. Navigation Tabs */}
       <div
         style={{
           display: 'flex',
@@ -203,8 +495,9 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
       >
         {[
           { id: 'overview', label: 'Overview' },
-          { id: 'milestones', label: 'Milestones' },
+          { id: 'milestones', label: `Milestones (${milestones.length})` },
           { id: 'team', label: 'Team' },
+          { id: 'discussions', label: `Discussions (${discussions.length})` },
           { id: 'resources', label: 'Resources' },
           { id: 'reports', label: 'Reports' },
         ].map((tab) => (
@@ -219,6 +512,9 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
               fontSize: '0.9rem',
               background: 'transparent',
               cursor: 'pointer',
+              borderTop: 'none',
+              borderLeft: 'none',
+              borderRight: 'none',
             }}
           >
             {tab.label}
@@ -226,7 +522,7 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
         ))}
       </div>
 
-      {/* 4. Main Body: Left Content + Right Metadata Card */}
+      {/* 5. Main Body: Left Content + Right Metadata Card */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -236,25 +532,10 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
               {/* Media gallery */}
               <div className="card" style={{ padding: '1rem' }}>
                 <img
-                  src={project.photo_url || 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800'}
+                  src={currentProject.photo_url || 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800'}
                   alt="Project Hardware"
-                  style={{ width: '100%', height: '260px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.75rem' }}
+                  style={{ width: '100%', height: '240px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.75rem' }}
                 />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
-                  {[
-                    'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=200',
-                    'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200',
-                    'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=200',
-                    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200',
-                  ].map((img, i) => (
-                    <img
-                      key={i}
-                      src={img}
-                      alt="Thumbnail"
-                      style={{ width: '100%', height: '65px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer' }}
-                    />
-                  ))}
-                </div>
               </div>
 
               {/* Milestones Preview inside Overview */}
@@ -265,115 +546,200 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                   </h3>
                   <button
                     onClick={() => setActiveTab('milestones')}
-                    style={{ fontSize: '0.8rem', fontWeight: 700, color: '#2563EB' }}
+                    style={{ fontSize: '0.8rem', fontWeight: 700, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
-                    View Checklist ➔
+                    View All Milestones ➔
                   </button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {milestones.map((m) => (
-                    <div
-                      key={m.id}
-                      onClick={() => handleToggleMilestone(m.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.75rem 1rem',
-                        background: m.status === 'completed' ? '#F0FDF4' : '#F8FAFC',
-                        borderRadius: '10px',
-                        border: m.status === 'completed' ? '1px solid #A7F3D0' : '1px solid #E2E8F0',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        {m.status === 'completed' ? (
-                          <CheckCircle2 size={20} color="#10B981" />
-                        ) : m.status === 'in_progress' ? (
-                          <Clock size={20} color="#2563EB" />
-                        ) : (
-                          <Circle size={20} color="#94A3B8" />
-                        )}
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A', textDecoration: m.status === 'completed' ? 'line-through' : 'none' }}>
-                          {m.title}
-                        </span>
-                      </div>
+                  {milestones.length === 0 ? (
+                    <p style={{ color: '#94A3B8', fontSize: '0.85rem' }}>No milestones scheduled yet.</p>
+                  ) : (
+                    milestones.slice(0, 4).map((m) => {
+                      const badge = getStatusBadgeStyle(m.status);
+                      return (
+                        <div
+                          key={m.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '0.75rem 1rem',
+                            background: m.status === 'APPROVED' ? '#F0FDF4' : '#F8FAFC',
+                            borderRadius: '10px',
+                            border: `1px solid ${badge.border}`,
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {m.status === 'APPROVED' ? (
+                              <CheckCircle2 size={18} color="#10B981" />
+                            ) : m.status === 'SUBMITTED' ? (
+                              <Clock size={18} color="#D97706" />
+                            ) : (
+                              <Circle size={18} color="#94A3B8" />
+                            )}
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>
+                              {m.title}
+                            </span>
+                          </div>
 
-                      <span
-                        style={{
-                          fontSize: '0.7rem',
-                          fontWeight: 700,
-                          padding: '2px 8px',
-                          borderRadius: '999px',
-                          background: m.status === 'completed' ? '#ECFDF5' : m.status === 'in_progress' ? '#EFF6FF' : '#F1F5F9',
-                          color: m.status === 'completed' ? '#059669' : m.status === 'in_progress' ? '#2563EB' : '#64748B',
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {m.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                  ))}
+                          <span
+                            style={{
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              background: badge.bg,
+                              color: badge.text,
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {m.status.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </>
           )}
 
-          {/* Tab 2: Milestones */}
+          {/* Tab 2: Milestones with Evidence & Review */}
           {activeTab === 'milestones' && (
             <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
-                  Project Milestones & Verification
-                </h3>
-                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Click any milestone to toggle status</span>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    Project Milestones & Verification Workflow
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                    Student teams submit verification evidence; faculty mentors evaluate and approve.
+                  </span>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {milestones.map((m) => (
-                  <div
-                    key={m.id}
-                    onClick={() => handleToggleMilestone(m.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '1rem',
-                      background: m.status === 'completed' ? '#F0FDF4' : '#FFFFFF',
-                      borderRadius: '12px',
-                      border: m.status === 'completed' ? '1px solid #A7F3D0' : '1px solid #E2E8F0',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      {m.status === 'completed' ? (
-                        <CheckCircle2 size={22} color="#10B981" />
-                      ) : m.status === 'in_progress' ? (
-                        <Clock size={22} color="#2563EB" />
-                      ) : (
-                        <Circle size={22} color="#94A3B8" />
-                      )}
-                      <div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{m.title}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Target Date: {m.date}</div>
-                      </div>
-                    </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {milestones.length === 0 ? (
+                  <p style={{ color: '#94A3B8', fontSize: '0.85rem' }}>No milestones created for this project.</p>
+                ) : (
+                  milestones.map((m, idx) => {
+                    const badge = getStatusBadgeStyle(m.status);
+                    return (
+                      <div
+                        key={m.id}
+                        style={{
+                          padding: '1.25rem',
+                          background: m.status === 'APPROVED' ? '#F0FDF4' : '#FFFFFF',
+                          borderRadius: '12px',
+                          border: `1px solid ${badge.border}`,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.75rem',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {m.status === 'APPROVED' ? (
+                              <CheckCircle2 size={22} color="#10B981" />
+                            ) : m.status === 'SUBMITTED' ? (
+                              <Clock size={22} color="#D97706" />
+                            ) : (
+                              <Circle size={22} color="#94A3B8" />
+                            )}
+                            <div>
+                              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
+                                #{m.order || idx + 1}. {m.title}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                                Target Date: {m.due_date || 'Upcoming'}
+                              </div>
+                            </div>
+                          </div>
 
-                    <span
-                      style={{
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        padding: '3px 10px',
-                        borderRadius: '999px',
-                        background: m.status === 'completed' ? '#ECFDF5' : m.status === 'in_progress' ? '#EFF6FF' : '#F1F5F9',
-                        color: m.status === 'completed' ? '#059669' : m.status === 'in_progress' ? '#2563EB' : '#64748B',
-                      }}
-                    >
-                      {m.status.replace('_', ' ').toUpperCase()}
-                    </span>
-                  </div>
-                ))}
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              padding: '3px 10px',
+                              borderRadius: '999px',
+                              background: badge.bg,
+                              color: badge.text,
+                            }}
+                          >
+                            {m.status.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+
+                        {m.description && (
+                          <p style={{ fontSize: '0.825rem', color: '#475569', margin: '0 0 0 2rem' }}>
+                            {m.description}
+                          </p>
+                        )}
+
+                        {m.evidence && (
+                          <div
+                            style={{
+                              marginLeft: '2rem',
+                              padding: '0.65rem 0.85rem',
+                              background: '#F8FAFC',
+                              borderRadius: '8px',
+                              border: '1px solid #E2E8F0',
+                              fontSize: '0.8rem',
+                              color: '#334155',
+                            }}
+                          >
+                            <strong style={{ color: '#0F172A' }}>Submitted Evidence: </strong>
+                            {m.evidence}
+                          </div>
+                        )}
+
+                        {m.reviewer_feedback && (
+                          <div
+                            style={{
+                              marginLeft: '2rem',
+                              padding: '0.65rem 0.85rem',
+                              background: '#FEF2F2',
+                              borderRadius: '8px',
+                              border: '1px solid #FECACA',
+                              fontSize: '0.8rem',
+                              color: '#991B1B',
+                            }}
+                          >
+                            <strong style={{ color: '#7F1D1D' }}>Mentor Review Feedback: </strong>
+                            {m.reviewer_feedback}
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+                          {/* Student submit evidence button */}
+                          {m.status !== 'APPROVED' && (
+                            <button
+                              onClick={() => handleOpenEvidenceModal(m)}
+                              className="btn btn-outline btn-sm"
+                              style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                            >
+                              <Send size={12} /> {m.evidence ? 'Update Evidence' : 'Submit Evidence'}
+                            </button>
+                          )}
+
+                          {/* Mentor review button */}
+                          {isMentorOrCoordinator && (
+                            <button
+                              onClick={() => handleOpenReviewModal(m)}
+                              className="btn btn-blue btn-sm"
+                              style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                            >
+                              <CheckCircle2 size={12} /> Review Milestone
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           )}
@@ -385,18 +751,16 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                 Engineering & Faculty Team
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                {[
-                  { name: 'Priya Sharma', role: 'Student Team Lead', dept: 'Computer Science' },
-                  { name: 'Dr. P. Mishra', role: 'Faculty Mentor', dept: 'Agriculture & Biosystems' },
-                  { name: 'Rohan Kumar', role: 'Robotics & Hardware', dept: 'Mechanical Engineering' },
-                  { name: 'AgriTech Pvt. Ltd.', role: 'Industry Partner & Pilot Site', dept: 'CSR Innovation' },
-                ].map((member, idx) => (
-                  <div key={idx} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{member.name}</div>
-                    <div style={{ fontSize: '0.775rem', color: '#2563EB', fontWeight: 600 }}>{member.role}</div>
-                    <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>{member.dept}</div>
-                  </div>
-                ))}
+                <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{mentorName}</div>
+                  <div style={{ fontSize: '0.775rem', color: '#2563EB', fontWeight: 600 }}>Faculty Mentor</div>
+                  <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>{universityName}</div>
+                </div>
+                <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{teamList}</div>
+                  <div style={{ fontSize: '0.775rem', color: '#059669', fontWeight: 600 }}>Student Engineering Team</div>
+                  <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>Primary Innovators</div>
+                </div>
               </div>
             </div>
           )}
@@ -408,9 +772,9 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                 Assigned Lab Resources & Hardware Grants
               </h3>
               <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                <div style={{ fontWeight: 700, color: '#0F172A' }}>BIT Sindri Robotics & IoT Lab Bench #4</div>
+                <div style={{ fontWeight: 700, color: '#0F172A' }}>{universityName} Engineering Lab Bench</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
-                  Equipment allocated: Drone flight testing rig, multispectral camera, 3D printing quota.
+                  Equipment allocated: Testing rigs, compute quota, and telemetry monitoring hardware.
                 </div>
               </div>
             </div>
@@ -423,8 +787,8 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                 Project Progress & Field Testing Reports
               </h3>
               {[
-                { name: 'Midterm_Evaluation_Report.pdf', size: '3.2 MB', date: '18 Aug 2024' },
-                { name: 'Field_Trial_Telemetry_Dataset.csv', size: '1.8 MB', date: '22 Aug 2024' },
+                { name: 'Milestone_Progress_Summary.pdf', size: '2.4 MB', date: 'Latest' },
+                { name: 'Deployment_Telemetry_Evidence.csv', size: '1.2 MB', date: 'Active' },
               ].map((doc, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -445,6 +809,84 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
               ))}
             </div>
           )}
+
+          {/* Tab 6: Discussions (Issue 40) */}
+          {activeTab === 'discussions' && (
+            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <MessageSquare size={18} color="#2563EB" /> Project Collaboration & Discussions
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                  {discussions.length} comment{discussions.length === 1 ? '' : 's'}
+                </span>
+              </div>
+
+              {/* Form to submit new comment */}
+              <form onSubmit={handlePostDiscussion} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <textarea
+                  rows={3}
+                  required
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Post an engineering update, question for mentor, or coordination note..."
+                  className="input-field"
+                  style={{ width: '100%', borderRadius: '10px', resize: 'vertical' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    type="submit"
+                    disabled={submittingComment || !newComment.trim()}
+                    className="btn btn-blue btn-sm"
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
+                  >
+                    <Send size={14} /> {submittingComment ? 'Posting...' : 'Post Message'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Comments list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.5rem' }}>
+                {loadingDiscussions ? (
+                  <div style={{ textAlign: 'center', padding: '1.5rem', color: '#64748B' }}>
+                    <Clock size={20} className="animate-spin" style={{ margin: '0 auto 0.5rem auto' }} />
+                    Loading discussions...
+                  </div>
+                ) : discussions.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#94A3B8', fontSize: '0.875rem' }}>
+                    No discussion messages posted yet. Start the engineering conversation!
+                  </div>
+                ) : (
+                  discussions.map((c) => (
+                    <div
+                      key={c.id}
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '10px',
+                        background: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>
+                          {c.author_name || c.author_email || 'Collaborator'}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                          {c.created_at ? new Date(c.created_at).toLocaleString() : 'Just now'}
+                        </span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.875rem', color: '#334155', whiteSpace: 'pre-wrap' }}>
+                        {c.content}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Project Metadata Panel */}
@@ -457,37 +899,31 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.825rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748B' }}>Project ID:</span>
-                <span style={{ fontWeight: 700, color: '#0F172A' }}>#0208</span>
+                <span style={{ fontWeight: 700, color: '#0F172A' }}>#{currentProject.id}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Category:</span>
-                <span style={{ fontWeight: 700, color: '#0F172A', textTransform: 'capitalize' }}>{category}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Start Date:</span>
-                <span style={{ fontWeight: 700, color: '#0F172A' }}>01 Aug 2024</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Expected Completion:</span>
-                <span style={{ fontWeight: 700, color: '#0F172A' }}>30 Nov 2024</span>
+                <span style={{ color: '#64748B' }}>Deployment Gate:</span>
+                <span style={{ fontWeight: 700, color: getStatusBadgeStyle(deploymentStatus).text }}>
+                  {deploymentStatus.replace(/_/g, ' ')}
+                </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748B' }}>Faculty Mentor:</span>
-                <span style={{ fontWeight: 700, color: '#2563EB' }}>{mentor}</span>
+                <span style={{ fontWeight: 700, color: '#2563EB' }}>{mentorName}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Industry Partner:</span>
-                <span style={{ fontWeight: 700, color: '#059669' }}>{industryPartner}</span>
+                <span style={{ color: '#64748B' }}>Partner Univ:</span>
+                <span style={{ fontWeight: 700, color: '#059669' }}>{universityName}</span>
               </div>
 
               {/* Progress bar */}
               <div style={{ marginTop: '0.5rem', borderTop: '1px solid #F1F5F9', paddingTop: '0.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontWeight: 700 }}>
-                  <span style={{ color: '#0F172A' }}>Overall Progress</span>
+                  <span style={{ color: '#0F172A' }}>Milestones Completed</span>
                   <span style={{ color: '#2563EB' }}>{progress}%</span>
                 </div>
                 <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '999px', overflow: 'hidden' }}>
-                  <div style={{ width: `${progress}%`, height: '100%', background: '#2563EB', borderRadius: '999px', transition: 'width 0.3s ease' }} />
+                  <div style={{ width: `${progress}%`, height: '100%', background: progress === 100 ? '#10B981' : '#2563EB', borderRadius: '999px', transition: 'width 0.3s ease' }} />
                 </div>
               </div>
             </div>
@@ -497,13 +933,191 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
               className="btn btn-blue"
               style={{ width: '100%', marginTop: '1.25rem', borderRadius: '10px' }}
             >
-              Update Progress
+              Log Progress Note
             </button>
           </div>
         </div>
       </div>
 
-      {/* Update Progress Modal */}
+      {/* Modal 1: Milestone Evidence Submission (Student) */}
+      {isEvidenceModalOpen && selectedMilestone && (
+        <div className="modal-backdrop" onClick={() => setIsEvidenceModalOpen(false)}>
+          <div
+            className="modal-content card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '520px', width: '90%', padding: '2rem', borderRadius: '20px' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                Submit Milestone Evidence
+              </h2>
+              <button
+                onClick={() => setIsEvidenceModalOpen(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748B' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '1rem', background: '#F8FAFC', padding: '0.75rem 1rem', borderRadius: '10px' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>
+                Milestone: {selectedMilestone.title}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                Submit documentation links, prototype GitHub release, or telemetry logs for mentor approval.
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitEvidence} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                  Evidence Details & Links
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={evidenceText}
+                  onChange={(e) => setEvidenceText(e.target.value)}
+                  placeholder="Paste GitHub PR, sensor calibration data, or video demo link..."
+                  className="input-field"
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setIsEvidenceModalOpen(false)} className="btn btn-outline">
+                  Cancel
+                </button>
+                <button type="submit" disabled={submittingEvidence} className="btn btn-blue">
+                  {submittingEvidence ? 'Submitting...' : 'Submit Evidence'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 2: Milestone Review (Mentor) */}
+      {isReviewModalOpen && selectedMilestone && (
+        <div className="modal-backdrop" onClick={() => setIsReviewModalOpen(false)}>
+          <div
+            className="modal-content card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '520px', width: '90%', padding: '2rem', borderRadius: '20px' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                Evaluate Milestone Deliverable
+              </h2>
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748B' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '1rem', background: '#F8FAFC', padding: '0.75rem 1rem', borderRadius: '10px' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>
+                Milestone: {selectedMilestone.title}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#334155', marginTop: '4px' }}>
+                <strong>Evidence: </strong>
+                {selectedMilestone.evidence || 'No evidence text provided yet.'}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                  Mentor Review Feedback / Revision Notes
+                </label>
+                <textarea
+                  rows={3}
+                  value={reviewFeedback}
+                  onChange={(e) => setReviewFeedback(e.target.value)}
+                  placeholder="Enter feedback or revision requirements for the team..."
+                  className="input-field"
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  disabled={submittingReview}
+                  onClick={() => handleReviewAction('request_changes')}
+                  className="btn btn-outline"
+                  style={{ color: '#DC2626', borderColor: '#FECACA' }}
+                >
+                  Request Changes
+                </button>
+                <button
+                  type="button"
+                  disabled={submittingReview}
+                  onClick={() => handleReviewAction('approve')}
+                  className="btn btn-blue"
+                  style={{ background: '#059669', borderColor: '#059669' }}
+                >
+                  Approve Milestone
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 3: Submit Project Deployment Gate Evidence */}
+      {isDeploymentModalOpen && (
+        <div className="modal-backdrop" onClick={() => setIsDeploymentModalOpen(false)}>
+          <div
+            className="modal-content card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '520px', width: '90%', padding: '2rem', borderRadius: '20px' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                Submit Project for Deployment
+              </h2>
+              <button
+                onClick={() => setIsDeploymentModalOpen(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748B' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.825rem', color: '#64748B', marginBottom: '1rem' }}>
+              Under Confluence Deployment Gate rules, student teams submit deployment evidence for faculty mentor verification before public citizen resolution is unlocked.
+            </p>
+
+            <form onSubmit={handleSubmitDeployment} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                  Deployment Evidence & Proof (Required)
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={deploymentEvidenceText}
+                  onChange={(e) => setDeploymentEvidenceText(e.target.value)}
+                  placeholder="Live production URL, telemetry dashboard link, Gram Panchayat test report, or field installation photos..."
+                  className="input-field"
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setIsDeploymentModalOpen(false)} className="btn btn-outline">
+                  Cancel
+                </button>
+                <button type="submit" disabled={submittingDeployment} className="btn btn-blue">
+                  {submittingDeployment ? 'Submitting...' : 'Submit for Gate Review'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Update Progress Notes Modal */}
       {isUpdateModalOpen && (
         <div className="modal-backdrop" onClick={() => setIsUpdateModalOpen(false)}>
           <div
@@ -521,21 +1135,14 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
               </button>
             </div>
 
-            <form onSubmit={handleUpdateProgressSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                  Progress Percentage ({progress}%)
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={progress}
-                  onChange={(e) => setProgress(Number(e.target.value))}
-                  style={{ width: '100%' }}
-                />
-              </div>
-
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setIsUpdateModalOpen(false);
+                addToast('Project progress log saved successfully!', 'success');
+              }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+            >
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
                   Progress Notes / Key Highlights
@@ -554,7 +1161,7 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-blue">
-                  Save Progress
+                  Save Note
                 </button>
               </div>
             </form>

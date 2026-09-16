@@ -25,21 +25,32 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   // Modal State for Schedule Review
+  const [reviewSessions, setReviewSessions] = useState([]);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [scheduleData, setScheduleData] = useState({
     title: 'University Innovation Board Evaluation Round 1',
-    date: '2024-09-20',
+    date: new Date().toISOString().split('T')[0],
     time: '14:00',
     panelists: 'Prof. S. Soren, Dr. P. Mishra, Industry Expert (Tata Steel)',
+    notes: '',
   });
 
   useEffect(() => {
-    const fetchPitches = async () => {
+    const fetchPitchesAndSessions = async () => {
       setLoading(true);
       try {
-        const res = await pitchesAPI.getPitches();
-        const list = Array.isArray(res) ? res : res.results || [];
-        setPitches(list);
+        const [res, sessRes] = await Promise.allSettled([
+          pitchesAPI.getPitches(),
+          pitchesAPI.getReviewSessions(),
+        ]);
+        if (res.status === 'fulfilled') {
+          const list = Array.isArray(res.value) ? res.value : res.value.results || [];
+          setPitches(list);
+        }
+        if (sessRes.status === 'fulfilled') {
+          const sList = Array.isArray(sessRes.value) ? sessRes.value : sessRes.value.results || [];
+          setReviewSessions(sList);
+        }
       } catch (err) {
         console.error('Failed to load review board:', err);
       } finally {
@@ -47,7 +58,7 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
       }
     };
 
-    fetchPitches();
+    fetchPitchesAndSessions();
   }, []);
 
   const pendingPitches = pitches.filter((p) => p.status === 'submitted' || p.status === 'under_review');
@@ -71,10 +82,22 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
     return matchesSearch && matchesCat;
   });
 
-  const handleScheduleSubmit = (e) => {
+  const handleScheduleSubmit = async (e) => {
     e.preventDefault();
-    showToast('Review session scheduled and invitations sent to panel members!', 'success');
-    setIsScheduleOpen(false);
+    try {
+      const scheduledDateTime = `${scheduleData.date}T${scheduleData.time}:00Z`;
+      const res = await pitchesAPI.createReviewSession({
+        title: scheduleData.title,
+        scheduled_at: scheduledDateTime,
+        panelists: scheduleData.panelists,
+        notes: scheduleData.notes || '',
+      });
+      showToast('Review session scheduled and persisted to review board!', 'success');
+      setReviewSessions((prev) => [res, ...prev]);
+      setIsScheduleOpen(false);
+    } catch (err) {
+      showToast(err.response?.data?.error || err.message || 'Failed to schedule review session.', 'error');
+    }
   };
 
   return (
@@ -117,6 +140,7 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
             { id: 'pending', label: 'Pending Review', count: pendingPitches.length },
             { id: 'discussion', label: 'In Discussion', count: discussionPitches.length },
             { id: 'finalized', label: 'Finalized', count: finalizedPitches.length },
+            { id: 'sessions', label: 'Evaluation Sessions', count: reviewSessions.length },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -175,90 +199,170 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
             <option value="water">Water</option>
             <option value="agriculture">Agriculture</option>
             <option value="transport">Transport</option>
-            <option value="environment">Environment</option>
+            <option value="healthcare">Healthcare</option>
           </select>
         </div>
       </div>
 
-      {/* 3. Review Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
-          <thead>
-            <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>
-              <th style={{ padding: '0.85rem 1.25rem' }}>#</th>
-              <th style={{ padding: '0.85rem 1.25rem' }}>Project Title</th>
-              <th style={{ padding: '0.85rem 1.25rem' }}>Student</th>
-              <th style={{ padding: '0.85rem 1.25rem' }}>Review Score</th>
-              <th style={{ padding: '0.85rem 1.25rem' }}>Status</th>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'right' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredList.length === 0 ? (
-              <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-                  No proposals found in this review stage.
-                </td>
+      {/* 3. Review Content or Sessions */}
+      {activeTab === 'sessions' ? (
+        <div className="card" style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              Scheduled Review Board Sessions
+            </h3>
+            <span style={{ fontSize: '0.85rem', color: '#64748B' }}>
+              {reviewSessions.length} total scheduled sessions
+            </span>
+          </div>
+
+          {reviewSessions.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+              <Calendar size={36} color="#94A3B8" style={{ margin: '0 auto 0.75rem auto', display: 'block' }} />
+              <p style={{ fontWeight: 600, margin: 0 }}>No review sessions scheduled yet.</p>
+              <p style={{ fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
+                Use the "+ Schedule Review" button above to organize evaluation panels.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {reviewSessions.map((s) => (
+                <div
+                  key={s.id}
+                  style={{
+                    padding: '1.25rem',
+                    borderRadius: '12px',
+                    border: '1px solid #E2E8F0',
+                    background: '#FFFFFF',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    flexWrap: 'wrap',
+                    gap: '1rem',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        fontSize: '0.725rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        background: s.status === 'completed' ? '#ECFDF5' : s.status === 'in_progress' ? '#FEF3C7' : '#EFF6FF',
+                        color: s.status === 'completed' ? '#059669' : s.status === 'in_progress' ? '#D97706' : '#2563EB',
+                      }}>
+                        {s.status}
+                      </span>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                        {s.title}
+                      </h4>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: '#475569', margin: '0.25rem 0' }}>
+                      <strong>Panel:</strong> {s.panelists || 'All Committee Evaluators'}
+                    </p>
+                    {s.notes && (
+                      <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0.25rem 0' }}>
+                        {s.notes}
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#2563EB', fontWeight: 700, fontSize: '0.9rem' }}>
+                      <Calendar size={15} />
+                      <span>{new Date(s.scheduled_at).toLocaleDateString()}</span>
+                      <Clock size={15} style={{ marginLeft: '4px' }} />
+                      <span>{new Date(s.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                      Organized by {s.created_by_details?.name || 'Review Board'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+            <thead>
+              <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                <th style={{ padding: '0.85rem 1.25rem' }}>#</th>
+                <th style={{ padding: '0.85rem 1.25rem' }}>Project Title</th>
+                <th style={{ padding: '0.85rem 1.25rem' }}>Student</th>
+                <th style={{ padding: '0.85rem 1.25rem' }}>Review Score</th>
+                <th style={{ padding: '0.85rem 1.25rem' }}>Status</th>
+                <th style={{ padding: '0.85rem 1.25rem', textAlign: 'right' }}>Action</th>
               </tr>
-            ) : (
-              filteredList.map((pitch, idx) => {
-                const pitchIdNum = `#038${pitch.id || idx + 1}`;
-                const titleText = pitch.title || pitch.executive_summary || 'AI Traffic Optimization';
-                const authorName = pitch.student_team_details?.[0]?.name || pitch.author?.name || pitch.author_name || 'Rohan Das';
-                const score = 75 + ((pitch.id || idx) * 7) % 24;
+            </thead>
+            <tbody>
+              {filteredList.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                    No proposals found in this review stage.
+                  </td>
+                </tr>
+              ) : (
+                filteredList.map((pitch, idx) => {
+                  const pitchIdNum = `#038${pitch.id || idx + 1}`;
+                  const titleText = pitch.title || pitch.executive_summary || 'AI Traffic Optimization';
+                  const authorName = pitch.student_team_details?.[0]?.name || pitch.author?.name || pitch.author_name || 'Rohan Das';
+                  const score = 75 + ((pitch.id || idx) * 7) % 24;
 
-                return (
-                  <tr
-                    key={pitch.id || idx}
-                    style={{ borderBottom: '1px solid #F1F5F9' }}
-                    className="table-row-hover"
-                  >
-                    <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#64748B' }}>
-                      {pitchIdNum}
-                    </td>
+                  return (
+                    <tr
+                      key={pitch.id || idx}
+                      style={{ borderBottom: '1px solid #F1F5F9' }}
+                      className="table-row-hover"
+                    >
+                      <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#64748B' }}>
+                        {pitchIdNum}
+                      </td>
 
-                    <td style={{ padding: '1rem 1.25rem' }}>
-                      <div style={{ fontWeight: 800, color: '#0F172A' }}>{titleText}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                        {pitch.category ? `Category: ${pitch.category}` : 'Engineering Challenge'}
-                      </div>
-                    </td>
-
-                    <td style={{ padding: '1rem 1.25rem', fontWeight: 600, color: '#334155' }}>
-                      {authorName}
-                    </td>
-
-                    <td style={{ padding: '1rem 1.25rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: 800, color: score >= 80 ? '#10B981' : '#F59E0B' }}>
-                          {score}/100
-                        </span>
-                        <div style={{ width: '50px', height: '6px', background: '#F1F5F9', borderRadius: '999px', overflow: 'hidden' }}>
-                          <div style={{ width: `${score}%`, height: '100%', background: score >= 80 ? '#10B981' : '#F59E0B' }} />
+                      <td style={{ padding: '1rem 1.25rem' }}>
+                        <div style={{ fontWeight: 800, color: '#0F172A' }}>{titleText}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                          {pitch.category ? `Category: ${pitch.category}` : 'Engineering Challenge'}
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td style={{ padding: '1rem 1.25rem' }}>
-                      <StatusBadge status={pitch.status || 'under_review'} />
-                    </td>
+                      <td style={{ padding: '1rem 1.25rem', fontWeight: 600, color: '#334155' }}>
+                        {authorName}
+                      </td>
 
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                      <button
-                        onClick={() => onSelectPitch && onSelectPitch(pitch)}
-                        className="btn btn-blue btn-sm"
-                        style={{ borderRadius: '8px', padding: '4px 12px' }}
-                      >
-                        Review
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      <td style={{ padding: '1rem 1.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: 800, color: score >= 80 ? '#10B981' : '#F59E0B' }}>
+                            {score}/100
+                          </span>
+                          <div style={{ width: '50px', height: '6px', background: '#F1F5F9', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ width: `${score}%`, height: '100%', background: score >= 80 ? '#10B981' : '#F59E0B' }} />
+                          </div>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '1rem 1.25rem' }}>
+                        <StatusBadge status={pitch.status || 'under_review'} />
+                      </td>
+
+                      <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
+                        <button
+                          onClick={() => onSelectPitch && onSelectPitch(pitch)}
+                          className="btn btn-blue btn-sm"
+                          style={{ borderRadius: '8px', padding: '4px 12px' }}
+                        >
+                          Review
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Schedule Review Modal */}
       {isScheduleOpen && (

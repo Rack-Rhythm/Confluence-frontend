@@ -47,4 +47,23 @@ export const authAPI = {
     const response = await apiClient.get(`/users/${id}/`);
     return response.data;
   },
+
+  getUniversityStudents: async (universityId) => {
+    const response = await apiClient.get(`/users/universities/${universityId}/students/`);
+    const data = response.data;
+    return Array.isArray(data) ? data : (data?.results || []);
+  },
+
+  getUniversityMentors: async (universityId) => {
+    const response = await apiClient.get(`/users/universities/${universityId}/mentors/`);
+    const data = response.data;
+    return Array.isArray(data) ? data : (data?.results || []);
+  },
+
+  getUniversityCoordinators: async (universityId) => {
+    const response = await apiClient.get(`/users/universities/${universityId}/coordinators/`);
+    const data = response.data;
+    return Array.isArray(data) ? data : (data?.results || []);
+  },
 };
+

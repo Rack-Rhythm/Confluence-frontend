@@ -85,7 +85,7 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
     <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Back button */}
       <button
-        onClick={onBack}
+        onClick={() => (onBack ? onBack() : navigate(-1))}
         style={{
           display: 'inline-flex',
           alignItems: 'center',

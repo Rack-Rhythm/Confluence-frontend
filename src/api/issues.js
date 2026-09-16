@@ -49,11 +49,67 @@ export const issuesAPI = {
     return response.data;
   },
 
-  confirmResolution: async (id, confirmed, feedback = '') => {
-    const response = await apiClient.post(`/issues/${id}/confirm-resolution/`, {
-      confirmed,
-      feedback,
-    });
+  confirmResolution: async (id, confirmed, details = {}) => {
+    const payload = typeof details === 'string'
+      ? { confirmed, feedback: details, reason: details }
+      : { confirmed, ...details };
+    const response = await apiClient.post(`/issues/${id}/confirm-resolution/`, payload);
+    return response.data;
+  },
+
+  getStatusHistory: async (id) => {
+    const response = await apiClient.get(`/issues/${id}/status-history/`);
+    return response.data;
+  },
+
+  getActionInbox: async () => {
+    const response = await apiClient.get('/issues/action-inbox/');
+    return response.data;
+  },
+
+  getOpenCalls: async (params = {}) => {
+    const response = await apiClient.get('/issues/open-calls/', { params });
+    return response.data;
+  },
+
+  createOpenCall: async (data) => {
+    const response = await apiClient.post('/issues/open-calls/', data);
+    return response.data;
+  },
+
+  getDiscussions: async (issueId, params = {}) => {
+    const response = await apiClient.get(`/issues/${issueId}/discussions/`, { params });
+    return response.data;
+  },
+
+  postDiscussion: async (issueId, data) => {
+    const payload = typeof data === 'string' ? { content: data } : data;
+    const response = await apiClient.post(`/issues/${issueId}/discussions/`, payload);
+    return response.data;
+  },
+
+  getCollaborators: async (issueId) => {
+    const response = await apiClient.get(`/issues/${issueId}/collaborators/`);
+    return response.data;
+  },
+
+  addCollaborator: async (issueId, payload) => {
+    const response = await apiClient.post(`/issues/${issueId}/collaborators/`, payload);
+    return response.data;
+  },
+
+  removeCollaborator: async (issueId, collaboratorId) => {
+    const response = await apiClient.delete(`/issues/${issueId}/collaborators/${collaboratorId}/`);
+    return response.data;
+  },
+
+  getStatusContract: async () => {
+    const response = await apiClient.get('/issues/status-contract/');
+    return response.data;
+  },
+
+  getActivityTimeline: async (issueId, params = {}) => {
+    const response = await apiClient.get(`/issues/${issueId}/activity/`, { params });
     return response.data;
   },
 };
