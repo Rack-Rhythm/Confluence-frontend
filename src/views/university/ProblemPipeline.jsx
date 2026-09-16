@@ -32,7 +32,9 @@ export const ProblemPipeline = ({ onSelectIssue }) => {
       showToast(`Problem #${issueId} ${action}d!`, 'success');
       load();
     } catch (err) {
-      showToast('Action failed.', 'error');
+      console.error('Failed to moderate issue:', err);
+      const msg = err.response?.data?.detail || err.response?.data?.error || 'Action failed.';
+      showToast(msg, 'error');
     }
   };
 

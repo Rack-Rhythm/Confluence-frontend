@@ -184,9 +184,11 @@ function MainApp() {
 
   const handleSelectPitch = (pitch) => {
     if (!pitch) return;
-    setSelectedPitch(pitch);
+    const pitchId = typeof pitch === 'object' ? pitch.id : pitch;
+    const pitchObj = typeof pitch === 'object' ? pitch : { id: pitch };
+    setSelectedPitch(pitchObj);
     const baseRole = getBaseRole(role);
-    navigate(`/${baseRole}/pitches/${pitch.id}`);
+    navigate(`/${baseRole}/pitches/${pitchId}`);
   };
 
   const handleSelectProject = (project) => {

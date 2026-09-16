@@ -72,6 +72,64 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
   const [availableMentors, setAvailableMentors] = useState([]);
   const [selectedMentorId, setSelectedMentorId] = useState('');
 
+  // Resubmit revision state for students (Issue 27 & P0 Issue 7/9)
+  const [showResubmitModal, setShowResubmitModal] = useState(false);
+  const [resubmitForm, setResubmitForm] = useState({
+    title: '',
+    public_summary: '',
+    confidential_package: '',
+    change_summary: '',
+    repository_url: '',
+    demo_url: '',
+    documentation_url: '',
+    video_url: '',
+  });
+
+  const handleOpenResubmit = () => {
+    setResubmitForm({
+      title: currentPitch.title || '',
+      public_summary: currentPitch.public_summary || currentPitch.summary || currentPitch.proposed_solution || '',
+      confidential_package: currentPitch.confidential_package || currentPitch.private_details || '',
+      change_summary: '',
+      repository_url: currentPitch.repository_url || '',
+      demo_url: currentPitch.demo_url || '',
+      documentation_url: currentPitch.documentation_url || '',
+      video_url: currentPitch.video_url || '',
+    });
+    setShowResubmitModal(true);
+  };
+
+  const handleResubmitPitch = async (e) => {
+    e.preventDefault();
+    if (!resubmitForm.change_summary.trim()) {
+      addToast('Please provide a summary of the revisions made.', 'error');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await pitchesAPI.resubmitPitch(currentPitch.id, {
+        title: resubmitForm.title,
+        public_summary: resubmitForm.public_summary,
+        confidential_package: resubmitForm.confidential_package || 'Updated confidential specification package.',
+        change_summary: resubmitForm.change_summary.trim(),
+        repository_url: resubmitForm.repository_url,
+        demo_url: resubmitForm.demo_url,
+        documentation_url: resubmitForm.documentation_url,
+        video_url: resubmitForm.video_url,
+      });
+      addToast(`Revision v${(currentPitch.version || 1) + 1} submitted successfully!`, 'success');
+      setShowResubmitModal(false);
+      fetchPitchAndEngagement();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error('Failed to resubmit pitch:', err);
+      const msg = err.response?.data?.error || err.response?.data?.detail || 'Failed to submit revision.';
+      addToast(msg, 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const fetchPitchAndEngagement = async () => {
     if (!targetId) return;
     try {
@@ -462,6 +520,104 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
           </p>
         </div>
       </div>
+
+      {/* Changes Requested Notification Banner (for Students, Citizens & Reviewers) */}
+      {currentPitch.status === 'changes_requested' && (
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+            border: '1.5px solid #F59E0B',
+            borderRadius: '16px',
+            padding: '1.25rem 1.5rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.1)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem', flex: 1, minWidth: '280px' }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: '#F59E0B',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <AlertTriangle size={22} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#92400E', margin: 0 }}>
+                  Revisions & Changes Requested
+                </h3>
+                <span
+                  style={{
+                    background: '#B45309',
+                    color: '#FFFFFF',
+                    fontSize: '0.675rem',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '999px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Action Required
+                </span>
+              </div>
+              <p style={{ fontSize: '0.875rem', color: '#78350F', margin: 0, lineHeight: 1.5 }}>
+                The University Review Board requested technical revisions on this solution proposal:
+              </p>
+              <div
+                style={{
+                  marginTop: '0.5rem',
+                  background: '#FFFFFF',
+                  padding: '0.85rem 1.15rem',
+                  borderRadius: '10px',
+                  border: '1px solid #FDE68A',
+                  color: '#0F172A',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  lineHeight: 1.55,
+                  whiteSpace: 'pre-line',
+                }}
+              >
+                "{currentPitch.review_feedback || 'Please refine the technical specification, bill of materials, and verification benchmarks as requested.'}"
+              </div>
+            </div>
+          </div>
+
+          {(user?.role === 'student' || isTeamMember) && (
+            <button
+              onClick={handleOpenResubmit}
+              className="btn btn-primary"
+              style={{
+                background: '#D97706',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '0.65rem 1.25rem',
+                fontWeight: 700,
+                fontSize: '0.875rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 3px 10px rgba(217, 119, 6, 0.3)',
+                alignSelf: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <FileEdit size={16} /> Submit Updated Revision (v{(currentPitch.version || 1) + 1})
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 3. Navigation Tabs */}
       <div
@@ -1235,16 +1391,52 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
               )}
             </div>
           ) : (
-            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
-                Pitch Review Status
+            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0 }}>
+                <Clock size={16} color="#3B82F6" /> Pitch Review Status
               </h4>
-              <p style={{ fontSize: '0.825rem', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
-                Status: <strong style={{ color: '#0F172A', textTransform: 'capitalize' }}>{currentPitch.status}</strong>
-              </p>
-              <p style={{ fontSize: '0.825rem', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
-                Under review by university coordinators and faculty evaluation committees.
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Status:</span>
+                <StatusBadge status={currentPitch.status} />
+              </div>
+              
+              {currentPitch.status === 'changes_requested' ? (
+                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '10px', padding: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#B45309', fontWeight: 700, fontSize: '0.825rem' }}>
+                    <AlertTriangle size={15} /> Revision Requested by Evaluators
+                  </div>
+                  <p style={{ fontSize: '0.825rem', color: '#92400E', margin: 0, lineHeight: 1.5, background: '#FEF3C7', padding: '0.5rem 0.65rem', borderRadius: '6px' }}>
+                    {currentPitch.review_feedback || 'Please update your pitch details and submit a new revision.'}
+                  </p>
+                  {(user?.role === 'student' || user?.role === 'citizen' || user?.id === currentPitch.author_id || user?.id === currentPitch.user?.id) && (
+                    <button
+                      onClick={handleOpenResubmit}
+                      className="btn btn-primary"
+                      style={{
+                        background: '#D97706',
+                        borderColor: '#D97706',
+                        color: '#FFFFFF',
+                        fontWeight: 700,
+                        fontSize: '0.825rem',
+                        padding: '0.6rem',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        marginTop: '0.25rem',
+                        width: '100%',
+                      }}
+                    >
+                      <Sparkles size={15} /> Submit Updated Revision
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p style={{ fontSize: '0.825rem', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                  Under review by university coordinators and faculty evaluation committees.
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -1723,6 +1915,190 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
                   className="btn btn-primary"
                 >
                   {actionLoading ? 'Assigning...' : 'Confirm Assignment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Resubmit Pitch Revision Modal */}
+      {showResubmitModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '620px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: '2rem',
+              borderRadius: '16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
+              <div style={{ background: '#FEF3C7', padding: '6px', borderRadius: '8px', color: '#D97706' }}>
+                <Sparkles size={20} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                Submit Pitch Revision (v{(currentPitch.version || 1) + 1})
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+              Address evaluator feedback and submit updated technical materials. A new version record will be created.
+            </p>
+
+            {currentPitch.review_feedback && (
+              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '8px', padding: '0.75rem', marginBottom: '1.25rem', fontSize: '0.825rem', color: '#92400E' }}>
+                <strong>Requested Changes:</strong> {currentPitch.review_feedback}
+              </div>
+            )}
+
+            <form onSubmit={handleResubmitPitch} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                  Summary of Changes Made <span style={{ color: '#DC2626' }}>*</span>
+                </label>
+                <textarea
+                  required
+                  rows="3"
+                  value={resubmitForm.change_summary}
+                  onChange={(e) => setResubmitForm({ ...resubmitForm, change_summary: e.target.value })}
+                  placeholder="Explain how you addressed the review board's feedback (e.g. Added solar storage battery specs and refined prototype budget)..."
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                  Pitch Title
+                </label>
+                <input
+                  type="text"
+                  value={resubmitForm.title}
+                  onChange={(e) => setResubmitForm({ ...resubmitForm, title: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                  Public Summary & Concept
+                </label>
+                <textarea
+                  rows="3"
+                  value={resubmitForm.public_summary}
+                  onChange={(e) => setResubmitForm({ ...resubmitForm, public_summary: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                  Confidential Technical Package & Specs <span style={{ color: '#DC2626' }}>*</span>
+                </label>
+                <textarea
+                  required
+                  rows="4"
+                  value={resubmitForm.confidential_package}
+                  onChange={(e) => setResubmitForm({ ...resubmitForm, confidential_package: e.target.value })}
+                  placeholder="Detailed architectural blueprints, bill of materials, algorithms, firmware details..."
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                    Repository URL
+                  </label>
+                  <input
+                    type="url"
+                    value={resubmitForm.repository_url}
+                    onChange={(e) => setResubmitForm({ ...resubmitForm, repository_url: e.target.value })}
+                    placeholder="https://github.com/..."
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.875rem',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
+                    Live Demo / Simulation URL
+                  </label>
+                  <input
+                    type="url"
+                    value={resubmitForm.demo_url}
+                    onChange={(e) => setResubmitForm({ ...resubmitForm, demo_url: e.target.value })}
+                    placeholder="https://demo..."
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.875rem',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowResubmitModal(false)}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="btn btn-primary"
+                  style={{ background: '#D97706', borderColor: '#D97706' }}
+                >
+                  {actionLoading ? 'Submitting Revision...' : 'Submit Pitch Revision'}
                 </button>
               </div>
             </form>

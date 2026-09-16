@@ -34,7 +34,9 @@ export const ValidationView = ({ onSelectIssue }) => {
       showToast(`Problem #${issueId} validated and approved for university open calls!`, 'success');
       load();
     } catch (err) {
-      showToast('Validation failed.', 'error');
+      console.error('Failed to validate issue:', err);
+      const msg = err.response?.data?.detail || err.response?.data?.error || 'Validation failed.';
+      showToast(msg, 'error');
     }
   };
 
@@ -44,7 +46,9 @@ export const ValidationView = ({ onSelectIssue }) => {
       showToast(`Problem #${issueId} rejected.`, 'info');
       load();
     } catch (err) {
-      showToast('Action failed.', 'error');
+      console.error('Failed to reject issue:', err);
+      const msg = err.response?.data?.detail || err.response?.data?.error || 'Action failed.';
+      showToast(msg, 'error');
     }
   };
 

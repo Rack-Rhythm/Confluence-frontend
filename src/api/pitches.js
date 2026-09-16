@@ -28,8 +28,13 @@ export const pitchesAPI = {
   },
 
   reviewAction: async (pitchId, actionData) => {
-    // action: 'select_winner' | 'merge_pitches' | 'assign_mentor' | 'reject'
+    // action: 'select_winner' | 'merge_pitches' | 'assign_mentor' | 'reject' | 'request_changes' | 'start_review'
     const response = await apiClient.post(`/pitches/${pitchId}/review-action/`, actionData);
+    return response.data;
+  },
+
+  resubmitPitch: async (pitchId, data) => {
+    const response = await apiClient.post(`/pitches/${pitchId}/resubmit/`, data);
     return response.data;
   },
 
