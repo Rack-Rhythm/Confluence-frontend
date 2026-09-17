@@ -1,7 +1,11 @@
-import axios from 'axios';
+// Base API URL (uses VITE_API_BASE_URL env var, or falls back to relative '/api' in dev, or Render backend URL in production)
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? '/api' : 'https://confluence-backend-8334.onrender.com/api');
 
-// Base API URL (relative '/api' uses Vite proxy in dev, or falls back to http://127.0.0.1:8000/api)
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+export const BACKEND_ROOT_URL = API_BASE_URL.endsWith('/api')
+  ? API_BASE_URL.slice(0, -4)
+  : (API_BASE_URL.startsWith('http') ? new URL(API_BASE_URL).origin : '');
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

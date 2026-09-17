@@ -28,3 +28,9 @@ dist-ssr
 !.env.example
 
 *.sw?
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
