@@ -35,6 +35,12 @@ export const DEMO_ACCOUNTS = {
     role: 'gov_admin',
     label: 'Gov Admin (Director HTE)',
   },
+  admin: {
+    email: 'superadmin@confluence.gov.in',
+    password: 'Password@123',
+    role: 'admin',
+    label: 'Master Admin (Full Control)',
+  },
   industry: {
     email: 'csr@tatasteel.com',
     password: 'Password@123',
@@ -46,6 +52,10 @@ export const DEMO_ACCOUNTS = {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user_data');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [impersonatingAdmin, setImpersonatingAdmin] = useState(() => {
+    const saved = localStorage.getItem('original_admin_user');
     return saved ? JSON.parse(saved) : null;
   });
   const [loading, setLoading] = useState(true);
@@ -151,6 +161,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const impersonateUser = (targetUser) => {
+    if (!user) return;
+    if (!impersonatingAdmin) {
+      localStorage.setItem('original_admin_token', localStorage.getItem('access_token') || '');
+      localStorage.setItem('original_admin_user', JSON.stringify(user));
+      setImpersonatingAdmin(user);
+    }
+    setUser(targetUser);
+    localStorage.setItem('user_data', JSON.stringify(targetUser));
+    showToast(`Impersonating ${targetUser.name || targetUser.email} (${targetUser.role}). Full authority active.`, 'info');
+  };
+
+  const stopImpersonating = () => {
+    const original = localStorage.getItem('original_admin_user');
+    const origToken = localStorage.getItem('original_admin_token');
+    if (original) {
+      if (origToken) localStorage.setItem('access_token', origToken);
+      localStorage.setItem('user_data', original);
+      setUser(JSON.parse(original));
+      localStorage.removeItem('original_admin_token');
+      localStorage.removeItem('original_admin_user');
+      setImpersonatingAdmin(null);
+      showToast('Returned to Master Admin Console.', 'success');
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -164,6 +200,10 @@ export const AuthProvider = ({ children }) => {
         logout,
         refreshProfile: loadProfile,
         updateProfile,
+        impersonateUser,
+        stopImpersonating,
+        isImpersonating: !!impersonatingAdmin,
+        originalAdmin: impersonatingAdmin,
       }}
     >
       {children}

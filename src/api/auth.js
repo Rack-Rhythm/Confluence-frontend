@@ -65,5 +65,50 @@ export const authAPI = {
     const data = response.data;
     return Array.isArray(data) ? data : (data?.results || []);
   },
+
+  createUser: async (userData) => {
+    const response = await apiClient.post('/users/', userData);
+    return response.data;
+  },
+
+  updateUser: async (id, data) => {
+    const response = await apiClient.patch(`/users/${id}/`, data);
+    return response.data;
+  },
+
+  deleteUser: async (id) => {
+    const response = await apiClient.delete(`/users/${id}/`);
+    return response.data;
+  },
+
+  createUniversity: async (data) => {
+    const response = await apiClient.post('/auth/universities/', data);
+    return response.data;
+  },
+
+  updateUniversity: async (id, data) => {
+    const response = await apiClient.patch(`/auth/universities/${id}/`, data);
+    return response.data;
+  },
+
+  deleteUniversity: async (id) => {
+    const response = await apiClient.delete(`/auth/universities/${id}/`);
+    return response.data;
+  },
+
+  createOrganization: async (data) => {
+    const response = await apiClient.post('/auth/organizations/', data);
+    return response.data;
+  },
+
+  updateOrganization: async (id, data) => {
+    const response = await apiClient.patch(`/auth/organizations/${id}/`, data);
+    return response.data;
+  },
+
+  deleteOrganization: async (id) => {
+    const response = await apiClient.delete(`/auth/organizations/${id}/`);
+    return response.data;
+  },
 };
 

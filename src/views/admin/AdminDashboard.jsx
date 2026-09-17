@@ -11,6 +11,10 @@ import {
   Cpu,
   Layers,
   CheckCircle2,
+  ListChecks,
+  Lightbulb,
+  Sliders,
+  Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../../api/auth';
@@ -181,13 +185,14 @@ export const AdminDashboard = ({ onNavigate }) => {
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* User Management */}
             <div
               onClick={() => handleNav('/admin/users')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '1.25rem',
+                padding: '1.15rem 1.25rem',
                 borderRadius: '12px',
                 border: '1px solid #E2E8F0',
                 background: '#F8FAFC',
@@ -202,23 +207,88 @@ export const AdminDashboard = ({ onNavigate }) => {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
-                    User & Role Management
+                    User & Impersonation Management
                   </div>
                   <div style={{ fontSize: '0.775rem', color: '#64748B' }}>
-                    Assign government officers, university coordinators, and inspect citizen accounts
+                    1-click Login As any role, assign faculty/officers, reset passwords & permissions
                   </div>
                 </div>
               </div>
               <ArrowRight size={18} color="#94A3B8" />
             </div>
 
+            {/* Problem & Challenge Management */}
+            <div
+              onClick={() => handleNav('/admin/problems')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1.15rem 1.25rem',
+                borderRadius: '12px',
+                border: '1px solid #E2E8F0',
+                background: '#F8FAFC',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              className="btn-glow-hover"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#FFFBEB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706' }}>
+                  <ListChecks size={22} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
+                    Challenges & Force Overrides
+                  </div>
+                  <div style={{ fontSize: '0.775rem', color: '#64748B' }}>
+                    Force university adoption, override lifecycle states, edit parameters, purge records
+                  </div>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94A3B8" />
+            </div>
+
+            {/* Solution Pitches & Confidential IP */}
+            <div
+              onClick={() => handleNav('/admin/pitches')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1.15rem 1.25rem',
+                borderRadius: '12px',
+                border: '1px solid #E2E8F0',
+                background: '#F8FAFC',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              className="btn-glow-hover"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7C3AED' }}>
+                  <Lightbulb size={22} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
+                    Student Solutions & IP Vault
+                  </div>
+                  <div style={{ fontSize: '0.775rem', color: '#64748B' }}>
+                    Inspect unmasked confidential proposals, direct grant awards, repository audit
+                  </div>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94A3B8" />
+            </div>
+
+            {/* Organizations & Universities */}
             <div
               onClick={() => handleNav('/admin/organizations')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '1.25rem',
+                padding: '1.15rem 1.25rem',
                 borderRadius: '12px',
                 border: '1px solid #E2E8F0',
                 background: '#F8FAFC',
@@ -233,23 +303,24 @@ export const AdminDashboard = ({ onNavigate }) => {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
-                    Universities & Industry Organizations
+                    Universities & Industry Accreditation
                   </div>
                   <div style={{ fontSize: '0.775rem', color: '#64748B' }}>
-                    Accredit universities, monitor incubation cells, and onboard CSR foundations
+                    Full CRUD on higher-ed campuses, incubation cells, and corporate CSR partners
                   </div>
                 </div>
               </div>
               <ArrowRight size={18} color="#94A3B8" />
             </div>
 
+            {/* Platform Master Settings */}
             <div
-              onClick={() => handleNav('/admin/system-logs')}
+              onClick={() => handleNav('/admin/settings')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '1.25rem',
+                padding: '1.15rem 1.25rem',
                 borderRadius: '12px',
                 border: '1px solid #E2E8F0',
                 background: '#F8FAFC',
@@ -259,7 +330,39 @@ export const AdminDashboard = ({ onNavigate }) => {
               className="btn-glow-hover"
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444' }}>
+                  <Sliders size={22} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
+                    Platform Master Settings & Policies
+                  </div>
+                  <div style={{ fontSize: '0.775rem', color: '#64748B' }}>
+                    Emergency maintenance lock, AI confidence thresholds, broadcast announcements
+                  </div>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94A3B8" />
+            </div>
+
+            {/* Audit Logs */}
+            <div
+              onClick={() => handleNav('/admin/system-logs')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1.15rem 1.25rem',
+                borderRadius: '12px',
+                border: '1px solid #E2E8F0',
+                background: '#F8FAFC',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              className="btn-glow-hover"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569' }}>
                   <TerminalSquare size={22} />
                 </div>
                 <div>

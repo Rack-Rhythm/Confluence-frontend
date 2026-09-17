@@ -16,6 +16,16 @@ export const pitchesAPI = {
     return response.data;
   },
 
+  updatePitch: async (id, data) => {
+    const response = await apiClient.patch(`/pitches/${id}/`, data);
+    return response.data;
+  },
+
+  deletePitch: async (id) => {
+    const response = await apiClient.delete(`/pitches/${id}/`);
+    return response.data;
+  },
+
   submitFeedback: async (pitchId, feedback_text) => {
     const response = await apiClient.post(`/pitches/${pitchId}/feedback/`, { feedback_text });
     return response.data;

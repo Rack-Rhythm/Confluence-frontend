@@ -23,6 +23,16 @@ export const issuesAPI = {
     return response.data;
   },
 
+  deleteIssue: async (id) => {
+    const response = await apiClient.delete(`/issues/${id}/`);
+    return response.data;
+  },
+
+  forceAdoptIssue: async (id, universityId) => {
+    const response = await apiClient.post(`/issues/${id}/force-adopt/`, { university_id: universityId });
+    return response.data;
+  },
+
   moderateIssue: async (id, actionData) => {
     // action: 'validate' | 'reject' | 'mark_duplicate', optional category, duplicate_of_id
     const response = await apiClient.post(`/issues/${id}/moderate/`, actionData);

@@ -3,7 +3,7 @@ import { Search, Bell, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }) => {
-  const { user, role } = useAuth();
+  const { user, role, isImpersonating, stopImpersonating } = useAuth();
 
   const getSearchPlaceholder = () => {
     switch (role) {
@@ -49,7 +49,41 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }
       </div>
 
       {/* Right User & Alert Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {isImpersonating && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '0.35rem 0.85rem',
+              background: '#FEF3C7',
+              border: '1px solid #FDE68A',
+              borderRadius: '999px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: '#92400E',
+            }}
+          >
+            <span>🎭 Acting as {user?.name || user?.email}</span>
+            <button
+              onClick={stopImpersonating}
+              style={{
+                background: '#D97706',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '2px 8px',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Exit to Master Admin
+            </button>
+          </div>
+        )}
+
         {/* Notification Bell */}
         <button
           onClick={() => onNavigate('notifications')}

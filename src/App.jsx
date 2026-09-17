@@ -73,6 +73,9 @@ import { AdminDashboard } from './views/admin/AdminDashboard';
 import { UserManagement } from './views/admin/UserManagement';
 import { OrganizationsManagement } from './views/admin/OrganizationsManagement';
 import { SystemLogsView } from './views/admin/SystemLogsView';
+import { AdminProblemsView } from './views/admin/AdminProblemsView';
+import { AdminPitchesView } from './views/admin/AdminPitchesView';
+import { AdminSettingsView } from './views/admin/AdminSettingsView';
 
 // Industry views
 import { IndustryDashboard } from './views/industry/IndustryDashboard';
@@ -461,11 +464,13 @@ function MainApp() {
                   />
                   <Route path="/admin/users" element={<UserManagement />} />
                   <Route path="/admin/organizations" element={<OrganizationsManagement />} />
-                  <Route path="/admin/problems" element={<IssuesOverview onSelectIssue={handleSelectIssue} />} />
+                  <Route path="/admin/problems" element={<AdminProblemsView />} />
+                  <Route path="/admin/pitches" element={<AdminPitchesView />} />
                   <Route path="/admin/projects" element={<ProjectsOverview />} />
                   <Route path="/admin/analytics" element={<ImpactAnalytics />} />
                   <Route path="/admin/reports" element={<ReportsDocuments />} />
                   <Route path="/admin/system-logs" element={<SystemLogsView />} />
+                  <Route path="/admin/settings" element={<AdminSettingsView />} />
                   <Route path="/admin/notifications" element={<NotificationsView />} />
                   <Route path="/admin/profile" element={<ProfileView />} />
                 </Route>
