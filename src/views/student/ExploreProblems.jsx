@@ -2,21 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, Compass, MapPin, Eye, MessageSquare, ArrowRight, Lightbulb } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
 import { IssueCard } from '../../components/common/IssueCard';
+import { useAuth } from '../../context/AuthContext';
 
 export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) => {
+  const { user } = useAuth();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [districtFilter, setDistrictFilter] = useState('all');
+  const [adoptionFilter, setAdoptionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await issuesAPI.getIssues({ status__in: 'validated,adopted' });
+        const res = await issuesAPI.getIssues();
         const raw = Array.isArray(res) ? res : res.results || [];
-        setIssues(raw.filter((i) => ['validated', 'adopted'].includes(i.status)));
+        // Show active challenges (exclude terminal rejected/duplicate/resolved from initial explore)
+        setIssues(raw.filter((i) => !['rejected', 'duplicate', 'resolved'].includes(i.status)));
       } catch (err) {
         console.error('Failed to load problems:', err);
       } finally {
@@ -27,15 +31,30 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
   }, []);
 
   const districts = Array.from(new Set(issues.map((i) => i.district).filter(Boolean)));
+  const userUniId = user?.university_id || user?.university?.id;
 
   const filtered = issues.filter((issue) => {
+    const isAdoptedByMyUni = issue.is_adopted_by_user_university || (
+      (issue.status === 'adopted' || issue.status === 'open') && (
+        issue.adoption?.university === userUniId ||
+        issue.adoption_details?.university === userUniId ||
+        issue.adoption_details?.university_details?.id === userUniId ||
+        issue.maintaining_university === userUniId ||
+        issue.maintaining_university_details?.id === userUniId
+      )
+    );
+
     const matchesCat = categoryFilter === 'all' || issue.category === categoryFilter;
     const matchesDist = districtFilter === 'all' || issue.district === districtFilter;
+    const matchesAdoption =
+      adoptionFilter === 'all' ||
+      (adoptionFilter === 'pitchable' && isAdoptedByMyUni) ||
+      (adoptionFilter === 'nominate' && !isAdoptedByMyUni);
     const matchesSearch =
       !searchQuery ||
       issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       issue.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesDist && matchesSearch;
+    return matchesCat && matchesDist && matchesAdoption && matchesSearch;
   });
 
   return (
@@ -76,6 +95,17 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <select
+            className="form-select"
+            value={adoptionFilter}
+            onChange={(e) => setAdoptionFilter(e.target.value)}
+            style={{ width: '190px', padding: '0.45rem 0.75rem', fontSize: '0.825rem', fontWeight: 600, color: '#1E293B', borderColor: '#CBD5E1' }}
+          >
+            <option value="all">All Adoption States</option>
+            <option value="pitchable">🔓 Open for Pitches (My Uni)</option>
+            <option value="nominate">🏛️ Needs Adoption (Nominate)</option>
+          </select>
+
           <select
             className="form-select"
             value={categoryFilter}

@@ -14,11 +14,13 @@ import {
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { useParams, useNavigate } from 'react-router-dom';
 import { issuesAPI } from '../../api/issues';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [currentProblem, setCurrentProblem] = useState(problem || null);
   const [loading, setLoading] = useState(!problem && !!id);
@@ -26,6 +28,13 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
   const [nominationRationale, setNominationRationale] = useState('');
   const [showNominateModal, setShowNominateModal] = useState(false);
   const [nominating, setNominating] = useState(false);
+  const [userNomination, setUserNomination] = useState(problem?.user_nomination || null);
+
+  useEffect(() => {
+    if (currentProblem?.user_nomination) {
+      setUserNomination(currentProblem.user_nomination);
+    }
+  }, [currentProblem]);
 
   useEffect(() => {
     if (problem && (!id || String(problem.id) === String(id))) {
@@ -73,11 +82,12 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
     e.preventDefault();
     setNominating(true);
     try {
-      await issuesAPI.nominateIssue(problem.id, nominationRationale);
+      const res = await issuesAPI.nominateIssue(problem.id, nominationRationale);
       showToast('Issue nominated for your university review board!', 'success');
+      setUserNomination(res);
       setShowNominateModal(false);
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Failed to nominate issue. You may have already nominated it.';
+      const msg = err.response?.data?.error || err.response?.data?.detail || 'Failed to nominate issue. You may have already nominated it.';
       showToast(msg, 'error');
     } finally {
       setNominating(false);
@@ -257,23 +267,129 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
             </div>
 
             {/* CTAs */}
-            <div style={{ marginTop: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button
-                onClick={() => onSubmitPitch(problem)}
-                className="btn btn-blue btn-lg"
-                style={{ width: '100%', borderRadius: '10px' }}
-              >
-                <Lightbulb size={18} /> Submit a Solution / Pitch
-              </button>
+            {(() => {
+              const userUniId = user?.university_id || user?.university?.id;
+              const isAdoptedByMyUni = problem?.is_adopted_by_user_university ?? (
+                (problem?.status === 'adopted' || problem?.status === 'open') &&
+                (problem?.adoption_details?.university === userUniId ||
+                 problem?.adoption_details?.university_details?.id === userUniId ||
+                 problem?.adoption?.university === userUniId ||
+                 problem?.adoption?.university_id === userUniId ||
+                 problem?.maintaining_university === userUniId ||
+                 problem?.maintaining_university_details?.id === userUniId)
+              );
+              const isAdoptedByOtherUni = (problem?.status === 'adopted' || problem?.status === 'open') && !isAdoptedByMyUni && (problem?.adoption_details || problem?.adoption);
 
-              <button
-                onClick={() => setShowNominateModal(true)}
-                className="btn btn-outline"
-                style={{ width: '100%', borderRadius: '10px' }}
-              >
-                <Building2 size={16} /> Nominate for My University
-              </button>
-            </div>
+              return (
+                <div style={{ marginTop: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {isAdoptedByMyUni ? (
+                    <>
+                      <div
+                        style={{
+                          padding: '0.75rem 1rem',
+                          borderRadius: '10px',
+                          background: '#ECFDF5',
+                          border: '1px solid #A7F3D0',
+                          color: '#065F46',
+                          fontSize: '0.8rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <CheckCircle2 size={16} color="#059669" />
+                        <span>Adopted by your university — Open Call Active. Technical pitch submissions are open!</span>
+                      </div>
+
+                      <button
+                        onClick={() => onSubmitPitch(problem)}
+                        className="btn btn-blue btn-lg"
+                        style={{ width: '100%', borderRadius: '10px' }}
+                      >
+                        <Lightbulb size={18} /> Submit a Solution / Pitch
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Lock Warning Notice */}
+                      <div
+                        style={{
+                          padding: '0.85rem 1rem',
+                          borderRadius: '12px',
+                          background: '#FFFBEB',
+                          border: '1px solid #FDE68A',
+                          color: '#92400E',
+                          fontSize: '0.8rem',
+                          lineHeight: 1.5,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#B45309' }}>
+                          <Lock size={15} /> Pitching Locked (University Adoption Required)
+                        </div>
+                        <div style={{ fontSize: '0.775rem', color: '#78350F' }}>
+                          {isAdoptedByOtherUni
+                            ? `This challenge has been adopted by another university (${problem.adoption_details?.university_details?.name || 'Partner Institution'}).`
+                            : 'Under the National Civic Innovation Framework, students cannot write pitches until this challenge is officially adopted by their university.'}
+                        </div>
+                      </div>
+
+                      {/* Disabled Pitch Button */}
+                      <button
+                        disabled
+                        className="btn btn-outline"
+                        style={{
+                          width: '100%',
+                          borderRadius: '10px',
+                          opacity: 0.6,
+                          cursor: 'not-allowed',
+                          background: '#F8FAFC',
+                          color: '#94A3B8',
+                          borderColor: '#CBD5E1',
+                        }}
+                        title="Adoption required before drafting solution pitches"
+                      >
+                        <Lock size={16} /> Submit a Solution / Pitch (Locked)
+                      </button>
+
+                      {/* Nomination Action */}
+                      {!isAdoptedByOtherUni && (
+                        userNomination ? (
+                          <div
+                            style={{
+                              padding: '0.75rem 1rem',
+                              borderRadius: '10px',
+                              background: '#EFF6FF',
+                              border: '1px solid #BFDBFE',
+                              color: '#1E40AF',
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                            }}
+                          >
+                            <CheckCircle2 size={16} color="#2563EB" />
+                            <span>Nominated for your University Review ({userNomination.status || 'Pending'})</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setShowNominateModal(true)}
+                            className="btn btn-primary"
+                            style={{ width: '100%', borderRadius: '10px' }}
+                          >
+                            <Building2 size={16} /> Nominate for My University Adoption
+                          </button>
+                        )
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

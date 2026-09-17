@@ -35,6 +35,15 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
   const [documentationUrl, setDocumentationUrl] = useState('');
   const [teamEmails, setTeamEmails] = useState('student2@bitsindri.ac.in');
   const [loading, setLoading] = useState(false);
+  const [nominationRationale, setNominationRationale] = useState('');
+  const [nominating, setNominating] = useState(false);
+  const [hasNominated, setHasNominated] = useState(Boolean(selectedProblem?.user_nomination));
+
+  useEffect(() => {
+    if (problem?.user_nomination) {
+      setHasNominated(true);
+    }
+  }, [problem]);
 
   useEffect(() => {
     const univId = user?.university_id || user?.university?.id;
@@ -49,29 +58,40 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
   }, [user]);
 
   useEffect(() => {
+    const userUniId = user?.university_id || user?.university?.id;
     if (!selectedProblem && problemId) {
       issuesAPI.getIssue(problemId)
         .then((data) => {
           setProblem(data);
           if (data.category) setCategory(data.category);
+          if (data.user_nomination) setHasNominated(true);
         })
         .catch((err) => console.error('Failed to load problem for pitch:', err));
     } else if (selectedProblem) {
       setProblem(selectedProblem);
       if (selectedProblem.category) setCategory(selectedProblem.category);
+      if (selectedProblem.user_nomination) setHasNominated(true);
     } else {
       issuesAPI.getIssues({ status: 'adopted,assigned' })
         .then((res) => {
           const list = Array.isArray(res) ? res : res.results || [];
-          setAdoptedList(list);
-          if (list.length > 0) {
-            setProblem(list[0]);
-            if (list[0].category) setCategory(list[0].category);
+          const myUniAdopted = list.filter((p) =>
+            p.is_adopted_by_user_university ||
+            p.adoption?.university === userUniId ||
+            p.adoption_details?.university === userUniId ||
+            p.adoption_details?.university_details?.id === userUniId ||
+            p.maintaining_university === userUniId ||
+            p.maintaining_university_details?.id === userUniId
+          );
+          setAdoptedList(myUniAdopted);
+          if (myUniAdopted.length > 0) {
+            setProblem(myUniAdopted[0]);
+            if (myUniAdopted[0].category) setCategory(myUniAdopted[0].category);
           }
         })
         .catch((err) => console.error('Failed to load adopted problems for pitch:', err));
     }
-  }, [problemId, selectedProblem]);
+  }, [problemId, selectedProblem, user]);
 
   const enteredEmails = teamEmails
     .split(/[,;\s]+/)
@@ -121,6 +141,160 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
       setLoading(false);
     }
   };
+
+  const handleNominateDirect = async () => {
+    if (!problem?.id) return;
+    setNominating(true);
+    try {
+      await issuesAPI.nominateIssue(problem.id, nominationRationale);
+      showToast('Challenge nominated for your university coordinator to adopt!', 'success');
+      setHasNominated(true);
+    } catch (err) {
+      const msg = err.response?.data?.error || err.response?.data?.detail || 'Failed to nominate challenge.';
+      showToast(msg, 'error');
+    } finally {
+      setNominating(false);
+    }
+  };
+
+  const userUniId = user?.university_id || user?.university?.id;
+  const isAdoptedByMyUni = problem ? Boolean(
+    problem.is_adopted_by_user_university || (
+      (problem.status === 'adopted' || problem.status === 'open') && (
+        problem.adoption?.university === userUniId ||
+        problem.adoption?.university_id === userUniId ||
+        problem.adoption_details?.university === userUniId ||
+        problem.adoption_details?.university_details?.id === userUniId ||
+        problem.maintaining_university === userUniId ||
+        problem.maintaining_university_details?.id === userUniId
+      )
+    )
+  ) : false;
+
+  if (problem && !isAdoptedByMyUni) {
+    return (
+      <div style={{ maxWidth: '780px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <button
+          onClick={onBack}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: '#2563EB',
+            width: 'fit-content',
+          }}
+        >
+          <ArrowLeft size={16} /> Back to Explore
+        </button>
+
+        <div className="card" style={{ padding: '2.5rem', textAlign: 'center' }}>
+          <div
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: '#FEF3C7',
+              color: '#D97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem',
+            }}
+          >
+            <Lock size={28} />
+          </div>
+
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>
+            Pitching Locked: University Adoption Required
+          </h2>
+          <p style={{ fontSize: '0.9rem', color: '#64748B', maxWidth: '560px', margin: '0 auto 1.5rem', lineHeight: 1.6 }}>
+            Under the National Civic Innovation Framework, students cannot write or submit solution pitches for challenges that have not been officially adopted by their university.
+          </p>
+
+          <div
+            style={{
+              background: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: '12px',
+              padding: '1.25rem',
+              textAlign: 'left',
+              maxWidth: '560px',
+              margin: '0 auto 1.75rem',
+            }}
+          >
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', marginBottom: '4px' }}>
+              Target Challenge #{problem.id}
+            </div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>
+              {problem.title}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
+              📍 {problem.district} • Status: <strong style={{ textTransform: 'capitalize' }}>{problem.status?.replace(/_/g, ' ')}</strong>
+            </div>
+          </div>
+
+          {hasNominated ? (
+            <div
+              style={{
+                maxWidth: '560px',
+                margin: '0 auto',
+                padding: '1rem',
+                borderRadius: '10px',
+                background: '#EFF6FF',
+                border: '1px solid #BFDBFE',
+                color: '#1E40AF',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <CheckCircle2 size={18} color="#2563EB" />
+              <span>You have already nominated this challenge. Your university coordinator review is pending!</span>
+            </div>
+          ) : (
+            <div style={{ maxWidth: '560px', margin: '0 auto', textAlign: 'left' }}>
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 700 }}>
+                  Nominate this challenge for your University to adopt:
+                </label>
+                <textarea
+                  className="form-textarea"
+                  rows={3}
+                  placeholder="Explain briefly why your university has the lab resources, mentors, or student talent to tackle this issue..."
+                  value={nominationRationale}
+                  onChange={(e) => setNominationRationale(e.target.value)}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="btn btn-outline"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNominateDirect}
+                  disabled={nominating}
+                  className="btn btn-primary"
+                  style={{ flex: 2 }}
+                >
+                  {nominating ? 'Submitting Nomination...' : 'Nominate for My University'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '820px', margin: '0 auto' }}>
