@@ -177,7 +177,7 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
                 }}
               >
                 <img
-                  src={issue.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=200'}
+                  src={issue.photo_url || issue.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=200'}
                   alt={issue.title}
                   style={{ width: '60px', height: '60px', borderRadius: '10px', objectFit: 'cover' }}
                 />

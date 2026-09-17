@@ -170,7 +170,7 @@ export const IssuesOverview = ({ onSelectIssue }) => {
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <img
-                          src={issue.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=100'}
+                          src={issue.photo_url || issue.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=100'}
                           alt={issue.title}
                           style={{ width: '38px', height: '38px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
                         />

@@ -125,7 +125,7 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
           {/* Main Photo */}
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <img
-              src={problem.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800'}
+              src={problem.photo_url || problem.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800'}
               alt={problem.title}
               style={{ width: '100%', height: '320px', objectFit: 'cover' }}
             />

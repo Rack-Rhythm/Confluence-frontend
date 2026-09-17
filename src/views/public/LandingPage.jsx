@@ -545,7 +545,7 @@ export const LandingPage = ({
                   }}
                 >
                   <img
-                    src={issue.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=500'}
+                    src={issue.photo_url || issue.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=500'}
                     alt={issue.title}
                     style={{ width: '100%', height: '170px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.85rem' }}
                   />

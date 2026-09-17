@@ -552,9 +552,9 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       overflow: 'hidden',
                     }}
                   >
-                    {issue.photo_url ? (
+                    {issue.photo_url || issue.photo ? (
                       <img
-                        src={issue.photo_url}
+                        src={issue.photo_url || issue.photo}
                         alt={issue.title}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />

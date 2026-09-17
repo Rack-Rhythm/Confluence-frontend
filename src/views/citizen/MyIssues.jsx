@@ -173,7 +173,7 @@ export const MyIssues = ({ onNavigate, onSelectIssue }) => {
               }}
             >
               <img
-                src={issue.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=300'}
+                src={issue.photo_url || issue.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=300'}
                 alt={issue.title}
                 style={{
                   width: '90px',

@@ -12,7 +12,8 @@ export const issuesAPI = {
   },
 
   createIssue: async (data, isFormData = false) => {
-    const config = isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+    const isFD = isFormData || (typeof FormData !== 'undefined' && data instanceof FormData);
+    const config = isFD ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
     const response = await apiClient.post('/issues/', data, config);
     return response.data;
   },
