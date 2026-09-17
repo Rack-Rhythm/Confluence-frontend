@@ -7,6 +7,7 @@ import {
   useNavigate,
   useLocation,
   useParams,
+  Outlet,
 } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -87,6 +88,18 @@ export const getBaseRole = (r) => {
   if (r === 'citizen') return 'citizen';
   if (r === 'admin') return 'admin';
   return r || 'citizen';
+};
+
+export const ProtectedRoute = ({ allowedRoles, children }) => {
+  const { user, role, isAuthenticated } = useAuth();
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/" replace />;
+  }
+  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(role)) {
+    const base = getBaseRole(role);
+    return <Navigate to={`/${base}/dashboard`} replace />;
+  }
+  return children ? children : <Outlet />;
 };
 
 // Universal Deep-Link Routers (Section 44 & 56, Issues 44 & 56)
@@ -281,169 +294,181 @@ function MainApp() {
                 <Route path="/projects/:id" element={<UniversalProjectRoute />} />
 
                 {/* 1. Citizen Routes */}
-                <Route path="/citizen" element={<Navigate to="/citizen/dashboard" replace />} />
-                <Route
-                  path="/citizen/dashboard"
-                  element={<CitizenDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
-                />
-                <Route
-                  path="/citizen/report"
-                  element={<ReportIssue onBack={() => navigate('/citizen/dashboard')} onSuccess={() => navigate('/citizen/my-issues')} />}
-                />
-                <Route
-                  path="/citizen/my-issues"
-                  element={<MyIssues onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
-                />
-                <Route
-                  path="/citizen/issues/:id"
-                  element={<IssueDetail issue={selectedIssue} backLabel="Back to My Issues" onBack={() => navigate('/citizen/my-issues')} onRefresh={() => {}} />}
-                />
-                <Route path="/citizen/notifications" element={<NotificationsView />} />
-                <Route path="/citizen/profile" element={<ProfileView />} />
-                <Route path="/citizen/settings" element={<SettingsView />} />
-                <Route path="/citizen/my-feedback" element={<MyFeedbackView />} />
-                <Route path="/citizen/feedback" element={<Navigate to="/citizen/my-feedback" replace />} />
+                <Route element={<ProtectedRoute allowedRoles={['citizen', 'gov_admin']} />}>
+                  <Route path="/citizen" element={<Navigate to="/citizen/dashboard" replace />} />
+                  <Route
+                    path="/citizen/dashboard"
+                    element={<CitizenDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
+                  />
+                  <Route
+                    path="/citizen/report"
+                    element={<ReportIssue onBack={() => navigate('/citizen/dashboard')} onSuccess={() => navigate('/citizen/my-issues')} />}
+                  />
+                  <Route
+                    path="/citizen/my-issues"
+                    element={<MyIssues onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
+                  />
+                  <Route
+                    path="/citizen/issues/:id"
+                    element={<IssueDetail issue={selectedIssue} backLabel="Back to My Issues" onBack={() => navigate('/citizen/my-issues')} onRefresh={() => {}} />}
+                  />
+                  <Route path="/citizen/notifications" element={<NotificationsView />} />
+                  <Route path="/citizen/profile" element={<ProfileView />} />
+                  <Route path="/citizen/settings" element={<SettingsView />} />
+                  <Route path="/citizen/my-feedback" element={<MyFeedbackView />} />
+                  <Route path="/citizen/feedback" element={<Navigate to="/citizen/my-feedback" replace />} />
+                </Route>
 
                 {/* 2. Student Routes */}
-                <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
-                <Route
-                  path="/student/dashboard"
-                  element={
-                    <StudentDashboard
-                      onNavigate={handleNavigate}
-                      onSelectProblem={handleSelectIssue}
-                      onSelectPitch={handleSelectPitch}
-                      onSubmitPitchForProblem={handleSubmitPitchForProblem}
-                    />
-                  }
-                />
-                <Route
-                  path="/student/explore"
-                  element={<ExploreProblems onSelectProblem={handleSelectIssue} onSubmitPitchForProblem={handleSubmitPitchForProblem} />}
-                />
-                <Route
-                  path="/student/problems/:id"
-                  element={<ProblemDetailStudent problem={selectedIssue} onBack={() => navigate('/student/explore')} onSubmitPitch={handleSubmitPitchForProblem} />}
-                />
-                <Route
-                  path="/student/submit-pitch"
-                  element={<SubmitPitchWizard selectedProblem={selectedProblemForPitch || selectedIssue} onBack={() => navigate('/student/explore')} onSuccess={() => navigate('/student/my-pitches')} />}
-                />
-                <Route
-                  path="/student/submit-pitch/:problemId"
-                  element={<SubmitPitchWizard selectedProblem={selectedProblemForPitch || selectedIssue} onBack={() => navigate('/student/explore')} onSuccess={() => navigate('/student/my-pitches')} />}
-                />
-                <Route
-                  path="/student/my-pitches"
-                  element={<MyPitches onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />}
-                />
-                <Route
-                  path="/student/pitches/:id"
-                  element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/student/my-pitches')} onRefresh={() => {}} />}
-                />
-                <Route path="/student/my-projects" element={<MyProjects />} />
-                <Route
-                  path="/student/projects/:id"
-                  element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/student/my-projects')} />}
-                />
-                <Route path="/student/opportunities" element={<OpportunitiesView />} />
-                <Route path="/student/certificates" element={<CertificatesView />} />
-                <Route path="/student/notifications" element={<NotificationsView />} />
-                <Route path="/student/profile" element={<ProfileView />} />
+                <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+                  <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
+                  <Route
+                    path="/student/dashboard"
+                    element={
+                      <StudentDashboard
+                        onNavigate={handleNavigate}
+                        onSelectProblem={handleSelectIssue}
+                        onSelectPitch={handleSelectPitch}
+                        onSubmitPitchForProblem={handleSubmitPitchForProblem}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/student/explore"
+                    element={<ExploreProblems onSelectProblem={handleSelectIssue} onSubmitPitchForProblem={handleSubmitPitchForProblem} />}
+                  />
+                  <Route
+                    path="/student/problems/:id"
+                    element={<ProblemDetailStudent problem={selectedIssue} onBack={() => navigate('/student/explore')} onSubmitPitch={handleSubmitPitchForProblem} />}
+                  />
+                  <Route
+                    path="/student/submit-pitch"
+                    element={<SubmitPitchWizard selectedProblem={selectedProblemForPitch || selectedIssue} onBack={() => navigate('/student/explore')} onSuccess={() => navigate('/student/my-pitches')} />}
+                  />
+                  <Route
+                    path="/student/submit-pitch/:problemId"
+                    element={<SubmitPitchWizard selectedProblem={selectedProblemForPitch || selectedIssue} onBack={() => navigate('/student/explore')} onSuccess={() => navigate('/student/my-pitches')} />}
+                  />
+                  <Route
+                    path="/student/my-pitches"
+                    element={<MyPitches onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />}
+                  />
+                  <Route
+                    path="/student/pitches/:id"
+                    element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/student/my-pitches')} onRefresh={() => {}} />}
+                  />
+                  <Route path="/student/my-projects" element={<MyProjects />} />
+                  <Route
+                    path="/student/projects/:id"
+                    element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/student/my-projects')} />}
+                  />
+                  <Route path="/student/opportunities" element={<OpportunitiesView />} />
+                  <Route path="/student/certificates" element={<CertificatesView />} />
+                  <Route path="/student/notifications" element={<NotificationsView />} />
+                  <Route path="/student/profile" element={<ProfileView />} />
+                </Route>
 
                 {/* 3. University Routes (Coordinator & Mentor) */}
-                <Route path="/university" element={<Navigate to="/university/dashboard" replace />} />
-                <Route
-                  path="/university/dashboard"
-                  element={<UniversityDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} onSelectPitch={handleSelectPitch} />}
-                />
-                <Route path="/university/problem-pipeline" element={<ProblemPipeline onSelectIssue={handleSelectIssue} />} />
-                <Route path="/university/validation" element={<ValidationView onSelectIssue={handleSelectIssue} />} />
-                <Route
-                  path="/university/adopted-problems"
-                  element={<AdoptedProblems onSelectIssue={handleSelectIssue} onCreateOpenCall={() => navigate('/university/open-calls')} />}
-                />
-                <Route path="/university/open-calls" element={<OpenCalls onSelectIssue={handleSelectIssue} onSelectPitch={handleSelectPitch} />} />
-                <Route path="/university/student-pitches" element={<StudentPitchesList onSelectPitch={handleSelectPitch} />} />
-                <Route
-                  path="/university/pitches/:id"
-                  element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/university/student-pitches')} onRefresh={() => {}} />}
-                />
-                <Route path="/university/review-board" element={<ReviewBoardView onSelectPitch={handleSelectPitch} />} />
-                <Route path="/university/projects" element={<ProjectsList onSelectProject={handleSelectProject} />} />
-                <Route
-                  path="/university/projects/:id"
-                  element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/university/projects')} />}
-                />
-                <Route path="/university/mentorship" element={<MentorshipView />} />
-                <Route path="/university/analytics" element={<UniversityAnalytics />} />
-                <Route path="/university/reports" element={<UniversityReports />} />
-                <Route path="/university/profile" element={<UniversityProfile />} />
-                <Route path="/university/settings" element={<UniversitySettings />} />
-                <Route path="/university/notifications" element={<UniversityNotifications />} />
-                <Route
-                  path="/university/challenges/:id"
-                  element={<UniversityChallengeView onBack={() => navigate('/university/adopted-problems')} onSelectPitch={handleSelectPitch} />}
-                />
-                <Route
-                  path="/university/issues/:id"
-                  element={<UniversityChallengeView onBack={() => navigate('/university/problem-pipeline')} onSelectPitch={handleSelectPitch} />}
-                />
+                <Route element={<ProtectedRoute allowedRoles={['university_coordinator', 'faculty_mentor']} />}>
+                  <Route path="/university" element={<Navigate to="/university/dashboard" replace />} />
+                  <Route
+                    path="/university/dashboard"
+                    element={<UniversityDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} onSelectPitch={handleSelectPitch} />}
+                  />
+                  <Route path="/university/problem-pipeline" element={<ProblemPipeline onSelectIssue={handleSelectIssue} />} />
+                  <Route path="/university/validation" element={<ValidationView onSelectIssue={handleSelectIssue} />} />
+                  <Route
+                    path="/university/adopted-problems"
+                    element={<AdoptedProblems onSelectIssue={handleSelectIssue} onCreateOpenCall={() => navigate('/university/open-calls')} />}
+                  />
+                  <Route path="/university/open-calls" element={<OpenCalls onSelectIssue={handleSelectIssue} onSelectPitch={handleSelectPitch} />} />
+                  <Route path="/university/student-pitches" element={<StudentPitchesList onSelectPitch={handleSelectPitch} />} />
+                  <Route
+                    path="/university/pitches/:id"
+                    element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/university/student-pitches')} onRefresh={() => {}} />}
+                  />
+                  <Route path="/university/review-board" element={<ReviewBoardView onSelectPitch={handleSelectPitch} />} />
+                  <Route path="/university/projects" element={<ProjectsList onSelectProject={handleSelectProject} />} />
+                  <Route
+                    path="/university/projects/:id"
+                    element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/university/projects')} />}
+                  />
+                  <Route path="/university/mentorship" element={<MentorshipView />} />
+                  <Route path="/university/analytics" element={<UniversityAnalytics />} />
+                  <Route path="/university/reports" element={<UniversityReports />} />
+                  <Route path="/university/profile" element={<UniversityProfile />} />
+                  <Route path="/university/settings" element={<UniversitySettings />} />
+                  <Route path="/university/notifications" element={<UniversityNotifications />} />
+                  <Route
+                    path="/university/challenges/:id"
+                    element={<UniversityChallengeView onBack={() => navigate('/university/adopted-problems')} onSelectPitch={handleSelectPitch} />}
+                  />
+                  <Route
+                    path="/university/issues/:id"
+                    element={<UniversityChallengeView onBack={() => navigate('/university/problem-pipeline')} onSelectPitch={handleSelectPitch} />}
+                  />
+                </Route>
 
                 {/* 4. Industry Routes */}
-                <Route path="/industry" element={<Navigate to="/industry/dashboard" replace />} />
-                <Route
-                  path="/industry/dashboard"
-                  element={<IndustryDashboard onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />}
-                />
-                <Route path="/industry/engagements" element={<IndustryEngagementsView />} />
-                <Route path="/industry/opportunities" element={<IndustryEngagementsView />} />
-                <Route path="/industry/funding" element={<IndustryEngagementsView />} />
-                <Route path="/industry/projects" element={<IndustryProjectsView onSelectPitch={handleSelectPitch} />} />
-                <Route
-                  path="/industry/projects/:id"
-                  element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/industry/projects')} />}
-                />
-                <Route path="/industry/notifications" element={<NotificationsView />} />
-                <Route path="/industry/profile" element={<IndustryProfile />} />
-                <Route
-                  path="/industry/pitches/:id"
-                  element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/industry/projects')} onRefresh={() => {}} />}
-                />
+                <Route element={<ProtectedRoute allowedRoles={['industry_partner']} />}>
+                  <Route path="/industry" element={<Navigate to="/industry/dashboard" replace />} />
+                  <Route
+                    path="/industry/dashboard"
+                    element={<IndustryDashboard onNavigate={handleNavigate} onSelectPitch={handleSelectPitch} />}
+                  />
+                  <Route path="/industry/engagements" element={<IndustryEngagementsView />} />
+                  <Route path="/industry/opportunities" element={<IndustryEngagementsView />} />
+                  <Route path="/industry/funding" element={<IndustryEngagementsView />} />
+                  <Route path="/industry/projects" element={<IndustryProjectsView onSelectPitch={handleSelectPitch} />} />
+                  <Route
+                    path="/industry/projects/:id"
+                    element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/industry/projects')} />}
+                  />
+                  <Route path="/industry/notifications" element={<NotificationsView />} />
+                  <Route path="/industry/profile" element={<IndustryProfile />} />
+                  <Route
+                    path="/industry/pitches/:id"
+                    element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/industry/projects')} onRefresh={() => {}} />}
+                  />
+                </Route>
 
                 {/* 5. Government / Officer Routes */}
-                <Route path="/officer" element={<Navigate to="/officer/dashboard" replace />} />
-                <Route
-                  path="/officer/dashboard"
-                  element={<OfficerDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
-                />
-                <Route path="/officer/issues" element={<IssuesOverview onSelectIssue={handleSelectIssue} />} />
-                <Route path="/officer/adoption-pipeline" element={<AdoptionPipeline />} />
-                <Route path="/officer/projects" element={<ProjectsOverview />} />
-                <Route path="/officer/analytics" element={<ImpactAnalytics />} />
-                <Route path="/officer/reports" element={<ReportsDocuments />} />
-                <Route
-                  path="/officer/issues/:id"
-                  element={<IssueDetail issue={selectedIssue} backLabel="Back to Issues Overview" onBack={() => navigate('/officer/issues')} onRefresh={() => {}} />}
-                />
-                <Route path="/officer/notifications" element={<NotificationsView />} />
-                <Route path="/officer/profile" element={<ProfileView />} />
+                <Route element={<ProtectedRoute allowedRoles={['gov_admin']} />}>
+                  <Route path="/officer" element={<Navigate to="/officer/dashboard" replace />} />
+                  <Route
+                    path="/officer/dashboard"
+                    element={<OfficerDashboard onNavigate={handleNavigate} onSelectIssue={handleSelectIssue} />}
+                  />
+                  <Route path="/officer/issues" element={<IssuesOverview onSelectIssue={handleSelectIssue} />} />
+                  <Route path="/officer/adoption-pipeline" element={<AdoptionPipeline />} />
+                  <Route path="/officer/projects" element={<ProjectsOverview />} />
+                  <Route path="/officer/analytics" element={<ImpactAnalytics />} />
+                  <Route path="/officer/reports" element={<ReportsDocuments />} />
+                  <Route
+                    path="/officer/issues/:id"
+                    element={<IssueDetail issue={selectedIssue} backLabel="Back to Issues Overview" onBack={() => navigate('/officer/issues')} onRefresh={() => {}} />}
+                  />
+                  <Route path="/officer/notifications" element={<NotificationsView />} />
+                  <Route path="/officer/profile" element={<ProfileView />} />
+                </Route>
 
                 {/* 6. Admin Routes */}
-                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route
-                  path="/admin/dashboard"
-                  element={<AdminDashboard onNavigate={handleNavigate} />}
-                />
-                <Route path="/admin/users" element={<UserManagement />} />
-                <Route path="/admin/organizations" element={<OrganizationsManagement />} />
-                <Route path="/admin/problems" element={<IssuesOverview onSelectIssue={handleSelectIssue} />} />
-                <Route path="/admin/projects" element={<ProjectsOverview />} />
-                <Route path="/admin/analytics" element={<ImpactAnalytics />} />
-                <Route path="/admin/reports" element={<ReportsDocuments />} />
-                <Route path="/admin/system-logs" element={<SystemLogsView />} />
-                <Route path="/admin/notifications" element={<NotificationsView />} />
-                <Route path="/admin/profile" element={<ProfileView />} />
+                <Route element={<ProtectedRoute allowedRoles={['gov_admin', 'admin']} />}>
+                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route
+                    path="/admin/dashboard"
+                    element={<AdminDashboard onNavigate={handleNavigate} />}
+                  />
+                  <Route path="/admin/users" element={<UserManagement />} />
+                  <Route path="/admin/organizations" element={<OrganizationsManagement />} />
+                  <Route path="/admin/problems" element={<IssuesOverview onSelectIssue={handleSelectIssue} />} />
+                  <Route path="/admin/projects" element={<ProjectsOverview />} />
+                  <Route path="/admin/analytics" element={<ImpactAnalytics />} />
+                  <Route path="/admin/reports" element={<ReportsDocuments />} />
+                  <Route path="/admin/system-logs" element={<SystemLogsView />} />
+                  <Route path="/admin/notifications" element={<NotificationsView />} />
+                  <Route path="/admin/profile" element={<ProfileView />} />
+                </Route>
 
                 {/* Catch-all fallback */}
                 <Route path="*" element={<Navigate to={role ? `/${getBaseRole(role)}/dashboard` : '/'} replace />} />

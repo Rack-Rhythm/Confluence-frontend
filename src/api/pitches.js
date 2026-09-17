@@ -166,6 +166,11 @@ export const pitchesAPI = {
   },
 
   // Issue 55: Verified Outcome Certificates
+  getCertificates: async (params = {}) => {
+    const response = await apiClient.get('/pitches/certificates/', { params });
+    return response.data;
+  },
+
   generateProjectCertificates: async (projectId) => {
     const response = await apiClient.post(`/pitches/projects/${projectId}/certificates/generate/`);
     return response.data;

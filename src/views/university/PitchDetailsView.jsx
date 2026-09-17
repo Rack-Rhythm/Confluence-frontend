@@ -158,8 +158,15 @@ export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
 
         if (user?.role === 'university_coordinator' || user?.role === 'faculty_mentor') {
           try {
-            const mList = await authAPI.getUsers({ role: 'faculty_mentor' });
-            const rawM = Array.isArray(mList) ? mList : mList?.results || [];
+            const univId = user?.university_id || user?.university?.id || data.university_id || data.university?.id;
+            let rawM = [];
+            if (univId) {
+              const res = await authAPI.getUniversityMentors(univId);
+              rawM = Array.isArray(res) ? res : res?.results || [];
+            } else if (user?.is_staff) {
+              const mList = await authAPI.getUsers({ role: 'faculty_mentor' });
+              rawM = Array.isArray(mList) ? mList : mList?.results || [];
+            }
             setAvailableMentors(rawM);
             if (rawM.length > 0 && !selectedMentorId) setSelectedMentorId(rawM[0].id);
           } catch (e) {

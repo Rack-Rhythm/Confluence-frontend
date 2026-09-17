@@ -66,8 +66,7 @@ export const AuthModal = ({ isOpen, initialTab = 'login', onClose, onSuccess }) 
       name,
       phone,
       role,
-      university: ['student', 'faculty_mentor', 'university_coordinator'].includes(role) && universityId ? parseInt(universityId) : null,
-      organization: role === 'industry_partner' && organizationId ? parseInt(organizationId) : null,
+      university: role === 'student' && universityId ? parseInt(universityId) : null,
     };
 
     setLoading(true);
@@ -296,43 +295,25 @@ export const AuthModal = ({ isOpen, initialTab = 'login', onClose, onSuccess }) 
               >
                 <option value="citizen">Citizen / Community Member</option>
                 <option value="student">Student / Innovator</option>
-                <option value="faculty_mentor">Faculty Mentor</option>
-                <option value="university_coordinator">University Coordinator</option>
-                <option value="industry_partner">Industry Partner / CSR</option>
-                <option value="gov_admin">Government Officer / Admin</option>
               </select>
+              <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', marginTop: '4px' }}>
+                Note: University Coordinator, Faculty Mentor, Industry, and Govt accounts are provisioned by official invitation.
+              </span>
             </div>
 
-            {['student', 'faculty_mentor', 'university_coordinator'].includes(role) && (
+            {role === 'student' && (
               <div className="form-group">
-                <label className="form-label">University / Institution</label>
+                <label className="form-label">University / Institution *</label>
                 <select
                   className="form-select"
                   value={universityId}
                   onChange={(e) => setUniversityId(e.target.value)}
+                  required
                 >
                   <option value="">Select University...</option>
                   {universities.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name} ({u.district})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {role === 'industry_partner' && (
-              <div className="form-group">
-                <label className="form-label">Company / Organization</label>
-                <select
-                  className="form-select"
-                  value={organizationId}
-                  onChange={(e) => setOrganizationId(e.target.value)}
-                >
-                  <option value="">Select Organization...</option>
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name} ({org.org_type?.toUpperCase()})
                     </option>
                   ))}
                 </select>

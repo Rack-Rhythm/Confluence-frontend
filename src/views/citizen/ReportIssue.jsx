@@ -41,8 +41,8 @@ export const ReportIssue = ({ onBack, onSuccess }) => {
       return;
     }
 
-    // Ensure photo_url has fallback if empty
-    const finalPhotoUrl = photoUrl || samplePhotoUrls[0].url;
+    // Only use photoUrl if explicitly provided or chosen by the citizen
+    const finalPhotoUrl = photoUrl ? photoUrl.trim() : '';
 
     const payload = {
       title,
@@ -239,7 +239,7 @@ export const ReportIssue = ({ onBack, onSuccess }) => {
 
           {/* Photo URL / Upload */}
           <div className="form-group">
-            <label className="form-label">Photo (Photo URL or choose sample) *</label>
+            <label className="form-label">Photo (Photo URL or choose sample - Optional)</label>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <input
                 type="url"

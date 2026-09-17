@@ -28,15 +28,18 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
   const [nominating, setNominating] = useState(false);
 
   useEffect(() => {
-    if (!problem && id) {
+    if (problem && (!id || String(problem.id) === String(id))) {
+      setCurrentProblem(problem);
+      setLoading(false);
+      return;
+    }
+    if (id) {
       setLoading(true);
       issuesAPI
         .getIssue(id)
         .then((res) => setCurrentProblem(res))
         .catch((err) => console.error('Failed to load student problem:', err))
         .finally(() => setLoading(false));
-    } else if (problem) {
-      setCurrentProblem(problem);
     }
   }, [id, problem]);
 

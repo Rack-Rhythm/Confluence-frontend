@@ -12,14 +12,18 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { pitchesAPI } from '../../api/pitches';
 import { issuesAPI } from '../../api/issues';
+import { authAPI } from '../../api/auth';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
   const { problemId } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [problem, setProblem] = useState(selectedProblem || null);
   const [adoptedList, setAdoptedList] = useState([]);
+  const [availableStudents, setAvailableStudents] = useState([]);
   const [step, setStep] = useState(1);
 
   const [title, setTitle] = useState('');
@@ -31,6 +35,18 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
   const [documentationUrl, setDocumentationUrl] = useState('');
   const [teamEmails, setTeamEmails] = useState('student2@bitsindri.ac.in');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const univId = user?.university_id || user?.university?.id;
+    if (univId) {
+      authAPI.getUniversityStudents(univId)
+        .then((students) => {
+          const list = Array.isArray(students) ? students : students?.results || [];
+          setAvailableStudents(list.filter((s) => s.id !== user?.id));
+        })
+        .catch((err) => console.error('Failed to load university students:', err));
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!selectedProblem && problemId) {
@@ -57,6 +73,19 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
     }
   }, [problemId, selectedProblem]);
 
+  const enteredEmails = teamEmails
+    .split(/[,;\s]+/)
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  const resolvedMembers = availableStudents.filter((s) =>
+    enteredEmails.includes((s.email || '').toLowerCase())
+  );
+
+  const unresolvedEmails = enteredEmails.filter(
+    (email) => !availableStudents.some((s) => (s.email || '').toLowerCase() === email)
+  );
+
   const handleSubmit = async () => {
     if (!title || !publicSummary || !confidentialPackage) {
       showToast('Please fill in all mandatory fields.', 'error');
@@ -77,7 +106,7 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
       repository_url: repositoryUrl,
       demo_url: demoUrl,
       documentation_url: documentationUrl,
-      team_member_ids: [],
+      team_member_ids: resolvedMembers.map((m) => m.id),
     };
 
     setLoading(true);
@@ -389,14 +418,87 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Collaborating Student Team Member Emails</label>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Collaborating Student Team Member Emails</span>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>
+                  (Must be students from your university)
+                </span>
+              </label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="student2@bitsindri.ac.in, teammate@bitsindri.ac.in"
+                placeholder="e.g. teammate1@bitsindri.ac.in, teammate2@bitsindri.ac.in"
                 value={teamEmails}
                 onChange={(e) => setTeamEmails(e.target.value)}
               />
+
+              {availableStudents.length > 0 && (
+                <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Quick Add:</span>
+                  {availableStudents.slice(0, 5).map((stud) => {
+                    const isAdded = enteredEmails.includes((stud.email || '').toLowerCase());
+                    return (
+                      <button
+                        key={stud.id}
+                        type="button"
+                        onClick={() => {
+                          if (isAdded) {
+                            const remaining = enteredEmails.filter((e) => e !== (stud.email || '').toLowerCase());
+                            setTeamEmails(remaining.join(', '));
+                          } else {
+                            const updated = [...enteredEmails, stud.email.toLowerCase()];
+                            setTeamEmails(updated.join(', '));
+                          }
+                        }}
+                        style={{
+                          fontSize: '0.72rem',
+                          padding: '3px 8px',
+                          borderRadius: '9999px',
+                          border: isAdded ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                          background: isAdded ? '#EFF6FF' : '#FFFFFF',
+                          color: isAdded ? '#1D4ED8' : '#475569',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {isAdded ? '✓ ' : '+ '}{stud.name || stud.email}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Resolved Teammate Badges */}
+              {resolvedMembers.length > 0 && (
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#166534', marginBottom: '4px' }}>
+                    ✓ Confirmed Student Teammates ({resolvedMembers.length}):
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {resolvedMembers.map((m) => (
+                      <span
+                        key={m.id}
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          background: '#DCFCE7',
+                          color: '#15803D',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {m.name} ({m.email})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Unresolved warning */}
+              {unresolvedEmails.length > 0 && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#D97706' }}>
+                  ⚠️ Not found in your university student roster: {unresolvedEmails.join(', ')}
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
@@ -443,6 +545,23 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>SOLUTION TITLE</div>
                 <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>{title}</div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>TEAM MEMBERS</div>
+                <div style={{ fontSize: '0.85rem', color: '#0F172A', display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                  <span style={{ padding: '2px 8px', borderRadius: '6px', background: '#EFF6FF', color: '#1D4ED8', fontWeight: 600 }}>
+                    {user?.name || user?.email || 'You'} (Lead)
+                  </span>
+                  {resolvedMembers.map((m) => (
+                    <span key={m.id} style={{ padding: '2px 8px', borderRadius: '6px', background: '#F1F5F9', color: '#334155', fontWeight: 500 }}>
+                      {m.name} ({m.email})
+                    </span>
+                  ))}
+                  {resolvedMembers.length === 0 && (
+                    <span style={{ color: '#64748B', fontStyle: 'italic' }}>Individual / Solo Submission</span>
+                  )}
+                </div>
               </div>
 
               <div>

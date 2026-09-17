@@ -36,7 +36,13 @@ export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel 
   const [evidenceUrl, setEvidenceUrl] = useState('');
 
   useEffect(() => {
-    if (!initialIssue && id) {
+    if (initialIssue && (!id || String(initialIssue.id) === String(id))) {
+      setCurrentIssue(initialIssue);
+      setConfirmedResolved(initialIssue.citizen_verified_resolved || false);
+      setLoading(false);
+      return;
+    }
+    if (id) {
       setLoading(true);
       issuesAPI
         .getIssue(id)
