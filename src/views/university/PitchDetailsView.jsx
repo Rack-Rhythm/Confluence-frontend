@@ -504,7 +504,7 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
           <span style={{ fontSize: '0.8rem', color: '#64748B' }}>
             Submission #{currentPitch.id ? currentPitch.id.toString().padStart(4, '0') : '0201'}
           </span>
-          <StatusBadge status={currentPitch.status || 'shortlisted'} />
+          <StatusBadge status={currentPitch.status || 'under_review'} />
         </div>
       </div>
 

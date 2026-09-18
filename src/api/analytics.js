@@ -10,4 +10,9 @@ export const analyticsAPI = {
     const response = await apiClient.get('/analytics/institutional/', { params });
     return response.data;
   },
+
+  getAuditLogs: async (params = {}) => {
+    const response = await apiClient.get('/analytics/audit-logs/', { params });
+    return response.data;
+  },
 };

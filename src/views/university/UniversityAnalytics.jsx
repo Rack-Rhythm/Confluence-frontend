@@ -56,7 +56,7 @@ export const UniversityAnalytics = () => {
 
   const totalAdopted = analytics?.overview?.adopted_issues ?? issues.filter((i) => ['adopted', 'assigned', 'resolved'].includes(i.status)).length;
   const totalPitches = analytics?.overview?.total_pitches_submitted ?? pitches.length;
-  const totalProjects = analytics?.overview?.assigned_solutions ?? pitches.filter((p) => p.status === 'shortlisted' || p.status === 'selected' || p.status === 'merged').length;
+  const totalProjects = analytics?.overview?.assigned_solutions ?? pitches.filter((p) => ['selected', 'merged', 'project'].includes(p.status)).length;
   const deployedSolutions = analytics?.overview?.resolved_issues ?? issues.filter((i) => i.status === 'resolved').length;
 
   // Derive dynamic monthly breakdown from live issues and pitches

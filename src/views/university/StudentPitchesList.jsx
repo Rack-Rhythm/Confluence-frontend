@@ -38,9 +38,9 @@ export const StudentPitchesList = ({ onSelectPitch }) => {
   }, []);
 
   const totalCount = pitches.length;
-  const underReviewCount = pitches.filter((p) => p.status === 'submitted' || p.status === 'under_review').length;
-  const shortlistedCount = pitches.filter((p) => p.status === 'shortlisted').length;
-  const selectedCount = pitches.filter((p) => p.status === 'selected' || p.status === 'merged').length;
+  const underReviewCount = pitches.filter((p) => ['submitted', 'under_review', 'resubmitted'].includes(p.status)).length;
+  const changesRequestedCount = pitches.filter((p) => p.status === 'changes_requested').length;
+  const selectedCount = pitches.filter((p) => ['selected', 'merged', 'project'].includes(p.status)).length;
   const rejectedCount = pitches.filter((p) => p.status === 'rejected').length;
 
   const filteredPitches = pitches.filter((pitch) => {
@@ -52,9 +52,9 @@ export const StudentPitchesList = ({ onSelectPitch }) => {
 
     const matchesCat = categoryFilter === 'all' || pitch.category === categoryFilter;
 
-    if (activeTab === 'under_review') return matchesSearch && matchesCat && (pitch.status === 'submitted' || pitch.status === 'under_review');
-    if (activeTab === 'shortlisted') return matchesSearch && matchesCat && pitch.status === 'shortlisted';
-    if (activeTab === 'selected') return matchesSearch && matchesCat && (pitch.status === 'selected' || pitch.status === 'merged');
+    if (activeTab === 'under_review') return matchesSearch && matchesCat && ['submitted', 'under_review', 'resubmitted'].includes(pitch.status);
+    if (activeTab === 'changes_requested') return matchesSearch && matchesCat && pitch.status === 'changes_requested';
+    if (activeTab === 'selected') return matchesSearch && matchesCat && ['selected', 'merged', 'project'].includes(pitch.status);
     if (activeTab === 'rejected') return matchesSearch && matchesCat && pitch.status === 'rejected';
     return matchesSearch && matchesCat;
   });
@@ -87,7 +87,7 @@ export const StudentPitchesList = ({ onSelectPitch }) => {
           {[
             { id: 'all', label: 'All', count: totalCount },
             { id: 'under_review', label: 'Under Review', count: underReviewCount },
-            { id: 'shortlisted', label: 'Shortlisted', count: shortlistedCount },
+            { id: 'changes_requested', label: 'Changes Requested', count: changesRequestedCount },
             { id: 'selected', label: 'Selected', count: selectedCount },
             { id: 'rejected', label: 'Rejected', count: rejectedCount },
           ].map((tab) => (

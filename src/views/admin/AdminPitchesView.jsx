@@ -28,10 +28,11 @@ import { useToast } from '../../context/ToastContext';
 
 const PITCH_STATUSES = [
   { value: 'submitted', label: 'Submitted' },
-  { value: 'under_review', label: 'Under Faculty Review' },
-  { value: 'shortlisted', label: 'Shortlisted' },
+  { value: 'under_review', label: 'Under Review' },
+  { value: 'changes_requested', label: 'Changes Requested' },
+  { value: 'resubmitted', label: 'Resubmitted' },
   { value: 'selected', label: 'Selected / Funded' },
-  { value: 'awarded', label: 'Awarded' },
+  { value: 'merged', label: 'Merged' },
   { value: 'rejected', label: 'Rejected' },
 ];
 
@@ -146,15 +147,18 @@ export const AdminPitchesView = () => {
     switch (st) {
       case 'selected':
       case 'awarded':
+      case 'merged':
         return { label: st.toUpperCase(), color: '#10B981', bg: '#ECFDF5' };
-      case 'shortlisted':
-        return { label: 'Shortlisted', color: '#7C3AED', bg: '#F5F3FF' };
+      case 'changes_requested':
+        return { label: 'CHANGES REQUESTED', color: '#DC2626', bg: '#FEF2F2' };
+      case 'resubmitted':
+        return { label: 'RESUBMITTED', color: '#7C3AED', bg: '#F5F3FF' };
       case 'under_review':
-        return { label: 'Under Review', color: '#2563EB', bg: '#EFF6FF' };
+        return { label: 'UNDER REVIEW', color: '#2563EB', bg: '#EFF6FF' };
       case 'rejected':
-        return { label: 'Rejected', color: '#EF4444', bg: '#FEF2F2' };
+        return { label: 'REJECTED', color: '#EF4444', bg: '#FEF2F2' };
       default:
-        return { label: 'Submitted', color: '#64748B', bg: '#F1F5F9' };
+        return { label: 'SUBMITTED', color: '#64748B', bg: '#F1F5F9' };
     }
   };
 
@@ -224,19 +228,19 @@ export const AdminPitchesView = () => {
         <div className="card" style={{ padding: '1.1rem' }}>
           <div style={{ fontSize: '0.75rem', color: '#2563EB', fontWeight: 700 }}>UNDER REVIEW</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#2563EB', marginTop: '2px' }}>
-            {pitches.filter((p) => p.status === 'under_review' || p.status === 'submitted').length}
+            {pitches.filter((p) => ['under_review', 'submitted', 'resubmitted'].includes(p.status)).length}
           </div>
         </div>
         <div className="card" style={{ padding: '1.1rem' }}>
-          <div style={{ fontSize: '0.75rem', color: '#7C3AED', fontWeight: 700 }}>SHORTLISTED</div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#7C3AED', marginTop: '2px' }}>
-            {pitches.filter((p) => p.status === 'shortlisted').length}
+          <div style={{ fontSize: '0.75rem', color: '#DC2626', fontWeight: 700 }}>CHANGES REQUESTED</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#DC2626', marginTop: '2px' }}>
+            {pitches.filter((p) => p.status === 'changes_requested').length}
           </div>
         </div>
         <div className="card" style={{ padding: '1.1rem' }}>
-          <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>AWARDED / FUNDED</div>
+          <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>SELECTED / FUNDED</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#10B981', marginTop: '2px' }}>
-            {pitches.filter((p) => ['selected', 'awarded'].includes(p.status)).length}
+            {pitches.filter((p) => ['selected', 'merged', 'awarded', 'project'].includes(p.status)).length}
           </div>
         </div>
       </div>

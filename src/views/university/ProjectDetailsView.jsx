@@ -96,7 +96,7 @@ export const ProjectDetailsView = ({ project, onBack }) => {
           const mls = projData.milestones || [];
           setMilestones(mls);
 
-          const approvedCount = mls.filter((m) => m.status === 'APPROVED').length;
+          const approvedCount = mls.filter((m) => (m.status || '').toLowerCase() === 'approved').length;
           const pct = mls.length > 0 ? Math.round((approvedCount / mls.length) * 100) : 35;
           setProgress(pct);
           if (projData.discussions) {
@@ -123,7 +123,8 @@ export const ProjectDetailsView = ({ project, onBack }) => {
           university_name: pitchData.university_details?.name || 'Partner Technical University',
           mentor_name: pitchData.assigned_mentor_details?.name || 'Assigned Faculty Mentor',
           team_members_detail: pitchData.student_team_details || [],
-          deployment_status: lc.outcome_status ? lc.outcome_status.toUpperCase().replace(' ', '_') : 'PROTOTYPE',
+          project_members: pitchData.student_team_details || [],
+          deployment_status: lc.outcome_status ? lc.outcome_status.toLowerCase().replace(' ', '_') : 'prototype',
           progress: 50,
           milestones: lc.milestones || [],
         };
@@ -133,7 +134,7 @@ export const ProjectDetailsView = ({ project, onBack }) => {
             id: m.id || idx + 1,
             order: idx + 1,
             title: m.title || `Milestone ${idx + 1}`,
-            status: m.completed ? 'APPROVED' : 'IN_PROGRESS',
+            status: m.completed || m.status === 'approved' ? 'approved' : 'in_progress',
             due_date: m.due_date || 'Upcoming',
             evidence: m.evidence || '',
           }))
@@ -347,26 +348,36 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
   };
 
   const getStatusBadgeStyle = (st) => {
-    switch (st?.toUpperCase()) {
-      case 'APPROVED':
-      case 'VERIFIED':
-      case 'DEPLOYED':
+    const s = (st || '').toLowerCase();
+    switch (s) {
+      case 'approved':
+      case 'verified':
+      case 'deployed':
+      case 'completed':
         return { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' };
-      case 'SUBMITTED':
-      case 'DEPLOYMENT_READY':
-      case 'AWAITING_CITIZEN_VERIFICATION':
+      case 'submitted':
+      case 'deployment_ready':
+      case 'awaiting_citizen_verification':
+      case 'awaiting_verification':
         return { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' };
-      case 'CHANGES_REQUESTED':
-      case 'REOPENED':
+      case 'changes_requested':
+      case 'reopened':
+      case 'rejected':
+      case 'failed':
+      case 'overdue':
         return { bg: '#FEF2F2', text: '#DC2626', border: '#FECACA' };
-      case 'IN_PROGRESS':
-      case 'PILOT':
-      case 'PROTOTYPE':
+      case 'in_progress':
+      case 'pilot':
+      case 'prototype':
+      case 'planning':
+      case 'created':
         return { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' };
       default:
         return { bg: '#F8FAFC', text: '#64748B', border: '#E2E8F0' };
     }
   };
+
+  const normDeployStatus = (deploymentStatus || '').toLowerCase();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -396,12 +407,12 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
               fontWeight: 700,
               padding: '4px 12px',
               borderRadius: '999px',
-              background: getStatusBadgeStyle(deploymentStatus).bg,
-              color: getStatusBadgeStyle(deploymentStatus).text,
-              border: `1px solid ${getStatusBadgeStyle(deploymentStatus).border}`,
+              background: getStatusBadgeStyle(normDeployStatus).bg,
+              color: getStatusBadgeStyle(normDeployStatus).text,
+              border: `1px solid ${getStatusBadgeStyle(normDeployStatus).border}`,
             }}
           >
-            ● State: {deploymentStatus.replace(/_/g, ' ')}
+            ● State: {normDeployStatus.replace(/_/g, ' ')}
           </span>
         </div>
       </div>
@@ -412,9 +423,9 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
         style={{
           padding: '1.25rem 1.5rem',
           borderLeft: `4px solid ${
-            deploymentStatus === 'VERIFIED'
+            normDeployStatus === 'verified'
               ? '#10B981'
-              : deploymentStatus === 'DEPLOYMENT_READY'
+              : normDeployStatus === 'deployment_ready'
               ? '#F59E0B'
               : '#2563EB'
           }`,
@@ -427,9 +438,9 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {deploymentStatus === 'VERIFIED' ? (
+          {normDeployStatus === 'verified' ? (
             <CheckCircle2 size={32} color="#10B981" />
-          ) : deploymentStatus === 'AWAITING_CITIZEN_VERIFICATION' ? (
+          ) : normDeployStatus === 'awaiting_citizen_verification' || normDeployStatus === 'awaiting_verification' ? (
             <Clock size={32} color="#F59E0B" />
           ) : (
             <ShieldCheck size={32} color="#2563EB" />
@@ -439,18 +450,18 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
               Deployment Verification Gate
             </h4>
             <p style={{ fontSize: '0.825rem', color: '#64748B', margin: '2px 0 0 0' }}>
-              {deploymentStatus === 'VERIFIED' && 'Citizen verified resolution. Field deployment is fully ratified and resolved.'}
-              {deploymentStatus === 'AWAITING_CITIZEN_VERIFICATION' && 'Mentor approved deployment. Awaiting final citizen confirmation on the public resolution portal.'}
-              {deploymentStatus === 'DEPLOYMENT_READY' && 'Student team submitted deployment evidence. Faculty mentor verification required.'}
-              {deploymentStatus === 'REOPENED' && 'Citizen rejected previous deployment verification. Revisions and re-testing needed.'}
-              {['CREATED', 'PLANNING', 'PROTOTYPE', 'PILOT'].includes(deploymentStatus) && 'In active development. Complete milestones and submit evidence to open the deployment gate.'}
+              {normDeployStatus === 'verified' && 'Citizen verified resolution. Field deployment is fully ratified and resolved.'}
+              {(normDeployStatus === 'awaiting_citizen_verification' || normDeployStatus === 'awaiting_verification') && 'Mentor approved deployment. Awaiting final citizen confirmation on the public resolution portal.'}
+              {normDeployStatus === 'deployment_ready' && 'Student team submitted deployment evidence. Faculty mentor verification required.'}
+              {normDeployStatus === 'reopened' && 'Citizen rejected previous deployment verification. Revisions and re-testing needed.'}
+              {['created', 'planning', 'prototype', 'pilot'].includes(normDeployStatus) && 'In active development. Complete milestones and submit evidence to open the deployment gate.'}
             </p>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {/* Student action: Submit deployment evidence */}
-          {!['DEPLOYED', 'AWAITING_CITIZEN_VERIFICATION', 'VERIFIED'].includes(deploymentStatus) && (
+          {!['deployed', 'awaiting_citizen_verification', 'awaiting_verification', 'verified'].includes(normDeployStatus) && (
             <button
               onClick={() => setIsDeploymentModalOpen(true)}
               className="btn btn-outline btn-sm"
@@ -461,7 +472,7 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
           )}
 
           {/* Mentor action: Approve deployment gate */}
-          {isMentorOrCoordinator && deploymentStatus === 'DEPLOYMENT_READY' && (
+          {isMentorOrCoordinator && normDeployStatus === 'deployment_ready' && (
             <button
               onClick={handleApproveDeployment}
               disabled={approvingDeployment}
@@ -557,7 +568,8 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                     <p style={{ color: '#94A3B8', fontSize: '0.85rem' }}>No milestones scheduled yet.</p>
                   ) : (
                     milestones.slice(0, 4).map((m) => {
-                      const badge = getStatusBadgeStyle(m.status);
+                      const mStatus = (m.status || '').toLowerCase();
+                      const badge = getStatusBadgeStyle(mStatus);
                       return (
                         <div
                           key={m.id}
@@ -566,15 +578,15 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             padding: '0.75rem 1rem',
-                            background: m.status === 'APPROVED' ? '#F0FDF4' : '#F8FAFC',
+                            background: mStatus === 'approved' ? '#F0FDF4' : '#F8FAFC',
                             borderRadius: '10px',
                             border: `1px solid ${badge.border}`,
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            {m.status === 'APPROVED' ? (
+                            {mStatus === 'approved' ? (
                               <CheckCircle2 size={18} color="#10B981" />
-                            ) : m.status === 'SUBMITTED' ? (
+                            ) : mStatus === 'submitted' ? (
                               <Clock size={18} color="#D97706" />
                             ) : (
                               <Circle size={18} color="#94A3B8" />
@@ -595,7 +607,7 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                               textTransform: 'uppercase',
                             }}
                           >
-                            {m.status.replace(/_/g, ' ')}
+                            {mStatus.replace(/_/g, ' ')}
                           </span>
                         </div>
                       );
@@ -625,13 +637,14 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                   <p style={{ color: '#94A3B8', fontSize: '0.85rem' }}>No milestones created for this project.</p>
                 ) : (
                   milestones.map((m, idx) => {
-                    const badge = getStatusBadgeStyle(m.status);
+                    const mStatus = (m.status || '').toLowerCase();
+                    const badge = getStatusBadgeStyle(mStatus);
                     return (
                       <div
                         key={m.id}
                         style={{
                           padding: '1.25rem',
-                          background: m.status === 'APPROVED' ? '#F0FDF4' : '#FFFFFF',
+                          background: mStatus === 'approved' ? '#F0FDF4' : '#FFFFFF',
                           borderRadius: '12px',
                           border: `1px solid ${badge.border}`,
                           display: 'flex',
@@ -641,9 +654,9 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            {m.status === 'APPROVED' ? (
+                            {mStatus === 'approved' ? (
                               <CheckCircle2 size={22} color="#10B981" />
-                            ) : m.status === 'SUBMITTED' ? (
+                            ) : mStatus === 'submitted' ? (
                               <Clock size={22} color="#D97706" />
                             ) : (
                               <Circle size={22} color="#94A3B8" />
@@ -668,7 +681,7 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                               color: badge.text,
                             }}
                           >
-                            {m.status.replace(/_/g, ' ')}
+                            {mStatus.replace(/_/g, ' ')}
                           </span>
                         </div>
 
@@ -715,7 +728,7 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
                         {/* Action buttons */}
                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
                           {/* Student submit evidence button */}
-                          {m.status !== 'APPROVED' && (
+                          {mStatus !== 'approved' && (
                             <button
                               onClick={() => handleOpenEvidenceModal(m)}
                               className="btn btn-outline btn-sm"
@@ -750,17 +763,27 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem' }}>
                 Engineering & Faculty Team
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                 <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{mentorName}</div>
                   <div style={{ fontSize: '0.775rem', color: '#2563EB', fontWeight: 600 }}>Faculty Mentor</div>
                   <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>{universityName}</div>
                 </div>
-                <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                  <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{teamList}</div>
-                  <div style={{ fontSize: '0.775rem', color: '#059669', fontWeight: 600 }}>Student Engineering Team</div>
-                  <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>Primary Innovators</div>
-                </div>
+                {Array.isArray(currentProject.project_members) && currentProject.project_members.length > 0 ? (
+                  currentProject.project_members.map((pm, idx) => (
+                    <div key={pm.id || idx} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                      <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{pm.user_name || pm.name || pm.user_email || 'Student Innovator'}</div>
+                      <div style={{ fontSize: '0.775rem', color: '#059669', fontWeight: 600 }}>{pm.role ? pm.role.replace(/_/g, ' ') : 'Team Member'}</div>
+                      <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>{pm.user_email || pm.department || 'Active Contributor'}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{teamList}</div>
+                    <div style={{ fontSize: '0.775rem', color: '#059669', fontWeight: 600 }}>Student Engineering Team</div>
+                    <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>Primary Innovators</div>
+                  </div>
+                )}
               </div>
             </div>
           )}

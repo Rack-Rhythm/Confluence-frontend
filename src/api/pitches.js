@@ -186,8 +186,19 @@ export const pitchesAPI = {
     return response.data;
   },
 
-  verifyCertificate: async (certificateId) => {
-    const response = await apiClient.get(`/pitches/certificates/${certificateId}/verify/`);
+  // Project Team Management (Unified Team Architecture)
+  getProjectTeam: async (projectId) => {
+    const response = await apiClient.get(`/pitches/projects/${projectId}/team/`);
+    return response.data;
+  },
+
+  addProjectTeamMember: async (projectId, memberData) => {
+    const response = await apiClient.post(`/pitches/projects/${projectId}/team/`, memberData);
+    return response.data;
+  },
+
+  removeProjectTeamMember: async (projectId, memberId) => {
+    const response = await apiClient.delete(`/pitches/projects/${projectId}/team/${memberId}/`);
     return response.data;
   },
 };

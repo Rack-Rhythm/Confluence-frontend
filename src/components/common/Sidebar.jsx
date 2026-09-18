@@ -222,7 +222,7 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
         main: [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'opportunities', label: 'Opportunities', icon: Target },
-          { id: 'shortlisted_projects', label: 'Shortlisted Projects', icon: Star },
+          { id: 'shortlisted_projects', label: 'Partner Projects', icon: Star },
           { id: 'partnerships', label: 'Partnerships', icon: Handshake },
           { id: 'funding', label: 'Funding', icon: Coins },
           { id: 'mentorship', label: 'Mentorship', icon: GraduationCap },

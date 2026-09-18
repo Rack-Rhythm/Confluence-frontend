@@ -61,13 +61,13 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
     fetchPitchesAndSessions();
   }, []);
 
-  const pendingPitches = pitches.filter((p) => p.status === 'submitted' || p.status === 'under_review');
-  const discussionPitches = pitches.filter((p) => p.status === 'shortlisted');
-  const finalizedPitches = pitches.filter((p) => p.status === 'selected' || p.status === 'merged' || p.status === 'rejected');
+  const pendingPitches = pitches.filter((p) => ['submitted', 'under_review', 'resubmitted'].includes(p.status));
+  const changesPitches = pitches.filter((p) => p.status === 'changes_requested');
+  const finalizedPitches = pitches.filter((p) => ['selected', 'merged', 'rejected', 'project'].includes(p.status));
 
   const getActiveList = () => {
     if (activeTab === 'pending') return pendingPitches;
-    if (activeTab === 'discussion') return discussionPitches;
+    if (activeTab === 'changes') return changesPitches;
     if (activeTab === 'finalized') return finalizedPitches;
     return pitches;
   };
@@ -138,7 +138,7 @@ export const ReviewBoardView = ({ onSelectPitch }) => {
           {[
             { id: 'all', label: 'All Pitches', count: pitches.length },
             { id: 'pending', label: 'Pending Review', count: pendingPitches.length },
-            { id: 'discussion', label: 'In Discussion', count: discussionPitches.length },
+            { id: 'changes', label: 'Changes Requested', count: changesPitches.length },
             { id: 'finalized', label: 'Finalized', count: finalizedPitches.length },
             { id: 'sessions', label: 'Evaluation Sessions', count: reviewSessions.length },
           ].map((tab) => (
