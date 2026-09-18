@@ -48,9 +48,7 @@ export const IssueCard = ({ issue, onView, compact = false }) => {
             objectFit: 'cover',
             transition: 'transform 0.3s ease',
           }}
-          onError={(e) => {
-            e.target.src = getCategoryImage(issue.category);
-          }}
+          onError={(e) => handleImageError(e, issue.category)}
         />
 
         {/* Impact Tag overlay */}
@@ -138,10 +136,10 @@ export const IssueCard = ({ issue, onView, compact = false }) => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <Eye size={13} /> {Math.floor(issue.id * 147 + 340)}
+              <Eye size={13} /> {issue.views_count ?? issue.upvotes_count ?? 12}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <MessageSquare size={13} /> {issue.id % 4 + 2}
+              <MessageSquare size={13} /> {issue.discussions_count ?? issue.comments_count ?? 0}
             </span>
             <span>{timeAgo(issue.created_at)}</span>
           </div>

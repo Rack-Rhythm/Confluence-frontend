@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { authAPI } from '../../api/auth';
 import { useToast } from '../../context/ToastContext';
+import { DeleteConfirmModal } from '../../components/common/DeleteConfirmModal';
 
 export const OrganizationsManagement = () => {
   const { showToast } = useToast();
@@ -25,6 +26,10 @@ export const OrganizationsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('universities'); // 'universities' | 'industry'
   const [search, setSearch] = useState('');
+
+  // Deletion modal state
+  const [itemToDelete, setItemToDelete] = useState(null); // { type: 'University' | 'Organization', data: obj }
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Modals
   const [uniModalOpen, setUniModalOpen] = useState(false);
@@ -115,16 +120,8 @@ export const OrganizationsManagement = () => {
     }
   };
 
-  const handleDeleteUni = async (uni) => {
-    if (!window.confirm(`Delete university "${uni.name}"? Affiliated users will be unlinked.`)) return;
-    try {
-      await authAPI.deleteUniversity(uni.id);
-      showToast('University removed from system', 'success');
-      loadData();
-    } catch (err) {
-      console.error(err);
-      showToast('Failed to delete university', 'error');
-    }
+  const handleDeleteUni = (uni) => {
+    setItemToDelete({ type: 'University', data: uni });
   };
 
   // Organization CRUD
@@ -166,15 +163,29 @@ export const OrganizationsManagement = () => {
     }
   };
 
-  const handleDeleteOrg = async (org) => {
-    if (!window.confirm(`Remove partner organization "${org.name}"?`)) return;
+  const handleDeleteOrg = (org) => {
+    setItemToDelete({ type: 'Organization', data: org });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    setDeleteLoading(true);
     try {
-      await authAPI.deleteOrganization(org.id);
-      showToast('Partner organization removed', 'success');
+      if (itemToDelete.type === 'University') {
+        await authAPI.deleteUniversity(itemToDelete.data.id);
+        showToast(`University "${itemToDelete.data.name}" permanently deleted from database.`, 'success');
+      } else {
+        await authAPI.deleteOrganization(itemToDelete.data.id);
+        showToast(`Partner organization "${itemToDelete.data.name}" permanently deleted from database.`, 'success');
+      }
+      setItemToDelete(null);
       loadData();
     } catch (err) {
       console.error(err);
-      showToast('Failed to delete organization', 'error');
+      const msg = err.response?.data?.detail || `Failed to delete ${itemToDelete.type.toLowerCase()} from database.`;
+      showToast(msg, 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -640,6 +651,26 @@ export const OrganizationsManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Database Deletion Confirmation Alert Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(itemToDelete)}
+        onClose={() => !deleteLoading && setItemToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title={`Delete ${itemToDelete?.type} from Database`}
+        itemType={itemToDelete?.type === 'University' ? 'University Institution' : 'Industry Partner Organization'}
+        itemName={itemToDelete?.data?.name}
+        itemDetails={[
+          itemToDelete?.type === 'University' ? itemToDelete?.data?.district : (itemToDelete?.data?.org_type?.toUpperCase() || 'CSR PARTNER'),
+          itemToDelete?.data?.code ? `Code: ${itemToDelete.data.code}` : itemToDelete?.data?.website,
+        ].filter(Boolean)}
+        warningMessage={
+          itemToDelete?.type === 'University'
+            ? `Permanently deleting "${itemToDelete?.data?.name}" will remove this university from the database and unlink any associated student and coordinator accounts.`
+            : `Permanently deleting "${itemToDelete?.data?.name}" will remove this industry partner from the database and invalidate any associated corporate CSR sponsorships.`
+        }
+        loading={deleteLoading}
+      />
     </div>
   );
 };

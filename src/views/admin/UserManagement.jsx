@@ -21,6 +21,7 @@ import { authAPI } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import { DeleteConfirmModal } from '../../components/common/DeleteConfirmModal';
 
 export const UserManagement = () => {
   const { showToast } = useToast();
@@ -39,6 +40,10 @@ export const UserManagement = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Deletion modal state
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -103,8 +108,8 @@ export const UserManagement = () => {
       password: '',
       role: u.role || 'citizen',
       phone: u.phone || '',
-      university: u.university_id || u.university || '',
-      organization: u.organization_id || u.organization || '',
+      university: u.university_details?.id || u.university_id || u.university || '',
+      organization: u.organization_details?.id || u.organization_id || u.organization || '',
       is_staff: Boolean(u.is_staff),
       is_superuser: Boolean(u.is_superuser),
       is_active: u.is_active !== false,
@@ -159,31 +164,38 @@ export const UserManagement = () => {
       payload.organization = formData.organization ? parseInt(formData.organization, 10) : null;
 
       await authAPI.updateUser(editingUser.id, payload);
-      showToast(`User ${formData.name} updated successfully!`, 'success');
+      showToast(`User ${formData.name} credentials updated successfully!`, 'success');
       setShowEditModal(false);
       fetchAll();
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Failed to update user.';
+      const msg = err.response?.data?.detail || err.response?.data?.email?.[0] || 'Failed to update user credentials.';
       showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDeleteUser = async (u) => {
+  const handleDeleteClick = (u) => {
     if (u.id === currentUser?.id) {
       showToast('Cannot delete your own superadmin account.', 'error');
       return;
     }
-    if (!window.confirm(`Are you sure you want to permanently delete ${u.name} (${u.email})? This action cannot be undone.`)) {
-      return;
-    }
+    setUserToDelete(u);
+  };
+
+  const handleConfirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeleteLoading(true);
     try {
-      await authAPI.deleteUser(u.id);
-      showToast(`User ${u.name} deleted.`, 'info');
+      await authAPI.deleteUser(userToDelete.id);
+      showToast(`User ${userToDelete.name} (${userToDelete.email}) permanently deleted from database.`, 'success');
+      setUserToDelete(null);
       fetchAll();
     } catch (err) {
-      showToast('Failed to delete user.', 'error');
+      const msg = err.response?.data?.detail || 'Failed to delete user from database.';
+      showToast(msg, 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -413,10 +425,10 @@ export const UserManagement = () => {
                           </button>
 
                           <button
-                            onClick={() => handleDeleteUser(u)}
+                            onClick={() => handleDeleteClick(u)}
                             className="btn btn-outline btn-sm"
                             style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', borderRadius: '8px', color: '#EF4444', borderColor: '#FECACA' }}
-                            title="Delete user"
+                            title="Permanently Delete User from Database"
                           >
                             <Trash2 size={13} />
                           </button>
@@ -501,23 +513,45 @@ export const UserManagement = () => {
                 >
                   <option value="student">Student Innovator</option>
                   <option value="citizen">Citizen / Community</option>
-                  <option value="university_coordinator">University Coordinator</option>
+                  <option value="university_coordinator">University Coordinator (Campus Lead)</option>
                   <option value="faculty_mentor">Faculty Mentor</option>
                   <option value="gov_admin">Government Officer</option>
-                  <option value="industry_partner">Industry CSR Partner</option>
+                  <option value="industry_partner">Industry Partner / CSR Representative</option>
                   <option value="admin">Master Super Admin</option>
                 </select>
               </div>
 
+              {formData.role === 'university_coordinator' && (
+                <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '10px', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', color: '#1E40AF' }}>
+                  <School size={18} color="#2563EB" style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>University Coordinator:</strong> Must be linked to an accredited University below to manage challenge adoptions and student teams.
+                  </div>
+                </div>
+              )}
+
+              {formData.role === 'industry_partner' && (
+                <div style={{ backgroundColor: '#FAF5FF', border: '1px solid #E9D5FF', borderRadius: '10px', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', color: '#6B21A8' }}>
+                  <Building2 size={18} color="#9333EA" style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>Industry Partner:</strong> Must be linked to an Industry/CSR Organization below to sponsor challenges and evaluate student pitches.
+                  </div>
+                </div>
+              )}
+
               {['student', 'university_coordinator', 'faculty_mentor'].includes(formData.role) && (
                 <div className="form-group">
-                  <label className="form-label">University Affiliation</label>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <School size={14} color="#2563EB" />
+                    <span>Affiliated University {formData.role === 'university_coordinator' ? '(Required)' : ''} *</span>
+                  </label>
                   <select
                     className="form-select"
                     value={formData.university}
                     onChange={(e) => setFormData({ ...formData, university: e.target.value })}
+                    required={formData.role === 'university_coordinator'}
                   >
-                    <option value="">-- Select University --</option>
+                    <option value="">-- Select University Institution --</option>
                     {universities.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.name} ({u.district})
@@ -529,13 +563,17 @@ export const UserManagement = () => {
 
               {formData.role === 'industry_partner' && (
                 <div className="form-group">
-                  <label className="form-label">Industry Organization</label>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Building2 size={14} color="#9333EA" />
+                    <span>Partner Organization / Industry (Required) *</span>
+                  </label>
                   <select
                     className="form-select"
                     value={formData.organization}
                     onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                    required
                   >
-                    <option value="">-- Select Organization --</option>
+                    <option value="">-- Select Industry / CSR Organization --</option>
                     {organizations.map((o) => (
                       <option key={o.id} value={o.id}>
                         {o.name}
@@ -569,7 +607,7 @@ export const UserManagement = () => {
                   Cancel
                 </button>
                 <button type="submit" disabled={submitting} className="btn btn-primary">
-                  {submitting ? 'Creating...' : 'Create Account'}
+                  {submitting ? 'Creating...' : 'Create Account & Credentials'}
                 </button>
               </div>
             </form>
@@ -582,9 +620,14 @@ export const UserManagement = () => {
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>
-                Edit Account: {editingUser.name}
-              </h3>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  Edit Credentials: {editingUser.name}
+                </h3>
+                <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '3px' }}>
+                  Update login email, reset password, change role or reassign institution
+                </div>
+              </div>
               <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                 <X size={20} color="#64748B" />
               </button>
@@ -603,7 +646,7 @@ export const UserManagement = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Email</label>
+                  <label className="form-label">Login Email</label>
                   <input
                     type="email"
                     className="form-input"
@@ -616,11 +659,11 @@ export const UserManagement = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Reset Password (leave empty to keep)</label>
+                  <label className="form-label">Reset Password</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="New password..."
+                    placeholder="Enter new password (leave blank to keep)"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
@@ -637,7 +680,7 @@ export const UserManagement = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Role Override</label>
+                <label className="form-label">Role Assignment</label>
                 <select
                   className="form-select"
                   value={formData.role}
@@ -645,16 +688,37 @@ export const UserManagement = () => {
                 >
                   <option value="student">Student Innovator</option>
                   <option value="citizen">Citizen / Community</option>
-                  <option value="university_coordinator">University Coordinator</option>
+                  <option value="university_coordinator">University Coordinator (Campus Lead)</option>
                   <option value="faculty_mentor">Faculty Mentor</option>
                   <option value="gov_admin">Government Officer</option>
-                  <option value="industry_partner">Industry CSR Partner</option>
+                  <option value="industry_partner">Industry Partner / CSR Representative</option>
                   <option value="admin">Master Super Admin</option>
                 </select>
               </div>
 
+              {formData.role === 'university_coordinator' && (
+                <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '10px', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', color: '#1E40AF' }}>
+                  <School size={18} color="#2563EB" style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>University Coordinator:</strong> Must have an assigned university to review student innovations and manage challenges.
+                  </div>
+                </div>
+              )}
+
+              {formData.role === 'industry_partner' && (
+                <div style={{ backgroundColor: '#FAF5FF', border: '1px solid #E9D5FF', borderRadius: '10px', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', color: '#6B21A8' }}>
+                  <Building2 size={18} color="#9333EA" style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>Industry Partner:</strong> Must have an assigned corporate/CSR organization to co-fund challenges and review pitches.
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
-                <label className="form-label">University Affiliation</label>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <School size={14} color="#2563EB" />
+                  <span>University Affiliation</span>
+                </label>
                 <select
                   className="form-select"
                   value={formData.university}
@@ -670,7 +734,10 @@ export const UserManagement = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Industry Organization Affiliation</label>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Building2 size={14} color="#9333EA" />
+                  <span>Industry Organization Affiliation</span>
+                </label>
                 <select
                   className="form-select"
                   value={formData.organization}
@@ -717,13 +784,30 @@ export const UserManagement = () => {
                   Cancel
                 </button>
                 <button type="submit" disabled={submitting} className="btn btn-primary">
-                  {submitting ? 'Saving Changes...' : 'Save Overrides'}
+                  {submitting ? 'Saving Changes...' : 'Save Credentials'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Database Deletion Confirmation Alert Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(userToDelete)}
+        onClose={() => !deleteLoading && setUserToDelete(null)}
+        onConfirm={handleConfirmDeleteUser}
+        title="Delete User from Database"
+        itemType="User Account"
+        itemName={userToDelete?.name}
+        itemDetails={[
+          userToDelete?.email,
+          `Role: ${userToDelete?.role?.replace(/_/g, ' ')}`,
+          userToDelete?.university_details?.name || userToDelete?.organization_details?.name || 'No institution link',
+        ].filter(Boolean)}
+        warningMessage={`Deleting ${userToDelete?.name} (${userToDelete?.email}) will revoke their credentials and immediately wipe their record from the SQLite database.`}
+        loading={deleteLoading}
+      />
     </div>
   );
 };

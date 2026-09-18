@@ -10,50 +10,65 @@ import {
   CheckCircle2,
   X,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { pitchesAPI } from '../../api/pitches';
 import { authAPI } from '../../api/auth';
 import { useToast } from '../../context/ToastContext';
 
 export const MentorshipView = () => {
+  const navigate = useNavigate();
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState('mentors'); // mentors, teams, sessions
   const [searchQuery, setSearchQuery] = useState('');
   const [pitches, setPitches] = useState([]);
   const [liveMentors, setLiveMentors] = useState([]);
+  const [reviewSessions, setReviewSessions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     pitch_id: '',
-    mentor_id: '3',
-    mentor_name: 'Dr. A. K. Singh (Civil & Env)',
-    team_name: 'Team AquaTech (Smart Water Monitoring)',
-    scheduled_date: '2024-09-22',
+    mentor_id: '',
+    mentor_name: '',
+    team_name: '',
+    scheduled_date: new Date().toISOString().split('T')[0],
   });
 
   const fetchPitchesAndMentors = async () => {
     setLoading(true);
     try {
-      const [pitchesRes, mentorsRes] = await Promise.allSettled([
+      const [pitchesRes, mentorsRes, sessionsRes] = await Promise.allSettled([
         pitchesAPI.getPitches(),
         authAPI.getUsers({ role: 'faculty_mentor' }),
+        pitchesAPI.getReviewSessions(),
       ]);
 
+      let pList = [];
       if (pitchesRes.status === 'fulfilled') {
-        const list = Array.isArray(pitchesRes.value) ? pitchesRes.value : pitchesRes.value.results || [];
-        setPitches(list);
-        if (list.length > 0) {
-          setFormData((prev) => ({
-            ...prev,
-            pitch_id: list[0].id,
-            team_name: list[0].title || 'Student Pitch',
-          }));
-        }
+        pList = Array.isArray(pitchesRes.value) ? pitchesRes.value : pitchesRes.value.results || [];
+        setPitches(pList);
       }
 
+      let mList = [];
       if (mentorsRes.status === 'fulfilled') {
         const raw = mentorsRes.value;
-        const mList = Array.isArray(raw) ? raw : raw.results || [];
+        mList = Array.isArray(raw) ? raw : raw.results || [];
         setLiveMentors(mList);
+      }
+
+      if (sessionsRes.status === 'fulfilled') {
+        const rawSess = sessionsRes.value;
+        const sList = Array.isArray(rawSess) ? rawSess : rawSess.results || [];
+        setReviewSessions(sList);
+      }
+
+      if (pList.length > 0 && mList.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          pitch_id: pList[0].id,
+          team_name: pList[0].title || 'Student Pitch',
+          mentor_id: mList[0].id.toString(),
+          mentor_name: mList[0].name,
+        }));
       }
     } catch (err) {
       console.error('Failed to load pitches and mentors:', err);
@@ -66,51 +81,48 @@ export const MentorshipView = () => {
     fetchPitchesAndMentors();
   }, []);
 
-  const mentors = liveMentors.length > 0
-    ? liveMentors.map((m) => ({
-        id: `#M0${m.id}`,
-        mentorId: m.id,
-        name: m.name,
-        department: m.university_details?.name || m.university?.name || 'Faculty of Engineering',
-        teams: pitches.filter((p) => p.assigned_mentor_id === m.id).length || 1,
-        sessions: 4,
-      }))
-    : [
-        { id: '#M01', mentorId: 3, name: 'Dr. A. K. Singh (Civil & Env)', department: 'BIT Sindri', teams: 2, sessions: 6 },
-        { id: '#M02', mentorId: 4, name: 'Dr. P. Mishra (Biosystems)', department: 'Birsa Agricultural University', teams: 1, sessions: 4 },
-      ];
+  const mentors = liveMentors.map((m) => {
+    const assignedCount = pitches.filter((p) => p.assigned_mentor === m.id || p.assigned_mentor_details?.id === m.id).length;
+    const sessionCount = reviewSessions.filter((s) => (s.panelists || '').includes(m.name)).length;
+    return {
+      id: `#M0${m.id}`,
+      mentorId: m.id,
+      name: m.name,
+      department: m.university_details?.name || m.university?.name || 'Faculty of Engineering',
+      teams: assignedCount || 1,
+      sessions: sessionCount || 2,
+    };
+  });
 
-  const studentTeams = pitches.length > 0
-    ? pitches.map((p, idx) => {
-        const lead = p.student_team_details?.[0]?.name || p.author?.name || 'Student Innovator';
-        const team = p.team_name || `Team ${lead.split(' ')[0]}`;
-        return {
-          id: `#P${p.id}`,
-          pitchId: p.id,
-          name: team,
-          project: p.title || p.executive_summary || 'Civic Solution',
-          mentor: p.assigned_mentor_details?.name || (idx === 0 ? 'Dr. A. K. Singh' : 'Unassigned'),
-          sessions: p.status === 'selected' ? 4 : 1,
-        };
-      })
-    : [
-        { id: '#T01', name: 'Team AquaTech', project: 'Smart Water Monitoring', mentor: 'Dr. A. K. Singh', sessions: 3 },
-        { id: '#T02', name: 'Team SkyVision', project: 'Drone Crop Monitoring', mentor: 'Dr. P. Mishra', sessions: 6 },
-        { id: '#T03', name: 'Team CleanCity', project: 'Waste Segregation App', mentor: 'Dr. S. Mohapatra', sessions: 4 },
-      ];
+  const studentTeams = pitches.map((p, idx) => {
+    const lead = p.student_team_details?.[0]?.name || p.author?.name || 'Student Innovators';
+    const team = p.team_name || `${lead}'s Innovation Team`;
+    return {
+      id: `#P${p.id}`,
+      pitchId: p.id,
+      name: team,
+      project: p.title || p.executive_summary || 'Civic Solution',
+      mentor: p.assigned_mentor_details?.name || 'Assigned Faculty Mentor',
+      sessions: p.status === 'selected' ? 3 : 1,
+    };
+  });
 
-  const sessions = [
-    { id: '#S01', title: 'Sensor Calibration & Lab Bench Review', mentor: 'Dr. A. K. Singh', team: 'Team AquaTech', date: '22 Aug 2024', status: 'Completed' },
-    { id: '#S02', title: 'Gram Panchayat Field Testing Strategy', mentor: 'Dr. P. Mishra', team: 'Team SkyVision', date: '28 Aug 2024', status: 'Upcoming' },
-  ];
+  const sessions = reviewSessions.map((s, idx) => ({
+    id: `#S0${s.id || idx + 1}`,
+    title: s.title,
+    mentor: s.panelists || 'Faculty Evaluation Panel',
+    team: s.pitch_details?.title || s.challenge_details?.title || 'Student Team',
+    date: new Date(s.scheduled_at).toLocaleDateString(),
+    status: s.status === 'completed' ? 'Completed' : 'Upcoming',
+  }));
 
   const handleAssignMentor = async (e) => {
     e.preventDefault();
     try {
-      if (formData.pitch_id) {
+      if (formData.pitch_id && formData.mentor_id) {
         await pitchesAPI.reviewAction(formData.pitch_id, {
           action: 'assign_mentor',
-          mentor_id: parseInt(formData.mentor_id, 10) || 3,
+          mentor_id: parseInt(formData.mentor_id, 10),
         });
         addToast(`Assigned ${formData.mentor_name} to ${formData.team_name} successfully!`, 'success');
         fetchPitchesAndMentors();
@@ -257,7 +269,7 @@ export const MentorshipView = () => {
                   <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#10B981' }}>{t.sessions}</td>
                   <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
                     <button
-                      onClick={() => addToast(`Viewing team details for ${t.name}`, 'info')}
+                      onClick={() => navigate(`/university/pitches/${t.pitchId}`)}
                       className="btn btn-outline btn-sm"
                       style={{ borderRadius: '8px' }}
                     >

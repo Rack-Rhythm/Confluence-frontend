@@ -17,6 +17,7 @@ import { issuesAPI } from '../../api/issues';
 import { pitchesAPI } from '../../api/pitches';
 import { StatCard } from '../../components/common/StatCard';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, onSubmitPitchForProblem }) => {
   const { user } = useAuth();
@@ -177,9 +178,10 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
                 }}
               >
                 <img
-                  src={issue.photo_url || issue.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=200'}
+                  src={getIssueImageUrl(issue)}
                   alt={issue.title}
                   style={{ width: '60px', height: '60px', borderRadius: '10px', objectFit: 'cover' }}
+                  onError={(e) => handleImageError(e, issue.category)}
                 />
 
                 <div style={{ flex: 1, minWidth: 0 }}>

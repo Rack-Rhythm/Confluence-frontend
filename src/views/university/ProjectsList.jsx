@@ -41,6 +41,11 @@ export const ProjectsList = ({ onSelectProject }) => {
             else if (['deployment_ready'].includes(p.status)) stage = 'Testing';
             else if (['deployed', 'awaiting_citizen_verification', 'verified'].includes(p.status)) stage = 'Deployed';
 
+            const defaultProgress = stage === 'Deployed' ? 100 : stage === 'Testing' ? 85 : stage === 'Development' ? 65 : 35;
+            const teamNames = p.team_details?.map((t) => t.name).filter(Boolean).join(', ') ||
+              p.student_team_details?.map((t) => t.name).filter(Boolean).join(', ') ||
+              'Student Engineering Team';
+
             return {
               ...p,
               id: p.id,
@@ -49,8 +54,8 @@ export const ProjectsList = ({ onSelectProject }) => {
               problem: p.challenge_details?.title || p.title,
               category: p.challenge_details?.category || 'Engineering',
               stage,
-              progress: p.progress_pct ?? 35,
-              team_name: p.team_details?.map((t) => t.name).filter(Boolean).join(', ') || 'Innovation Team',
+              progress: p.progress_pct ?? defaultProgress,
+              team_name: teamNames,
             };
           });
           setProjects(formatted);
@@ -66,14 +71,15 @@ export const ProjectsList = ({ onSelectProject }) => {
             const stages = ['Prototype', 'Development', 'Testing', 'Deployed'];
             const stageIdx = (p.id || idx) % 4;
             const stage = p.stage || stages[stageIdx];
-            const progressVals = [25, 45, 75, 100];
+            const progressVals = [35, 65, 85, 100];
             const progress = p.progress_pct || progressVals[stageIdx];
+            const leadName = p.student_team_details?.[0]?.name || p.author?.name || 'Student Innovators';
 
             return {
               ...p,
               stage,
               progress,
-              team_name: p.team_name || (idx % 2 === 0 ? 'Team SkyVision' : 'Team CleanCity'),
+              team_name: p.team_name || `${leadName}'s Team`,
             };
           });
 

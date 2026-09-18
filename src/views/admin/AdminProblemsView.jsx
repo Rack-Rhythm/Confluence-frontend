@@ -30,6 +30,7 @@ import {
 import { issuesAPI } from '../../api/issues';
 import { authAPI } from '../../api/auth';
 import { useToast } from '../../context/ToastContext';
+import { DeleteConfirmModal } from '../../components/common/DeleteConfirmModal';
 
 const ALL_STATUSES = [
   { value: 'submitted', label: 'Submitted' },
@@ -99,6 +100,10 @@ export const AdminProblemsView = () => {
   const [issues, setIssues] = useState([]);
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Deletion modal state
+  const [issueToDelete, setIssueToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedIssue, setSelectedIssue] = useState(null);
@@ -224,21 +229,24 @@ export const AdminProblemsView = () => {
   };
 
   // Action: Delete Issue
-  const handleDeleteIssue = async (issue) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to permanently purge challenge "${issue.title}"? This cannot be undone.`
-      )
-    ) {
-      return;
-    }
+  const handleDeleteIssue = (issue) => {
+    setIssueToDelete(issue);
+  };
+
+  const handleConfirmDeleteIssue = async () => {
+    if (!issueToDelete) return;
+    setDeleteLoading(true);
     try {
-      await issuesAPI.deleteIssue(issue.id);
-      showToast('Challenge eradicated from database', 'success');
+      await issuesAPI.deleteIssue(issueToDelete.id);
+      showToast(`Challenge "${issueToDelete.title}" permanently deleted from database.`, 'success');
+      setIssueToDelete(null);
       fetchAll();
     } catch (err) {
       console.error(err);
-      showToast('Failed to delete challenge', 'error');
+      const msg = err.response?.data?.detail || 'Failed to delete challenge from database.';
+      showToast(msg, 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -1209,6 +1217,24 @@ export const AdminProblemsView = () => {
           </div>
         </div>
       )}
+
+      {/* Database Deletion Confirmation Alert Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(issueToDelete)}
+        onClose={() => !deleteLoading && setIssueToDelete(null)}
+        onConfirm={handleConfirmDeleteIssue}
+        title="Delete Challenge from Database"
+        itemType="Challenge / Problem Statement"
+        itemName={issueToDelete?.title}
+        itemDetails={[
+          `ID: #${issueToDelete?.public_id || issueToDelete?.id}`,
+          `District: ${issueToDelete?.district || 'Jharkhand'}`,
+          `Category: ${issueToDelete?.category?.replace(/_/g, ' ') || 'Civic'}`,
+          `Status: ${issueToDelete?.status?.toUpperCase() || 'SUBMITTED'}`,
+        ].filter(Boolean)}
+        warningMessage={`Permanently deleting this challenge will purge it directly from the database. Any associated adoptions, solution pitches, or project milestones will also be removed.`}
+        loading={deleteLoading}
+      />
     </div>
   );
 };

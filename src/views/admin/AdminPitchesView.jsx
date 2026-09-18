@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { pitchesAPI } from '../../api/pitches';
 import { useToast } from '../../context/ToastContext';
+import { DeleteConfirmModal } from '../../components/common/DeleteConfirmModal';
 
 const PITCH_STATUSES = [
   { value: 'submitted', label: 'Submitted' },
@@ -40,6 +41,10 @@ export const AdminPitchesView = () => {
   const { showToast } = useToast();
   const [pitches, setPitches] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Deletion modal state
+  const [pitchToDelete, setPitchToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedPitch, setSelectedPitch] = useState(null);
@@ -129,17 +134,24 @@ export const AdminPitchesView = () => {
   };
 
   // Action: Delete Pitch
-  const handleDeletePitch = async (pitch) => {
-    if (!window.confirm(`Permanently delete pitch "${pitch.title}"? This cannot be undone.`)) {
-      return;
-    }
+  const handleDeletePitch = (pitch) => {
+    setPitchToDelete(pitch);
+  };
+
+  const handleConfirmDeletePitch = async () => {
+    if (!pitchToDelete) return;
+    setDeleteLoading(true);
     try {
-      await pitchesAPI.deletePitch(pitch.id);
-      showToast('Solution pitch permanently removed', 'success');
+      await pitchesAPI.deletePitch(pitchToDelete.id);
+      showToast(`Pitch "${pitchToDelete.title}" permanently deleted from database.`, 'success');
+      setPitchToDelete(null);
       fetchPitches();
     } catch (err) {
       console.error(err);
-      showToast('Failed to delete pitch', 'error');
+      const msg = err.response?.data?.detail || 'Failed to delete pitch from database.';
+      showToast(msg, 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -728,6 +740,24 @@ export const AdminPitchesView = () => {
           </div>
         </div>
       )}
+
+      {/* Database Deletion Confirmation Alert Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(pitchToDelete)}
+        onClose={() => !deleteLoading && setPitchToDelete(null)}
+        onConfirm={handleConfirmDeletePitch}
+        title="Delete Solution Pitch from Database"
+        itemType="Solution Pitch"
+        itemName={pitchToDelete?.title}
+        itemDetails={[
+          `ID: #${pitchToDelete?.public_id || pitchToDelete?.id}`,
+          pitchToDelete?.university_name ? `University: ${pitchToDelete.university_name}` : null,
+          `Status: ${pitchToDelete?.status?.toUpperCase() || 'SUBMITTED'}`,
+          pitchToDelete?.lead_innovator ? `Lead: ${pitchToDelete.lead_innovator}` : null,
+        ].filter(Boolean)}
+        warningMessage={`Permanently deleting this pitch will wipe it directly from the central database. All student solution submissions, community feedback ratings, and review sessions linked to this pitch will be removed.`}
+        loading={deleteLoading}
+      />
     </div>
   );
 };

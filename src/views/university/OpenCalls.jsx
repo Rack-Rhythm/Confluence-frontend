@@ -283,10 +283,10 @@ export const OpenCalls = ({ onSelectIssue, onSelectPitch }) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexShrink: 0 }}>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
-                      {submissionsCount || Math.max(1, (call.id % 5) + 2)} Submissions
+                      {submissionsCount} {submissionsCount === 1 ? 'Submission' : 'Submissions'}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>
-                      ● Active Submissions Open
+                    <div style={{ fontSize: '0.75rem', color: submissionsCount > 0 ? '#10B981' : '#64748B', fontWeight: 700 }}>
+                      {submissionsCount > 0 ? '● Active Submissions' : '○ Awaiting Submissions'}
                     </div>
                   </div>
 

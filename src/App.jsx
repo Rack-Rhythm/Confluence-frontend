@@ -141,6 +141,8 @@ const UniversalSolutionRoute = () => {
   const role = user?.role;
   if (role === 'university_coordinator' || role === 'faculty_mentor') return <Navigate to={`/university/pitches/${id}`} replace />;
   if (role === 'industry_partner') return <Navigate to={`/industry/pitches/${id}`} replace />;
+  if (role === 'gov_admin') return <Navigate to={`/officer/pitches/${id}`} replace />;
+  if (role === 'admin') return <Navigate to={`/admin/pitches/${id}`} replace />;
   return <Navigate to={`/student/pitches/${id}`} replace />;
 };
 
@@ -150,6 +152,8 @@ const UniversalProjectRoute = () => {
   const role = user?.role;
   if (role === 'student') return <Navigate to={`/student/projects/${id}`} replace />;
   if (role === 'industry_partner') return <Navigate to={`/industry/projects/${id}`} replace />;
+  if (role === 'gov_admin') return <Navigate to={`/officer/projects/${id}`} replace />;
+  if (role === 'admin') return <Navigate to={`/admin/projects/${id}`} replace />;
   return <Navigate to={`/university/projects/${id}`} replace />;
 };
 
@@ -457,6 +461,14 @@ function MainApp() {
                     path="/officer/issues/:id"
                     element={<IssueDetail issue={selectedIssue} backLabel="Back to Issues Overview" onBack={() => navigate('/officer/issues')} onRefresh={() => {}} />}
                   />
+                  <Route
+                    path="/officer/pitches/:id"
+                    element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/officer/projects')} onRefresh={() => {}} />}
+                  />
+                  <Route
+                    path="/officer/projects/:id"
+                    element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/officer/projects')} />}
+                  />
                   <Route path="/officer/notifications" element={<NotificationsView />} />
                   <Route path="/officer/profile" element={<ProfileView />} />
                 </Route>
@@ -471,8 +483,24 @@ function MainApp() {
                   <Route path="/admin/users" element={<UserManagement />} />
                   <Route path="/admin/organizations" element={<OrganizationsManagement />} />
                   <Route path="/admin/problems" element={<AdminProblemsView />} />
+                  <Route
+                    path="/admin/problems/:id"
+                    element={<IssueDetail issue={selectedIssue} backLabel="Back to Problems" onBack={() => navigate('/admin/problems')} onRefresh={() => {}} />}
+                  />
+                  <Route
+                    path="/admin/issues/:id"
+                    element={<IssueDetail issue={selectedIssue} backLabel="Back to Problems" onBack={() => navigate('/admin/problems')} onRefresh={() => {}} />}
+                  />
                   <Route path="/admin/pitches" element={<AdminPitchesView />} />
+                  <Route
+                    path="/admin/pitches/:id"
+                    element={<PitchDetailsView pitch={selectedPitch} onBack={() => navigate('/admin/pitches')} onRefresh={() => {}} />}
+                  />
                   <Route path="/admin/projects" element={<ProjectsOverview />} />
+                  <Route
+                    path="/admin/projects/:id"
+                    element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/admin/projects')} />}
+                  />
                   <Route path="/admin/analytics" element={<ImpactAnalytics />} />
                   <Route path="/admin/reports" element={<ReportsDocuments />} />
                   <Route path="/admin/system-logs" element={<SystemLogsView />} />
