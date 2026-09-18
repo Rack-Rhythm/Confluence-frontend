@@ -16,6 +16,7 @@ import {
 import { issuesAPI } from '../../api/issues';
 import { pitchesAPI } from '../../api/pitches';
 import { useToast } from '../../context/ToastContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const OpenCalls = ({ onSelectIssue, onSelectPitch }) => {
   const { addToast } = useToast();
@@ -243,9 +244,10 @@ export const OpenCalls = ({ onSelectIssue, onSelectPitch }) => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1, minWidth: 0 }}>
                   <img
-                    src={call.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=300'}
+                    src={getIssueImageUrl(call)}
                     alt={call.title}
-                    style={{ width: '90px', height: '80px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0 }}
+                    style={{ width: '90px', height: '80px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                    onError={(e) => handleImageError(e, call.category)}
                   />
 
                   <div style={{ minWidth: 0 }}>

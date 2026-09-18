@@ -15,12 +15,17 @@ import {
   Award,
   AlertOctagon,
   ArrowRight,
+  Sparkles,
+  Eye,
+  MapPin,
 } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
 import { pitchesAPI } from '../../api/pitches';
 import { analyticsAPI } from '../../api/analytics';
 import { StatCard } from '../../components/common/StatCard';
+import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { useAuth } from '../../context/AuthContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const UniversityDashboard = ({ onNavigate, onSelectIssue, onSelectPitch }) => {
   const { user } = useAuth();
@@ -539,6 +544,139 @@ export const UniversityDashboard = ({ onNavigate, onSelectIssue, onSelectPitch }
             })}
           </div>
         </div>
+      </div>
+
+      {/* 4. Incoming Problem Pipeline (Recently Reported) */}
+      <div
+        className="card"
+        style={{
+          background: '#FFFFFF',
+          borderRadius: '16px',
+          border: '1px solid #E2E8F0',
+          padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '1.25rem',
+            borderBottom: '1px solid #F1F5F9',
+            paddingBottom: '0.85rem',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+          }}
+        >
+          <div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              Incoming Problem Pipeline
+            </h3>
+            <p style={{ fontSize: '0.775rem', color: '#64748B', margin: '3px 0 0 0' }}>
+              Recently reported citizen problems requiring university verification and adoption
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onNavigate('problem_pipeline')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              color: '#2563EB',
+              background: '#EFF6FF',
+              border: '1px solid #BFDBFE',
+              padding: '0.4rem 0.85rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+            }}
+          >
+            <span>View Full Pipeline ({totalIssues})</span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
+
+        {issues.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2.5rem', color: '#64748B' }}>
+            No reported problems available in the pipeline.
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+              <thead>
+                <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#64748B', fontWeight: 700, fontSize: '0.75rem' }}>
+                  <th style={{ padding: '0.75rem 1rem' }}># ID</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>REPORTED PROBLEM & PHOTO</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>AI CLASSIFICATION</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>LOCATION</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>STATUS</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                {issues.slice(0, 6).map((iss) => (
+                  <tr key={iss.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                    <td style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#64748B' }}>
+                      #{iss.id}
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <img
+                          src={getIssueImageUrl(iss)}
+                          alt={iss.title}
+                          style={{
+                            width: '42px',
+                            height: '42px',
+                            borderRadius: '8px',
+                            objectFit: 'cover',
+                            flexShrink: 0,
+                            border: '1px solid #E2E8F0',
+                            background: '#F1F5F9',
+                          }}
+                          onError={(e) => handleImageError(e, iss.category)}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#0F172A', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {iss.title}
+                          </div>
+                          <div style={{ fontSize: '0.725rem', color: '#64748B' }}>
+                            Reported {iss.created_at ? new Date(iss.created_at).toLocaleDateString() : 'recently'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10B981', fontWeight: 700, fontSize: '0.75rem' }}>
+                        <Sparkles size={12} /> {Math.round((iss.ai_confidence || 0.9) * 100)}% ({iss.category})
+                      </div>
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem', color: '#475569' }}>
+                      📍 {iss.district || 'Dhanbad'}
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem' }}>
+                      <StatusBadge status={iss.status} />
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                      <button
+                        type="button"
+                        onClick={() => onSelectIssue ? onSelectIssue(iss) : onNavigate('problem_pipeline')}
+                        className="btn btn-outline btn-sm"
+                        style={{ borderRadius: '6px', fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                      >
+                        <Eye size={13} style={{ marginRight: '4px' }} />
+                        Review
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { issuesAPI } from '../../api/issues';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const ValidationView = ({ onSelectIssue }) => {
   const { role } = useAuth();
@@ -116,7 +117,7 @@ export const ValidationView = ({ onSelectIssue }) => {
               <thead>
                 <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#64748B', fontWeight: 700, fontSize: '0.75rem' }}>
                   <th style={{ padding: '0.85rem 1.25rem' }}># ID</th>
-                  <th style={{ padding: '0.85rem 1.25rem' }}>TITLE</th>
+                  <th style={{ padding: '0.85rem 1.25rem' }}>TITLE & PHOTO</th>
                   <th style={{ padding: '0.85rem 1.25rem' }}>AI DUPLICATE-CHECK</th>
                   <th style={{ padding: '0.85rem 1.25rem' }}>AI CATEGORY</th>
                   <th style={{ padding: '0.85rem 1.25rem', textAlign: 'right' }}>ACTION</th>
@@ -128,8 +129,18 @@ export const ValidationView = ({ onSelectIssue }) => {
                     <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#64748B' }}>
                       #{issue.id}
                     </td>
-                    <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#0F172A', maxWidth: '300px' }}>
-                      {issue.title}
+                    <td style={{ padding: '1rem 1.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <img
+                          src={getIssueImageUrl(issue)}
+                          alt={issue.title}
+                          style={{ width: '42px', height: '42px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                          onError={(e) => handleImageError(e, issue.category)}
+                        />
+                        <div style={{ fontWeight: 700, color: '#0F172A', maxWidth: '280px' }}>
+                          {issue.title}
+                        </div>
+                      </div>
                     </td>
                     <td style={{ padding: '1rem 1.25rem' }}>
                       {issue.duplicate_of || issue.duplicate_of_details || (issue.ai_triage_notes && issue.ai_triage_notes.includes('Flagged duplicate')) ? (

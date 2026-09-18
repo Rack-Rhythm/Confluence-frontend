@@ -1,26 +1,12 @@
 import React from 'react';
 import { MapPin, Eye, MessageSquare, Clock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { StatusBadge, CategoryPill } from './StatusBadge';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const IssueCard = ({ issue, onView, compact = false }) => {
   if (!issue) return null;
 
-  // Fallback image based on category if photo_url is missing
-  const getCategoryImage = (category) => {
-    const images = {
-      water: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=600&auto=format&fit=crop&q=80',
-      agriculture: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80',
-      education: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&auto=format&fit=crop&q=80',
-      urban_infra: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80',
-      environment: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=600&auto=format&fit=crop&q=80',
-      healthcare: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=600&auto=format&fit=crop&q=80',
-      energy: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=600&auto=format&fit=crop&q=80',
-      transport: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=600&auto=format&fit=crop&q=80',
-    };
-    return images[issue.category] || 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80';
-  };
-
-  const imageSrc = issue.photo_url || (issue.photo ? (issue.photo.startsWith('http') ? issue.photo : `http://127.0.0.1:8000${issue.photo}`) : getCategoryImage(issue.category));
+  const imageSrc = getIssueImageUrl(issue);
 
   // Determine Impact badge
   const isHighImpact = issue.ai_confidence > 0.9 || issue.is_escalated;

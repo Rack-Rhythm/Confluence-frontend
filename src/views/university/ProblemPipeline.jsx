@@ -3,6 +3,7 @@ import { Inbox, Sparkles, CheckCircle, XCircle, ArrowRight, Layers, Eye } from '
 import { issuesAPI } from '../../api/issues';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { useToast } from '../../context/ToastContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const ProblemPipeline = ({ onSelectIssue }) => {
   const { showToast } = useToast();
@@ -129,9 +130,10 @@ export const ProblemPipeline = ({ onSelectIssue }) => {
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <img
-                          src={issue.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=100'}
+                          src={getIssueImageUrl(issue)}
                           alt={issue.title}
-                          style={{ width: '38px', height: '38px', borderRadius: '8px', objectFit: 'cover' }}
+                          style={{ width: '42px', height: '42px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                          onError={(e) => handleImageError(e, issue.category)}
                         />
                         <div style={{ fontWeight: 700, color: '#0F172A', maxWidth: '260px' }}>
                           {issue.title}

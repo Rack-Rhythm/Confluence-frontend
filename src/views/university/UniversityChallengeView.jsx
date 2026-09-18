@@ -21,6 +21,8 @@ import {
   Building2,
   ChevronRight,
   ShieldCheck,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { issuesAPI } from '../../api/issues';
@@ -29,6 +31,7 @@ import { authAPI } from '../../api/auth';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const UniversityChallengeView = ({ issueId, onBack, onSelectPitch }) => {
   const params = useParams();
@@ -420,6 +423,94 @@ export const UniversityChallengeView = ({ issueId, onBack, onSelectPitch }) => {
       {activeTab === 'overview' && (
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* Reported Photographic Evidence Card */}
+            <div
+              className="card"
+              style={{
+                background: '#FFFFFF',
+                padding: '1.25rem',
+                borderRadius: '16px',
+                border: '1px solid #E2E8F0',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '0.85rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: '#EFF6FF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#2563EB',
+                    }}
+                  >
+                    <Camera size={18} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      Reported Photographic Evidence
+                    </h3>
+                    <div style={{ fontSize: '0.725rem', color: '#64748B' }}>
+                      Primary visual record submitted for this problem
+                    </div>
+                  </div>
+                </div>
+
+                <span
+                  style={{
+                    fontSize: '0.725rem',
+                    fontWeight: 700,
+                    color: '#2563EB',
+                    background: '#EFF6FF',
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <ImageIcon size={13} />
+                  {issue.photo ? 'Uploaded Photo File' : issue.photo_url ? 'Reported Photo Link' : 'Category Reference'}
+                </span>
+              </div>
+
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '340px',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  background: '#F8FAFC',
+                  border: '1px solid #F1F5F9',
+                }}
+              >
+                <img
+                  src={getIssueImageUrl(issue)}
+                  alt={issue.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    transition: 'transform 0.3s ease',
+                  }}
+                  onError={(e) => handleImageError(e, issue.category)}
+                />
+              </div>
+            </div>
+
             {/* Problem Statement Card */}
             <div className="card" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.75rem' }}>

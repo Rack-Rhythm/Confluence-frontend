@@ -22,6 +22,7 @@ import { authAPI } from '../../api/auth';
 import { engagementsAPI } from '../../api/engagements';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { useToast } from '../../context/ToastContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const AdoptedProblems = ({ onSelectIssue, onCreateOpenCall }) => {
   const { showToast } = useToast();
@@ -299,11 +300,21 @@ export const AdoptedProblems = ({ onSelectIssue, onCreateOpenCall }) => {
                       <StatusBadge status={issue.status} />
                     </div>
 
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.4rem' }}>
-                      {issue.title}
-                    </h3>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginBottom: '0.75rem' }}>
-                      📍 {issue.district} • Adopted by University Innovation Cell
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', marginBottom: '0.85rem' }}>
+                      <img
+                        src={getIssueImageUrl(issue)}
+                        alt={issue.title}
+                        style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                        onError={(e) => handleImageError(e, issue.category)}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.4rem', lineHeight: 1.3 }}>
+                          {issue.title}
+                        </h3>
+                        <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                          📍 {issue.district} • Adopted by University Innovation Cell
+                        </div>
+                      </div>
                     </div>
 
                     <p style={{ fontSize: '0.85rem', color: '#334155', lineHeight: 1.5, marginBottom: '1rem' }}>
