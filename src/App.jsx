@@ -84,12 +84,11 @@ import { IndustryProjectsView } from './views/industry/IndustryProjectsView';
 import { IndustryProfile } from './views/industry/IndustryProfile';
 
 export const getBaseRole = (r) => {
+  if (r === 'citizen') return 'citizen';
+  if (r === 'student') return 'student';
   if (r === 'university_coordinator' || r === 'faculty_mentor') return 'university';
   if (r === 'gov_admin') return 'officer';
   if (r === 'industry_partner') return 'industry';
-  if (r === 'student') return 'student';
-  if (r === 'citizen') return 'citizen';
-  if (r === 'admin') return 'admin';
   return r || 'citizen';
 };
 
@@ -142,7 +141,6 @@ const UniversalSolutionRoute = () => {
   if (role === 'university_coordinator' || role === 'faculty_mentor') return <Navigate to={`/university/pitches/${id}`} replace />;
   if (role === 'industry_partner') return <Navigate to={`/industry/pitches/${id}`} replace />;
   if (role === 'gov_admin') return <Navigate to={`/officer/pitches/${id}`} replace />;
-  if (role === 'admin') return <Navigate to={`/admin/pitches/${id}`} replace />;
   return <Navigate to={`/student/pitches/${id}`} replace />;
 };
 
@@ -153,7 +151,6 @@ const UniversalProjectRoute = () => {
   if (role === 'student') return <Navigate to={`/student/projects/${id}`} replace />;
   if (role === 'industry_partner') return <Navigate to={`/industry/projects/${id}`} replace />;
   if (role === 'gov_admin') return <Navigate to={`/officer/projects/${id}`} replace />;
-  if (role === 'admin') return <Navigate to={`/admin/projects/${id}`} replace />;
   return <Navigate to={`/university/projects/${id}`} replace />;
 };
 

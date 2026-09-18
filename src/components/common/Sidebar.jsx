@@ -198,7 +198,7 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
     }
 
     // 4. Government Dashboard Sidebar
-    if (role === 'gov_admin' && !user?.is_superuser) {
+    if (role === 'gov_admin') {
       return {
         main: [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -236,25 +236,16 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
       };
     }
 
-    // 6. Admin Dashboard Sidebar (Super Admin)
+    // Default Fallback: Citizen Sidebar
     return {
       main: [
-        { id: 'dashboard', label: 'Master Console', icon: LayoutDashboard },
-        { id: 'user_management', label: 'Users & Impersonate', icon: Users },
-        { id: 'problem_management', label: 'Challenges & Overrides', icon: ListChecks },
-        { id: 'solution_vault', label: 'Solutions & IP Vault', icon: Lightbulb },
-        { id: 'organizations', label: 'Universities & Orgs', icon: Building2 },
-        { id: 'project_management', label: 'Project Oversight', icon: Rocket },
-        { id: 'platform_analytics', label: 'Platform Analytics', icon: BarChart3 },
-        { id: 'reports', label: 'Reports & Export', icon: FileText },
-      ],
-      system: [
-        { id: 'platform_settings', label: 'Platform Master Settings', icon: Sliders },
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'report_problem', label: 'Report Problem', icon: PlusCircle },
+        { id: 'my_issues', label: 'My Issues', icon: ListChecks },
         { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadNotificationsCount },
-        { id: 'system_logs', label: 'Audit Logs & Telemetry', icon: TerminalSquare },
+        { id: 'profile', label: 'Profile', icon: User },
       ],
       account: [
-        { id: 'profile', label: 'Profile', icon: User },
         { id: 'logout', label: 'Logout', icon: LogOut, isAction: true },
       ],
     };

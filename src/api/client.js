@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 // Base API URL (uses VITE_API_BASE_URL env var, or falls back to relative '/api' in dev, or Render backend URL in production)
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||

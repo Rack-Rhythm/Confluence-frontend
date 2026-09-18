@@ -221,7 +221,6 @@ export const UserManagement = () => {
     { id: 'university', label: `University Staff (${usersList.filter((u) => u.role.includes('coordinator') || u.role.includes('mentor')).length})` },
     { id: 'government', label: `Government (${usersList.filter((u) => u.role === 'gov_admin').length})` },
     { id: 'industry', label: `Industry (${usersList.filter((u) => u.role === 'industry_partner').length})` },
-    { id: 'admin', label: `Admins (${usersList.filter((u) => u.role === 'admin' || u.is_superuser).length})` },
   ];
 
   const filtered = usersList.filter((u) => {
@@ -231,8 +230,7 @@ export const UserManagement = () => {
       (activeTab === 'student' && u.role === 'student') ||
       (activeTab === 'university' && (u.role.includes('coordinator') || u.role.includes('mentor'))) ||
       (activeTab === 'government' && u.role === 'gov_admin') ||
-      (activeTab === 'industry' && u.role === 'industry_partner') ||
-      (activeTab === 'admin' && (u.role === 'admin' || u.is_superuser));
+      (activeTab === 'industry' && u.role === 'industry_partner');
 
     const q = searchQuery.toLowerCase();
     const matchesSearch =
@@ -517,7 +515,6 @@ export const UserManagement = () => {
                   <option value="faculty_mentor">Faculty Mentor</option>
                   <option value="gov_admin">Government Officer</option>
                   <option value="industry_partner">Industry Partner / CSR Representative</option>
-                  <option value="admin">Master Super Admin</option>
                 </select>
               </div>
 
@@ -692,7 +689,6 @@ export const UserManagement = () => {
                   <option value="faculty_mentor">Faculty Mentor</option>
                   <option value="gov_admin">Government Officer</option>
                   <option value="industry_partner">Industry Partner / CSR Representative</option>
-                  <option value="admin">Master Super Admin</option>
                 </select>
               </div>
 
