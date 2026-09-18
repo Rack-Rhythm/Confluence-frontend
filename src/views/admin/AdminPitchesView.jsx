@@ -332,7 +332,7 @@ export const AdminPitchesView = () => {
                           {pitch.issue_title || 'Civic Challenge'}
                         </div>
                         <div style={{ fontSize: '0.725rem', color: '#64748B', marginTop: '2px' }}>
-                          Challenge ID: #{pitch.issue ? pitch.issue.slice(0, 8) : 'N/A'}
+                          Challenge ID: #{pitch.issue ? String(pitch.issue).slice(0, 8) : 'N/A'}
                         </div>
                       </td>
 

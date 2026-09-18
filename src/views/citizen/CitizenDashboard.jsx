@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   FileText,
   Clock,
@@ -7,192 +8,113 @@ import {
   MapPin,
   ArrowRight,
   ChevronDown,
+  ChevronRight,
   Image as ImageIcon,
   Sparkles,
   Building2,
   Trash2,
   ShieldCheck,
   Leaf,
-  Bus,
   ArrowUpDown,
   LayoutGrid,
   Calendar,
   Compass,
   X,
-  Maximize2,
-  ExternalLink,
+  RefreshCw,
+  Search,
+  Home,
+  Plus,
+  ListTodo,
+  User,
+  Droplets,
+  Trees,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { issuesAPI } from '../../api/issues';
 import { IssueMap } from '../../components/common/IssueMap';
 
-// Standard high-fidelity sample issues matching the design
-const SAMPLE_COMMUNITY_ISSUES = [
-  {
-    id: 'sample-1',
-    title: 'Severe Potholes on Main Road Causing Accidents',
-    category: 'infrastructure',
-    category_display: 'Infrastructure',
-    district: 'Bokaro',
-    state: 'Jharkhand',
-    time_ago: '2 days ago',
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    description:
-      'Large potholes on the main road near City Mall are causing accidents frequently. The road needs urgent repair before the situation worsens.',
-    status: 'submitted',
-    latitude: 23.6693,
-    longitude: 86.1511,
-    theme: {
-      bg: '#DBEAFE',
-      badgeBg: '#EFF6FF',
-      text: '#2563EB',
-      iconColor: '#3B82F6',
-    },
-  },
-  {
-    id: 'sample-2',
-    title: 'Garbage Overflowing Near Bus Stand',
-    category: 'sanitation',
-    category_display: 'Sanitation',
-    district: 'Dhanbad',
-    state: 'Jharkhand',
-    time_ago: '3 days ago',
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    description:
-      'Garbage bins near the bus stand are overflowing for several days, causing a foul smell and creating health hazards for nearby residents.',
-    status: 'validated',
-    latitude: 23.7957,
-    longitude: 86.4304,
-    theme: {
+// Map helper to format category theme colors and human-readable badges
+const getCategoryTheme = (category) => {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('water') || cat.includes('sanitat')) {
+    return {
       bg: '#D1FAE5',
       badgeBg: '#ECFDF5',
       text: '#059669',
       iconColor: '#10B981',
-    },
-  },
-  {
-    id: 'sample-3',
-    title: 'Street Lights Not Working in Locality',
-    category: 'public_safety',
-    category_display: 'Public Safety',
-    district: 'Ranchi',
-    state: 'Jharkhand',
-    time_ago: '4 days ago',
-    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    description:
-      'Multiple street lights have been non-functional for over a week, making the area unsafe during night hours.',
-    status: 'adopted',
-    latitude: 23.3441,
-    longitude: 85.3096,
-    theme: {
-      bg: '#EDE9FE',
-      badgeBg: '#F5F3FF',
-      text: '#7C3AED',
-      iconColor: '#8B5CF6',
-    },
-  },
-  {
-    id: 'sample-4',
-    title: 'Waterbody Polluted with Plastic Waste',
-    category: 'environment',
-    category_display: 'Environment',
-    district: 'Jamshedpur',
-    state: 'Jharkhand',
-    time_ago: '5 days ago',
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    description:
-      'The nearby lake is filled with plastic and other waste, affecting local wildlife and creating an unhealthy environment.',
-    status: 'submitted',
-    latitude: 22.8046,
-    longitude: 86.2029,
-    theme: {
-      bg: '#DCFCE7',
-      badgeBg: '#F0FDF4',
-      text: '#16A34A',
-      iconColor: '#22C55E',
-    },
-  },
-  {
-    id: 'sample-5',
-    title: 'Broken Footpath Creates Difficulty for Pedestrians',
-    category: 'infrastructure',
-    category_display: 'Infrastructure',
-    district: 'Ranchi',
-    state: 'Jharkhand',
-    time_ago: '6 days ago',
-    created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-    description:
-      'The footpath near the railway station is damaged, making it difficult for pedestrians, especially senior citizens and divyang individuals.',
-    status: 'assigned',
-    latitude: 23.356,
-    longitude: 85.324,
-    theme: {
-      bg: '#FFE4E6',
-      badgeBg: '#FFF1F2',
-      text: '#E11D48',
-      iconColor: '#F43F5E',
-    },
-  },
-  {
-    id: 'sample-6',
-    title: 'Bus Stop Needs Shelter Facility',
-    category: 'transport',
-    category_display: 'Transport',
-    district: 'Dhanbad',
-    state: 'Jharkhand',
-    time_ago: '1 week ago',
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    description:
-      'The bus stop near the market area does not have a shelter. People, especially students and daily commuters, face difficulties during rain and extreme heat.',
-    status: 'validated',
-    latitude: 23.8101,
-    longitude: 86.4412,
-    theme: {
+      label: 'Water & Sanitation',
+    };
+  }
+  if (cat.includes('agri') || cat.includes('farm')) {
+    return {
       bg: '#FEF3C7',
       badgeBg: '#FFFBEB',
       text: '#D97706',
       iconColor: '#F59E0B',
-    },
-  },
-];
-
-// Map helper to format category theme colors
-const getCategoryTheme = (category) => {
-  const cat = (category || '').toLowerCase();
-  if (cat.includes('infra') || cat.includes('road') || cat.includes('urban')) {
+      label: 'Agriculture',
+    };
+  }
+  if (cat.includes('edu') || cat.includes('school')) {
     return {
       bg: '#DBEAFE',
       badgeBg: '#EFF6FF',
       text: '#2563EB',
       iconColor: '#3B82F6',
-      label: 'Infrastructure',
+      label: 'Education',
     };
   }
-  if (cat.includes('sanitat') || cat.includes('water') || cat.includes('waste')) {
-    return {
-      bg: '#D1FAE5',
-      badgeBg: '#ECFDF5',
-      text: '#059669',
-      iconColor: '#10B981',
-      label: 'Sanitation',
-    };
-  }
-  if (cat.includes('safe') || cat.includes('public') || cat.includes('admin') || cat.includes('light')) {
-    return {
-      bg: '#EDE9FE',
-      badgeBg: '#F5F3FF',
-      text: '#7C3AED',
-      iconColor: '#8B5CF6',
-      label: 'Public Safety',
-    };
-  }
-  if (cat.includes('env') || cat.includes('forest') || cat.includes('energy') || cat.includes('tree')) {
+  if (cat.includes('env') || cat.includes('forest')) {
     return {
       bg: '#DCFCE7',
       badgeBg: '#F0FDF4',
       text: '#16A34A',
       iconColor: '#22C55E',
-      label: 'Environment',
+      label: 'Environment & Forests',
+    };
+  }
+  if (cat.includes('energy') || cat.includes('solar') || cat.includes('power')) {
+    return {
+      bg: '#FEF9C3',
+      badgeBg: '#FEF08A',
+      text: '#CA8A04',
+      iconColor: '#EAB308',
+      label: 'Renewable Energy',
+    };
+  }
+  if (cat.includes('infra') || cat.includes('road') || cat.includes('urban')) {
+    return {
+      bg: '#E0F2FE',
+      badgeBg: '#F0F9FF',
+      text: '#0284C7',
+      iconColor: '#0EA5E9',
+      label: 'Urban Infrastructure',
+    };
+  }
+  if (cat.includes('rural') || cat.includes('livelihood') || cat.includes('artisan') || cat.includes('handloom') || cat.includes('tribal')) {
+    return {
+      bg: '#FFEDD5',
+      badgeBg: '#FFF7ED',
+      text: '#EA580C',
+      iconColor: '#F97316',
+      label: 'Rural Livelihoods',
+    };
+  }
+  if (cat.includes('health') || cat.includes('medic')) {
+    return {
+      bg: '#FFE4E6',
+      badgeBg: '#FFF1F2',
+      text: '#E11D48',
+      iconColor: '#F43F5E',
+      label: 'Healthcare',
+    };
+  }
+  if (cat.includes('safe') || cat.includes('public') || cat.includes('admin')) {
+    return {
+      bg: '#EDE9FE',
+      badgeBg: '#F5F3FF',
+      text: '#7C3AED',
+      iconColor: '#8B5CF6',
+      label: 'Public Administration',
     };
   }
   if (cat.includes('trans') || cat.includes('bus') || cat.includes('traffic')) {
@@ -209,14 +131,47 @@ const getCategoryTheme = (category) => {
     badgeBg: '#EEF2FF',
     text: '#4F46E5',
     iconColor: '#6366F1',
-    label: category || 'General',
+    label: category ? category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'General',
   };
+};
+
+// Curated contextual photo fallbacks matching Jharkhand civic & problem categories
+const getCategoryFallbackImage = (category, title) => {
+  const cat = (category || '').toLowerCase();
+  const t = (title || '').toLowerCase();
+  if (cat.includes('water') || cat.includes('sanitat') || t.includes('water')) {
+    return 'https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?w=400&auto=format&fit=crop&q=80';
+  }
+  if (cat.includes('agri') || cat.includes('farm') || t.includes('crop') || t.includes('soil')) {
+    return 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&auto=format&fit=crop&q=80';
+  }
+  if (cat.includes('edu') || cat.includes('school') || t.includes('teacher') || t.includes('school')) {
+    return 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&auto=format&fit=crop&q=80';
+  }
+  if (cat.includes('env') || cat.includes('forest') || cat.includes('pollut') || t.includes('slag') || t.includes('smoke') || t.includes('mud')) {
+    return 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=400&auto=format&fit=crop&q=80';
+  }
+  if (cat.includes('energy') || cat.includes('solar') || cat.includes('power')) {
+    return 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=400&auto=format&fit=crop&q=80';
+  }
+  if (cat.includes('rural') || cat.includes('livelihood') || cat.includes('handloom') || cat.includes('artisan') || cat.includes('tribal') || t.includes('jacquard')) {
+    return 'https://images.unsplash.com/photo-1606857521015-7f9fcf423740?w=400&auto=format&fit=crop&q=80';
+  }
+  if (cat.includes('health') || cat.includes('medic') || cat.includes('clinic')) {
+    return 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=400&auto=format&fit=crop&q=80';
+  }
+  if (cat.includes('infra') || cat.includes('road') || cat.includes('urban') || t.includes('bridge') || t.includes('defect') || t.includes('tree')) {
+    return 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&auto=format&fit=crop&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&auto=format&fit=crop&q=80';
 };
 
 export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [allIssues, setAllIssues] = useState([]);
-  const [myIssues, setMyIssues] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Full Map Modal State
@@ -224,39 +179,27 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
   const [modalCategoryFilter, setModalCategoryFilter] = useState('all');
 
   // Active filters
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryPill, setSelectedCategoryPill] = useState('all');
   const [sortBy, setSortBy] = useState('latest');
   const [locationFilter, setLocationFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('latest');
 
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      const res = await issuesAPI.getIssues();
+      const list = Array.isArray(res) ? res : res.results || [];
+      setAllIssues(list);
+    } catch (err) {
+      console.error('Failed to load dashboard issues:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadDashboardData = async () => {
-      setLoading(true);
-      try {
-        const [allRes, mineRes] = await Promise.allSettled([
-          issuesAPI.getIssues(),
-          issuesAPI.getIssues({ mine: 1 }),
-        ]);
-
-        if (allRes.status === 'fulfilled') {
-          const res = allRes.value;
-          const list = Array.isArray(res) ? res : res.results || [];
-          setAllIssues(list);
-        }
-
-        if (mineRes.status === 'fulfilled') {
-          const res = mineRes.value;
-          const list = Array.isArray(res) ? res : res.results || [];
-          setMyIssues(list);
-        }
-      } catch (err) {
-        console.error('Failed to load dashboard:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadDashboardData();
   }, []);
 
@@ -269,61 +212,81 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Merge live issues with canonical sample feed issues to ensure rich visual presentation
-  const mergedFeedIssues = useMemo(() => {
-    const liveList = allIssues.map((issue) => {
+  // Format real database issues with category badges & formatted timestamps
+  const feedIssues = useMemo(() => {
+    return allIssues.map((issue) => {
       const theme = getCategoryTheme(issue.category);
+      const daysDiff = issue.created_at
+        ? Math.max(1, Math.floor((Date.now() - new Date(issue.created_at).getTime()) / (1000 * 60 * 60 * 24)))
+        : 1;
       return {
         ...issue,
         category_display: theme.label,
-        time_ago: issue.created_at
-          ? `${Math.max(1, Math.floor((Date.now() - new Date(issue.created_at).getTime()) / (1000 * 60 * 60 * 24)))} days ago`
-          : 'Recently',
+        time_ago: daysDiff === 1 ? '1 day ago' : `${daysDiff} days ago`,
         theme,
+        preview_image: issue.photo_url || issue.photo || getCategoryFallbackImage(issue.category, issue.title),
       };
     });
-
-    const liveTitles = new Set(liveList.map((i) => i.title.toLowerCase().trim()));
-    const nonDuplicatedSamples = SAMPLE_COMMUNITY_ISSUES.filter(
-      (s) => !liveTitles.has(s.title.toLowerCase().trim())
-    );
-
-    return [...liveList, ...nonDuplicatedSamples];
   }, [allIssues]);
 
-  // Filter and Sort feed issues
+  // Dynamically extract unique districts from database issues
+  const availableDistricts = useMemo(() => {
+    const set = new Set(allIssues.map((i) => i.district).filter(Boolean));
+    return Array.from(set).sort();
+  }, [allIssues]);
+
+  // Dynamically extract unique categories from database issues
+  const availableCategories = useMemo(() => {
+    const map = new Map();
+    allIssues.forEach((i) => {
+      if (i.category && !map.has(i.category)) {
+        map.set(i.category, getCategoryTheme(i.category).label);
+      }
+    });
+    return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+  }, [allIssues]);
+
+  // Filter and Sort feed issues strictly from database records
   const displayedIssues = useMemo(() => {
-    let list = [...mergedFeedIssues];
+    let list = [...feedIssues];
+
+    // Search Query Filter
+    if (searchQuery && searchQuery.trim() !== '') {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (i) =>
+          (i.title || '').toLowerCase().includes(q) ||
+          (i.description || '').toLowerCase().includes(q) ||
+          (i.district || '').toLowerCase().includes(q) ||
+          (i.category || '').toLowerCase().includes(q) ||
+          (i.category_display || '').toLowerCase().includes(q)
+      );
+    }
 
     // Category Pill Filter
     if (selectedCategoryPill !== 'all') {
       list = list.filter((i) => {
         const cat = (i.category || '').toLowerCase();
-        if (selectedCategoryPill === 'infrastructure') return cat.includes('infra') || cat.includes('road') || cat.includes('urban');
-        if (selectedCategoryPill === 'sanitation') return cat.includes('sanitat') || cat.includes('water') || cat.includes('waste');
-        if (selectedCategoryPill === 'public_safety') return cat.includes('safe') || cat.includes('public') || cat.includes('admin') || cat.includes('light');
-        if (selectedCategoryPill === 'environment') return cat.includes('env') || cat.includes('forest') || cat.includes('energy') || cat.includes('tree');
-        if (selectedCategoryPill === 'transport') return cat.includes('trans') || cat.includes('bus') || cat.includes('traffic');
+        if (selectedCategoryPill === 'urban_infra') return cat.includes('infra') || cat.includes('urban') || cat.includes('road');
+        if (selectedCategoryPill === 'water') return cat.includes('water') || cat.includes('sanitat');
+        if (selectedCategoryPill === 'agriculture') return cat.includes('agri') || cat.includes('farm');
+        if (selectedCategoryPill === 'environment') return cat.includes('env') || cat.includes('forest');
+        if (selectedCategoryPill === 'energy') return cat.includes('energy') || cat.includes('solar') || cat.includes('power');
+        if (selectedCategoryPill === 'education') return cat.includes('edu') || cat.includes('school');
+        if (selectedCategoryPill === 'rural_livelihoods') return cat.includes('rural') || cat.includes('livelihood') || cat.includes('artisan') || cat.includes('handloom') || cat.includes('tribal');
+        if (selectedCategoryPill === 'public_admin') return cat.includes('public') || cat.includes('admin') || cat.includes('safe');
         return cat === selectedCategoryPill;
       });
     }
 
     // Quick Filter: Location
     if (locationFilter !== 'all') {
-      list = list.filter((i) => (i.district || '').toLowerCase().includes(locationFilter.toLowerCase()));
+      list = list.filter((i) => (i.district || '').toLowerCase() === locationFilter.toLowerCase());
     }
 
     // Quick Filter: Category Dropdown
     if (categoryFilter !== 'all') {
-      list = list.filter((i) => {
-        const cat = (i.category || '').toLowerCase();
-        if (categoryFilter === 'infrastructure') return cat.includes('infra') || cat.includes('road') || cat.includes('urban');
-        if (categoryFilter === 'sanitation') return cat.includes('sanitat') || cat.includes('water') || cat.includes('waste');
-        if (categoryFilter === 'public_safety') return cat.includes('safe') || cat.includes('public') || cat.includes('admin');
-        if (categoryFilter === 'environment') return cat.includes('env') || cat.includes('energy');
-        if (categoryFilter === 'transport') return cat.includes('trans') || cat.includes('bus');
-        return cat === categoryFilter;
-      });
+      list = list.filter((i) => (i.category || '').toLowerCase() === categoryFilter.toLowerCase());
     }
 
     // Sorting
@@ -337,71 +300,146 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
     }
 
     return list;
-  }, [mergedFeedIssues, selectedCategoryPill, sortBy, locationFilter, categoryFilter, dateFilter]);
+  }, [feedIssues, searchQuery, selectedCategoryPill, sortBy, locationFilter, categoryFilter, dateFilter]);
 
   // Modal filtered issues
   const modalIssues = useMemo(() => {
-    if (modalCategoryFilter === 'all') return mergedFeedIssues;
-    return mergedFeedIssues.filter((i) => {
+    if (modalCategoryFilter === 'all') return feedIssues;
+    return feedIssues.filter((i) => {
       const cat = (i.category || '').toLowerCase();
-      if (modalCategoryFilter === 'infrastructure') return cat.includes('infra') || cat.includes('road') || cat.includes('urban');
-      if (modalCategoryFilter === 'sanitation') return cat.includes('sanitat') || cat.includes('water') || cat.includes('waste');
-      if (modalCategoryFilter === 'public_safety') return cat.includes('safe') || cat.includes('public') || cat.includes('admin');
-      if (modalCategoryFilter === 'environment') return cat.includes('env') || cat.includes('energy');
-      if (modalCategoryFilter === 'transport') return cat.includes('trans') || cat.includes('bus');
+      if (modalCategoryFilter === 'urban_infra') return cat.includes('infra') || cat.includes('urban') || cat.includes('road');
+      if (modalCategoryFilter === 'water') return cat.includes('water') || cat.includes('sanitat');
+      if (modalCategoryFilter === 'agriculture') return cat.includes('agri') || cat.includes('farm');
+      if (modalCategoryFilter === 'environment') return cat.includes('env') || cat.includes('forest');
+      if (modalCategoryFilter === 'energy') return cat.includes('energy') || cat.includes('solar') || cat.includes('power');
+      if (modalCategoryFilter === 'education') return cat.includes('edu') || cat.includes('school');
+      if (modalCategoryFilter === 'rural_livelihoods') return cat.includes('rural') || cat.includes('livelihood') || cat.includes('artisan') || cat.includes('handloom') || cat.includes('tribal');
+      if (modalCategoryFilter === 'public_admin') return cat.includes('public') || cat.includes('admin') || cat.includes('safe');
       return cat === modalCategoryFilter;
     });
-  }, [mergedFeedIssues, modalCategoryFilter]);
+  }, [feedIssues, modalCategoryFilter]);
 
-  // Dynamic Impact Metrics
-  const totalCount = 7;
-  const underReviewCount = 2;
-  const inProgressCount = 5;
-  const resolvedCount = 0;
+  // Dynamic Impact Metrics from real database issues
+  const totalCount = allIssues.length;
+  const underReviewCount = allIssues.filter((i) =>
+    ['submitted', 'validating', 'validated', 'under_review'].includes(i.status)
+  ).length;
+  const inProgressCount = allIssues.filter((i) =>
+    [
+      'adopted',
+      'open',
+      'pitching',
+      'solution_selected',
+      'selected',
+      'assigned',
+      'project',
+      'prototype',
+      'pilot',
+      'in_progress',
+      'developed',
+      'testing',
+      'piloting',
+    ].includes(i.status)
+  ).length;
+  const resolvedCount = allIssues.filter((i) =>
+    ['deployed', 'verified', 'resolved'].includes(i.status)
+  ).length;
 
-  // Category Pills definition
+  // Category Pills definition matching the screenshot
   const categoryPills = [
-    { id: 'all', label: 'All', icon: Sparkles },
-    { id: 'infrastructure', label: 'Infrastructure', icon: Building2 },
-    { id: 'sanitation', label: 'Sanitation', icon: Trash2 },
-    { id: 'public_safety', label: 'Public Safety', icon: ShieldCheck },
-    { id: 'environment', label: 'Environment', icon: Leaf },
-    { id: 'transport', label: 'Transport', icon: Bus },
+    { id: 'all', label: 'All', icon: LayoutGrid },
+    { id: 'water', label: 'Water & Sanitation', icon: Droplets },
+    { id: 'agriculture', label: 'Agriculture', icon: Leaf },
+    { id: 'urban_infra', label: 'Infrastructure', icon: Building2 },
+    { id: 'environment', label: 'Environment', icon: Trees },
+    { id: 'education', label: 'Education', icon: Compass },
+    { id: 'rural_livelihoods', label: 'Rural Livelihoods', icon: Building2 },
+    { id: 'energy', label: 'Energy', icon: Sparkles },
+    { id: 'public_admin', label: 'Public Admin', icon: ShieldCheck },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', maxWidth: '1440px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', maxWidth: '1440px', margin: '0 auto' }}>
+      
+      {/* 0. MOBILE SEARCH SECTION (Matching Screenshot) */}
+      <div className="mobile-search-section">
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.65rem',
+            background: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: '999px',
+            padding: '0.65rem 1rem',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+          }}
+        >
+          <Search size={18} color="#94A3B8" />
+          <input
+            type="text"
+            placeholder="Search issues, locations, or keywords..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              fontSize: '0.875rem',
+              color: '#0F172A',
+              outline: 'none',
+              fontWeight: 500,
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{ color: '#94A3B8', padding: '2px', display: 'flex', alignItems: 'center' }}
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* 1. TOP HEADER & CATEGORY FILTER PILLS */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {/* Title and Sort Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            <h1 style={{ fontSize: '1.55rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
               Community Feed
             </h1>
-            <p style={{ fontSize: '0.875rem', color: '#64748B', marginTop: '0.25rem' }}>
-              Real problems. Real people. Real change.
+            <p style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '0.15rem' }}>
+              Real civic challenges and community solutions across Jharkhand
             </p>
           </div>
 
-          {/* Sort Dropdown */}
+          {/* Sort Dropdown Pill */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              onClick={loadDashboardData}
+              className="btn btn-outline"
+              style={{ padding: '0.4rem 0.65rem', borderRadius: '10px', fontSize: '0.8rem', color: '#64748B' }}
+              title="Refresh Feed"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            </button>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
+                gap: '0.35rem',
                 background: '#FFFFFF',
                 border: '1px solid #E2E8F0',
-                padding: '0.5rem 0.85rem',
+                padding: '0.45rem 0.75rem',
                 borderRadius: '10px',
-                fontSize: '0.85rem',
+                fontSize: '0.825rem',
                 fontWeight: 600,
                 color: '#334155',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
               }}
             >
-              <ArrowUpDown size={15} color="#64748B" />
+              <ArrowUpDown size={14} color="#64748B" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -409,30 +447,32 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   border: 'none',
                   background: 'transparent',
                   fontWeight: 600,
-                  fontSize: '0.85rem',
+                  fontSize: '0.825rem',
                   color: '#1E293B',
                   cursor: 'pointer',
                   outline: 'none',
                 }}
               >
-                <option value="latest">Latest</option>
+                <option value="latest">Latest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="most_upvoted">Most Upvoted</option>
               </select>
-              <ChevronDown size={14} color="#94A3B8" />
+              <ChevronDown size={13} color="#94A3B8" />
             </div>
           </div>
         </div>
 
-        {/* Category Filter Pills Row */}
+        {/* Category Filter Pills Row (Horizontally scrollable) */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.65rem',
+            gap: '0.55rem',
             overflowX: 'auto',
-            paddingBottom: '0.25rem',
+            paddingBottom: '0.35rem',
             scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
           {categoryPills.map((pill) => {
@@ -445,10 +485,10 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.45rem 1rem',
+                  gap: '0.45rem',
+                  padding: '0.45rem 0.95rem',
                   borderRadius: '999px',
-                  fontSize: '0.825rem',
+                  fontSize: '0.8rem',
                   fontWeight: 700,
                   whiteSpace: 'nowrap',
                   cursor: 'pointer',
@@ -457,9 +497,10 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   color: isActive ? '#FFFFFF' : '#334155',
                   border: isActive ? '1px solid #10B981' : '1px solid #E2E8F0',
                   boxShadow: isActive ? '0 2px 8px rgba(16, 185, 129, 0.28)' : '0 1px 2px rgba(0,0,0,0.02)',
+                  flexShrink: 0,
                 }}
               >
-                <Icon size={15} color={isActive ? '#FFFFFF' : '#64748B'} />
+                <Icon size={14} color={isActive ? '#FFFFFF' : '#64748B'} />
                 {pill.label}
               </button>
             );
@@ -467,8 +508,198 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
         </div>
       </div>
 
-      {/* 2. MAIN 2-COLUMN SECTION (FEED GRID ON LEFT, WIDGETS ON RIGHT) */}
+      {/* 2. MOBILE FEED CARDS LIST (Matching Screenshot on Phone) */}
+      <div className="mobile-feed-container" style={{ display: 'none', flexDirection: 'column', gap: '0.85rem' }}>
+        {loading ? (
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1px solid #E2E8F0',
+              padding: '3rem 1.5rem',
+              textAlign: 'center',
+              color: '#64748B',
+            }}
+          >
+            <RefreshCw size={28} className="animate-spin" style={{ margin: '0 auto 0.75rem', color: '#10B981' }} />
+            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
+              Loading Community Issues...
+            </h3>
+            <p style={{ fontSize: '0.8rem' }}>Fetching live database records</p>
+          </div>
+        ) : displayedIssues.length === 0 ? (
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1px solid #E2E8F0',
+              padding: '2.5rem 1.25rem',
+              textAlign: 'center',
+              color: '#64748B',
+            }}
+          >
+            <Compass size={36} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
+            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.4rem' }}>
+              No Issues Found
+            </h3>
+            <p style={{ fontSize: '0.8rem', marginBottom: '1rem' }}>
+              {searchQuery
+                ? `No issues found matching "${searchQuery}".`
+                : 'No issues match the selected category filters.'}
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategoryPill('all');
+              }}
+              style={{
+                background: '#10B981',
+                color: '#FFFFFF',
+                padding: '0.45rem 1.15rem',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+              }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          displayedIssues.map((issue) => {
+            const theme = issue.theme || getCategoryTheme(issue.category);
+            return (
+              <div
+                key={issue.id}
+                onClick={() => onSelectIssue && onSelectIssue(issue)}
+                style={{
+                  background: '#FFFFFF',
+                  borderRadius: '16px',
+                  border: '1px solid #E2E8F0',
+                  padding: '0.75rem',
+                  display: 'flex',
+                  gap: '0.85rem',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {/* Left Thumbnail Image */}
+                <div
+                  style={{
+                    width: '115px',
+                    minWidth: '115px',
+                    height: '88px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    background: theme.bg,
+                    flexShrink: 0,
+                    position: 'relative',
+                  }}
+                >
+                  <img
+                    src={issue.preview_image}
+                    alt={issue.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.currentTarget.src = getCategoryFallbackImage(issue.category, issue.title);
+                    }}
+                  />
+                </div>
+
+                {/* Right Content */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: 1,
+                    minWidth: 0,
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  {/* Category Pill & Right Chevron */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        color: theme.text,
+                        background: theme.badgeBg,
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '85%',
+                      }}
+                    >
+                      {issue.category_display || theme.label}
+                    </span>
+                    <ChevronRight size={16} color="#94A3B8" />
+                  </div>
+
+                  {/* Title (2-line clamp) */}
+                  <h3
+                    style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 800,
+                      color: '#0F172A',
+                      lineHeight: 1.25,
+                      margin: '3px 0 2px 0',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {issue.title}
+                  </h3>
+
+                  {/* Location & Time Row */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '0.7rem',
+                      color: '#64748B',
+                      marginBottom: '2px',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <MapPin size={11} color="#64748B" />
+                      {issue.district ? `${issue.district}, Jharkhand` : 'Jharkhand'}
+                    </span>
+                    <span style={{ color: '#94A3B8', fontSize: '0.675rem', whiteSpace: 'nowrap', marginLeft: '4px' }}>
+                      {issue.time_ago || '1 day ago'}
+                    </span>
+                  </div>
+
+                  {/* Description Snippet (2-line clamp) */}
+                  <p
+                    style={{
+                      fontSize: '0.725rem',
+                      color: '#64748B',
+                      lineHeight: 1.3,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      margin: 0,
+                    }}
+                  >
+                    {issue.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* 3. DESKTOP MAIN 2-COLUMN SECTION (FEED GRID ON LEFT, WIDGETS ON RIGHT) */}
       <div
+        className="desktop-feed-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) 320px',
@@ -484,7 +715,25 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             gap: '1.25rem',
           }}
         >
-          {displayedIssues.length === 0 ? (
+          {loading ? (
+            <div
+              style={{
+                gridColumn: '1 / -1',
+                background: '#FFFFFF',
+                borderRadius: '16px',
+                border: '1px solid #E2E8F0',
+                padding: '3.5rem 1.5rem',
+                textAlign: 'center',
+                color: '#64748B',
+              }}
+            >
+              <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 1rem', color: '#10B981' }} />
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
+                Loading Community Issues...
+              </h3>
+              <p style={{ fontSize: '0.85rem' }}>Fetching live database records</p>
+            </div>
+          ) : displayedIssues.length === 0 ? (
             <div
               style={{
                 gridColumn: '1 / -1',
@@ -498,13 +747,16 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             >
               <Compass size={40} color="#94A3B8" style={{ margin: '0 auto 1rem' }} />
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>
-                No Issues Found in this Category
+                No Issues Found
               </h3>
               <p style={{ fontSize: '0.85rem', marginBottom: '1.25rem' }}>
-                Try selecting "All" or choosing different filter parameters.
+                {allIssues.length === 0
+                  ? 'No problem statements currently reported in the system.'
+                  : 'No issues match the selected search, category or location filters.'}
               </p>
               <button
                 onClick={() => {
+                  setSearchQuery('');
                   setSelectedCategoryPill('all');
                   setLocationFilter('all');
                   setCategoryFilter('all');
@@ -552,29 +804,14 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       overflow: 'hidden',
                     }}
                   >
-                    {issue.photo_url || issue.photo ? (
-                      <img
-                        src={issue.photo_url || issue.photo}
-                        alt={issue.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: '60px',
-                          height: '44px',
-                          borderRadius: '10px',
-                          border: `2px solid ${theme.iconColor}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          opacity: 0.65,
-                          background: 'rgba(255,255,255,0.4)',
-                        }}
-                      >
-                        <ImageIcon size={26} color={theme.iconColor} strokeWidth={1.8} />
-                      </div>
-                    )}
+                    <img
+                      src={issue.preview_image}
+                      alt={issue.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.currentTarget.src = getCategoryFallbackImage(issue.category, issue.title);
+                      }}
+                    />
                   </div>
 
                   {/* Card Body */}
@@ -698,7 +935,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
         </div>
 
         {/* RIGHT COLUMN: SIDEBAR WIDGETS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="desktop-sidebar-widgets" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* 1. ISSUE MAP WIDGET */}
           <div
             style={{
@@ -742,7 +979,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               title="Click to expand full map"
             >
               <IssueMap
-                issues={displayedIssues.length > 0 ? displayedIssues : SAMPLE_COMMUNITY_ISSUES}
+                issues={displayedIssues}
                 onViewIssue={onSelectIssue}
                 height="190px"
                 colorBy="category"
@@ -763,24 +1000,28 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }}></span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0284C7' }}></span>
                 <span>Infrastructure</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }}></span>
-                <span>Sanitation</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }}></span>
-                <span>Public Safety</span>
+                <span>Water / San.</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }}></span>
+                <span>Agriculture</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16A34A' }}></span>
                 <span>Environment</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8B5CF6' }}></span>
-                <span>Transport</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB' }}></span>
+                <span>Education</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#CA8A04' }}></span>
+                <span>Energy</span>
               </div>
             </div>
           </div>
@@ -800,7 +1041,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {/* Location Select */}
+              {/* Location Select (Dynamic from DB) */}
               <div
                 style={{
                   display: 'flex',
@@ -827,18 +1068,17 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     cursor: 'pointer',
                   }}
                 >
-                  <option value="all">All Locations</option>
-                  <option value="Ranchi">Ranchi, Jharkhand</option>
-                  <option value="Dhanbad">Dhanbad, Jharkhand</option>
-                  <option value="Bokaro">Bokaro, Jharkhand</option>
-                  <option value="Jamshedpur">Jamshedpur, Jharkhand</option>
-                  <option value="Hazaribagh">Hazaribagh, Jharkhand</option>
-                  <option value="Deoghar">Deoghar, Jharkhand</option>
+                  <option value="all">All Locations ({availableDistricts.length})</option>
+                  {availableDistricts.map((d) => (
+                    <option key={d} value={d}>
+                      {d}, Jharkhand
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown size={14} color="#94A3B8" />
               </div>
 
-              {/* Category Select */}
+              {/* Category Select (Dynamic from DB) */}
               <div
                 style={{
                   display: 'flex',
@@ -865,12 +1105,12 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     cursor: 'pointer',
                   }}
                 >
-                  <option value="all">All Categories</option>
-                  <option value="infrastructure">Infrastructure</option>
-                  <option value="sanitation">Sanitation</option>
-                  <option value="public_safety">Public Safety</option>
-                  <option value="environment">Environment</option>
-                  <option value="transport">Transport</option>
+                  <option value="all">All Categories ({availableCategories.length})</option>
+                  {availableCategories.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown size={14} color="#94A3B8" />
               </div>
@@ -909,37 +1149,35 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 <ChevronDown size={14} color="#94A3B8" />
               </div>
 
-              {/* Apply Filters Button */}
-              <button
-                onClick={() => {
-                  // Instant reactivity already applied through state bindings
-                }}
-                style={{
-                  width: '100%',
-                  background: '#10B981',
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  fontSize: '0.875rem',
-                  padding: '0.75rem',
-                  borderRadius: '10px',
-                  marginTop: '0.35rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
-                  transition: 'background 0.15s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#059669';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#10B981';
-                }}
-              >
-                Apply Filters
-              </button>
+              {/* Reset Filters Button */}
+              {(selectedCategoryPill !== 'all' || locationFilter !== 'all' || categoryFilter !== 'all' || searchQuery) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategoryPill('all');
+                    setLocationFilter('all');
+                    setCategoryFilter('all');
+                  }}
+                  style={{
+                    width: '100%',
+                    background: '#F1F5F9',
+                    color: '#475569',
+                    fontWeight: 700,
+                    fontSize: '0.825rem',
+                    padding: '0.6rem',
+                    borderRadius: '10px',
+                    border: '1px solid #CBD5E1',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  Clear Active Filters
+                </button>
+              )}
             </div>
           </div>
 
-          {/* 3. COMMUNITY IMPACT WIDGET */}
+          {/* 3. COMMUNITY IMPACT WIDGET (Dynamic from DB) */}
           <div
             style={{
               background: '#FFFFFF',
@@ -994,9 +1232,6 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 <div style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>
                   Total Issues
                 </div>
-                <div style={{ position: 'absolute', bottom: '6px', right: '8px' }}>
-                  <ChevronDown size={13} color="#94A3B8" />
-                </div>
               </div>
 
               {/* Stat 2: Under Review */}
@@ -1032,9 +1267,6 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 </div>
                 <div style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>
                   Under Review
-                </div>
-                <div style={{ position: 'absolute', bottom: '6px', right: '8px' }}>
-                  <ChevronDown size={13} color="#94A3B8" />
                 </div>
               </div>
 
@@ -1072,9 +1304,6 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 <div style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>
                   In Progress
                 </div>
-                <div style={{ position: 'absolute', bottom: '6px', right: '8px' }}>
-                  <ChevronDown size={13} color="#94A3B8" />
-                </div>
               </div>
 
               {/* Stat 4: Resolved */}
@@ -1111,16 +1340,13 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 <div style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>
                   Resolved
                 </div>
-                <div style={{ position: 'absolute', bottom: '6px', right: '8px' }}>
-                  <ChevronDown size={13} color="#94A3B8" />
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. FULL INTERACTIVE MAP MODAL */}
+      {/* 4. FULL INTERACTIVE MAP MODAL */}
       {isFullMapOpen && (
         <div
           style={{
@@ -1132,7 +1358,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '1.5rem',
+            padding: '1rem',
           }}
           onClick={() => setIsFullMapOpen(false)}
         >
@@ -1155,7 +1381,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             {/* Modal Header */}
             <div
               style={{
-                padding: '1.25rem 1.75rem',
+                padding: '1.25rem 1.5rem',
                 borderBottom: '1px solid #E2E8F0',
                 display: 'flex',
                 alignItems: 'center',
@@ -1168,12 +1394,12 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ fontSize: '1.4rem' }}>🗺️</span>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>
                     Jharkhand Community Issue Map
                   </h2>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
-                  Explore verified challenges and active solutions across all regional districts
+                  Explore verified challenges and active solutions across all regional districts ({modalIssues.length} issues mapped)
                 </p>
               </div>
 
@@ -1260,57 +1486,219 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   </span>
                 </div>
 
-                {modalIssues.map((issue) => {
-                  const theme = issue.theme || getCategoryTheme(issue.category);
-                  return (
-                    <div
-                      key={issue.id}
-                      onClick={() => {
-                        setIsFullMapOpen(false);
-                        if (onSelectIssue) onSelectIssue(issue);
-                      }}
-                      style={{
-                        padding: '0.75rem',
-                        borderRadius: '12px',
-                        border: '1px solid #E2E8F0',
-                        background: '#F8FAFC',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#93C5FD';
-                        e.currentTarget.style.background = '#EFF6FF';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#E2E8F0';
-                        e.currentTarget.style.background = '#F8FAFC';
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: theme.text, background: theme.badgeBg, padding: '2px 6px', borderRadius: '4px' }}>
-                          {issue.category_display || theme.label}
-                        </span>
-                        <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
-                          📍 {issue.district || 'Jharkhand'}
-                        </span>
+                {modalIssues.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94A3B8', fontSize: '0.85rem' }}>
+                    No mapped issues in this category.
+                  </div>
+                ) : (
+                  modalIssues.map((issue) => {
+                    const theme = issue.theme || getCategoryTheme(issue.category);
+                    return (
+                      <div
+                        key={issue.id}
+                        onClick={() => {
+                          setIsFullMapOpen(false);
+                          if (onSelectIssue) onSelectIssue(issue);
+                        }}
+                        style={{
+                          padding: '0.75rem',
+                          borderRadius: '12px',
+                          border: '1px solid #E2E8F0',
+                          background: '#F8FAFC',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = '#93C5FD';
+                          e.currentTarget.style.background = '#EFF6FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = '#E2E8F0';
+                          e.currentTarget.style.background = '#F8FAFC';
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: theme.text, background: theme.badgeBg, padding: '2px 6px', borderRadius: '4px' }}>
+                            {issue.category_display || theme.label}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                            📍 {issue.district || 'Jharkhand'}
+                          </span>
+                        </div>
+                        <h4 style={{ fontSize: '0.825rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.3, marginBottom: '4px' }}>
+                          {issue.title}
+                        </h4>
+                        <p style={{ fontSize: '0.725rem', color: '#64748B', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {issue.description}
+                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: '6px', color: '#2563EB', fontSize: '0.725rem', fontWeight: 700 }}>
+                          View Details <ArrowRight size={12} style={{ marginLeft: '3px' }} />
+                        </div>
                       </div>
-                      <h4 style={{ fontSize: '0.825rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.3, marginBottom: '4px' }}>
-                        {issue.title}
-                      </h4>
-                      <p style={{ fontSize: '0.725rem', color: '#64748B', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {issue.description}
-                      </p>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: '6px', color: '#2563EB', fontSize: '0.725rem', fontWeight: 700 }}>
-                        View Details <ArrowRight size={12} style={{ marginLeft: '3px' }} />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* 5. MOBILE FIXED BOTTOM NAVIGATION BAR (Matching Screenshot) */}
+      <nav
+        className="mobile-bottom-nav"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '66px',
+          background: '#FFFFFF',
+          borderTop: '1px solid #E2E8F0',
+          display: 'none', // Handled responsively via CSS
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          zIndex: 100,
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.04)',
+          padding: '0 0.5rem',
+        }}
+      >
+        {/* 1. Home (Active) */}
+        <button
+          onClick={() => navigate('/citizen/dashboard')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '2px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px',
+            minWidth: '54px',
+          }}
+        >
+          <div
+            style={{
+              background: '#EFF6FF',
+              borderRadius: '999px',
+              padding: '4px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Home size={20} color="#2563EB" strokeWidth={2.5} />
+          </div>
+          <span style={{ fontSize: '0.675rem', fontWeight: 800, color: '#2563EB' }}>
+            Home
+          </span>
+        </button>
+
+        {/* 2. Report (+ elevated circle) */}
+        <button
+          onClick={() => navigate('/citizen/report')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '2px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '2px',
+            marginTop: '-12px',
+            minWidth: '54px',
+          }}
+        >
+          <div
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: '#2563EB',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.38)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFFFFF',
+            }}
+          >
+            <Plus size={22} color="#FFFFFF" strokeWidth={2.8} />
+          </div>
+          <span style={{ fontSize: '0.675rem', fontWeight: 700, color: '#2563EB' }}>
+            Report
+          </span>
+        </button>
+
+        {/* 3. My Issues */}
+        <button
+          onClick={() => navigate('/citizen/my-issues')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '3px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px',
+            minWidth: '54px',
+          }}
+        >
+          <ListTodo size={20} color="#64748B" strokeWidth={2} />
+          <span style={{ fontSize: '0.675rem', fontWeight: 600, color: '#64748B' }}>
+            My Issues
+          </span>
+        </button>
+
+        {/* 4. Map */}
+        <button
+          onClick={() => setIsFullMapOpen(true)}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '3px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px',
+            minWidth: '54px',
+          }}
+        >
+          <MapPin size={20} color="#64748B" strokeWidth={2} />
+          <span style={{ fontSize: '0.675rem', fontWeight: 600, color: '#64748B' }}>
+            Map
+          </span>
+        </button>
+
+        {/* 5. Profile */}
+        <button
+          onClick={() => navigate('/citizen/profile')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '3px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px',
+            minWidth: '54px',
+          }}
+        >
+          <User size={20} color="#64748B" strokeWidth={2} />
+          <span style={{ fontSize: '0.675rem', fontWeight: 600, color: '#64748B' }}>
+            Profile
+          </span>
+        </button>
+      </nav>
     </div>
   );
 };

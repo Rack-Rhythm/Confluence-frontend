@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth, DEMO_ACCOUNTS } from '../../context/AuthContext';
+import { getBaseRole } from '../../App';
 import { Sparkles, Shield, ChevronDown, ChevronUp, LogIn, ExternalLink } from 'lucide-react';
 
 export const DemoRoleSwitcher = ({ onNavigatePublic }) => {
   const { user, role, demoLogin, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+
+  const handleRoleSelect = async (key, item) => {
+    try {
+      const profile = await demoLogin(key);
+      const targetRole = profile?.role || item.role;
+      const base = getBaseRole(targetRole);
+      navigate(`/${base}/dashboard`);
+    } catch (err) {
+      console.error('Demo login switch error:', err);
+    }
+  };
 
   return (
     <aside aria-label="Demo role selector" className="demo-role-bar">
@@ -24,12 +38,12 @@ export const DemoRoleSwitcher = ({ onNavigatePublic }) => {
             return (
               <button
                 key={key}
-                onClick={() => demoLogin(key)}
+                onClick={() => handleRoleSelect(key, item)}
                 className={`demo-role-btn ${isActive ? 'active' : ''}`}
                 title={`Switch to ${item.label}`}
               >
                 {isActive && '✓ '}
-                {item.label.split(' ')[0]}
+                {item.shortLabel || item.label.split(' ')[0]}
               </button>
             );
           })}

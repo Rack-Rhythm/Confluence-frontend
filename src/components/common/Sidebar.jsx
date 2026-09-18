@@ -137,7 +137,7 @@ export const getViewPath = (role, id) => {
   return map[role]?.[id] || `/${role}/dashboard`;
 };
 
-export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificationsCount = 3 }) => {
+export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificationsCount = 3, isOpen = false, onClose }) => {
   const { user, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -271,7 +271,10 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
       return (
         <button
           key={item.id}
-          onClick={onOpenLogout}
+          onClick={() => {
+            if (onClose) onClose();
+            onOpenLogout();
+          }}
           style={{
             width: '100%',
             display: 'flex',
@@ -296,6 +299,7 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
       <button
         key={item.id}
         onClick={() => {
+          if (onClose) onClose();
           navigate(itemPath);
           if (onNavigate) onNavigate(item.id, itemPath);
         }}
@@ -337,98 +341,117 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
   };
 
   return (
-    <aside className="dashboard-sidebar" style={{ width: '260px' }}>
-      {/* Brand Header */}
-      <div
-        style={{
-          padding: '1.25rem 1.5rem',
-          borderBottom: '1px solid #E2E8F0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-        }}
-      >
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div
+          className="sidebar-mobile-backdrop"
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.5)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 998,
+          }}
+        />
+      )}
+
+      <aside className={`dashboard-sidebar ${isOpen ? 'open' : ''}`} style={{ width: '260px' }}>
+        {/* Brand Header */}
         <div
           style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '9px',
-            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+            padding: '1.25rem 1.5rem',
+            borderBottom: '1px solid #E2E8F0',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            boxShadow: '0 3px 10px rgba(16, 185, 129, 0.3)',
+            justifyContent: 'space-between',
           }}
         >
-          <Leaf size={18} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '9px',
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+                boxShadow: '0 3px 10px rgba(16, 185, 129, 0.3)',
+              }}
+            >
+              <Leaf size={18} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+                CONFLUENCE
+              </div>
+              <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
+                People. Ideas. Impact.
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
-            CONFLUENCE
-          </div>
-          <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
-            People. Ideas. Impact.
-          </div>
+
+        {/* Navigation Sections */}
+        <div style={{ flex: 1, padding: '0.75rem', overflowY: 'auto' }}>
+          {/* MAIN Section */}
+          {config.main && config.main.length > 0 && (
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div
+                style={{
+                  fontSize: '0.675rem',
+                  fontWeight: 800,
+                  color: '#94A3B8',
+                  letterSpacing: '0.06em',
+                  padding: '0 0.85rem 0.4rem',
+                }}
+              >
+                MAIN
+              </div>
+              {config.main.map(renderNavBtn)}
+            </div>
+          )}
+
+          {/* SYSTEM Section (for Admin) */}
+          {config.system && config.system.length > 0 && (
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div
+                style={{
+                  fontSize: '0.675rem',
+                  fontWeight: 800,
+                  color: '#94A3B8',
+                  letterSpacing: '0.06em',
+                  padding: '0 0.85rem 0.4rem',
+                }}
+              >
+                SYSTEM
+              </div>
+              {config.system.map(renderNavBtn)}
+            </div>
+          )}
+
+          {/* ACCOUNT Section */}
+          {config.account && config.account.length > 0 && (
+            <div>
+              <div
+                style={{
+                  fontSize: '0.675rem',
+                  fontWeight: 800,
+                  color: '#94A3B8',
+                  letterSpacing: '0.06em',
+                  padding: '0 0.85rem 0.4rem',
+                }}
+              >
+                ACCOUNT
+              </div>
+              {config.account.map(renderNavBtn)}
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Navigation Sections */}
-      <div style={{ flex: 1, padding: '0.75rem', overflowY: 'auto' }}>
-        {/* MAIN Section */}
-        {config.main && config.main.length > 0 && (
-          <div style={{ marginBottom: '1.25rem' }}>
-            <div
-              style={{
-                fontSize: '0.675rem',
-                fontWeight: 800,
-                color: '#94A3B8',
-                letterSpacing: '0.06em',
-                padding: '0 0.85rem 0.4rem',
-              }}
-            >
-              MAIN
-            </div>
-            {config.main.map(renderNavBtn)}
-          </div>
-        )}
-
-        {/* SYSTEM Section (for Admin) */}
-        {config.system && config.system.length > 0 && (
-          <div style={{ marginBottom: '1.25rem' }}>
-            <div
-              style={{
-                fontSize: '0.675rem',
-                fontWeight: 800,
-                color: '#94A3B8',
-                letterSpacing: '0.06em',
-                padding: '0 0.85rem 0.4rem',
-              }}
-            >
-              SYSTEM
-            </div>
-            {config.system.map(renderNavBtn)}
-          </div>
-        )}
-
-        {/* ACCOUNT Section */}
-        {config.account && config.account.length > 0 && (
-          <div>
-            <div
-              style={{
-                fontSize: '0.675rem',
-                fontWeight: 800,
-                color: '#94A3B8',
-                letterSpacing: '0.06em',
-                padding: '0 0.85rem 0.4rem',
-              }}
-            >
-              ACCOUNT
-            </div>
-            {config.account.map(renderNavBtn)}
-          </div>
-        )}
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };

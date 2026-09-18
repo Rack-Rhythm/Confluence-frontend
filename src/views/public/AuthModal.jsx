@@ -43,9 +43,9 @@ export const AuthModal = ({ isOpen, initialTab = 'login', onClose, onSuccess }) 
     }
     setLoading(true);
     try {
-      await login(email, password);
+      const profile = await login(email, password);
       onClose();
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(profile);
     } catch (err) {
       // Error handled by AuthContext
     } finally {
@@ -83,9 +83,9 @@ export const AuthModal = ({ isOpen, initialTab = 'login', onClose, onSuccess }) 
   const handleDemoClick = async (demoKey) => {
     setLoading(true);
     try {
-      await demoLogin(demoKey);
+      const profile = await demoLogin(demoKey);
       onClose();
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(profile);
     } catch (err) {
       // Handled
     } finally {
@@ -199,7 +199,7 @@ export const AuthModal = ({ isOpen, initialTab = 'login', onClose, onSuccess }) 
                   cursor: 'pointer',
                 }}
               >
-                <span>{item.label.split(' ')[0]}</span>
+                <span>{item.shortLabel || item.label.split(' ')[0]}</span>
                 <span style={{ fontSize: '0.65rem', color: '#10B981' }}>➔</span>
               </button>
             ))}

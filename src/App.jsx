@@ -169,6 +169,7 @@ function MainApp() {
   const [selectedPitch, setSelectedPitch] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [globalSearch, setGlobalSearch] = useState('');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const publicRoutes = ['/', '/problems', '/solutions', '/how_it_works', '/success_stories', '/stats', '/public'];
   const isPublicPage = publicRoutes.includes(location.pathname);
@@ -179,6 +180,7 @@ function MainApp() {
   };
 
   const handleNavigate = (viewIdOrPath) => {
+    setIsMobileSidebarOpen(false);
     if (typeof viewIdOrPath === 'string' && viewIdOrPath.startsWith('/')) {
       navigate(viewIdOrPath);
     } else {
@@ -236,8 +238,9 @@ function MainApp() {
         isOpen={isAuthModalOpen}
         initialTab={authModalTab}
         onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={() => {
-          navigate(`/${getBaseRole(role)}/dashboard`);
+        onSuccess={(profile) => {
+          const userRole = profile?.role || role;
+          navigate(`/${getBaseRole(userRole)}/dashboard`);
         }}
       />
 
@@ -278,6 +281,8 @@ function MainApp() {
             currentView={location.pathname}
             onNavigate={handleNavigate}
             onOpenLogout={() => setIsLogoutModalOpen(true)}
+            isOpen={isMobileSidebarOpen}
+            onClose={() => setIsMobileSidebarOpen(false)}
           />
 
           <div className="dashboard-main">
@@ -285,6 +290,7 @@ function MainApp() {
               onNavigate={handleNavigate}
               onSearch={setGlobalSearch}
               searchQuery={globalSearch}
+              onToggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
             />
 
             <main className="dashboard-content">

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Search, Bell, ChevronDown } from 'lucide-react';
+import { Search, Bell, ChevronDown, Menu, Leaf } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }) => {
+export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3, onToggleSidebar }) => {
   const { user, role, isImpersonating, stopImpersonating } = useAuth();
 
   const getSearchPlaceholder = () => {
@@ -37,8 +37,35 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }
 
   return (
     <header className="top-header">
-      {/* Search Bar with Role-Specific Placeholder */}
-      <div className="search-bar-input" style={{ width: '380px' }}>
+      {/* Mobile Branding (Visible on small screens) */}
+      <div className="mobile-header-brand" style={{ display: 'none', alignItems: 'center', gap: '0.65rem' }}>
+        <div
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
+            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#FFFFFF',
+            boxShadow: '0 3px 8px rgba(16, 185, 129, 0.28)',
+          }}
+        >
+          <Leaf size={19} />
+        </div>
+        <div>
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+            CONFLUENCE
+          </div>
+          <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
+            People. Ideas. Impact.
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Search Bar */}
+      <div className="desktop-search-bar search-bar-input" style={{ width: '380px' }}>
         <Search size={16} color="#94A3B8" />
         <input
           type="text"
@@ -49,7 +76,7 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }
       </div>
 
       {/* Right User & Alert Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         {isImpersonating && (
           <div
             style={{
@@ -79,7 +106,7 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }
                 cursor: 'pointer',
               }}
             >
-              Exit to Master Admin
+              Exit
             </button>
           </div>
         )}
@@ -97,7 +124,7 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#475569',
+            color: '#1E293B',
           }}
           title="Notifications"
         >
@@ -126,8 +153,9 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }
           )}
         </button>
 
-        {/* User Profile Pill */}
+        {/* Desktop User Profile Pill */}
         <div
+          className="desktop-profile-pill"
           onClick={() => onNavigate('profile')}
           style={{
             display: 'flex',
@@ -166,6 +194,26 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3 }
           </div>
           <ChevronDown size={14} color="#94A3B8" />
         </div>
+
+        {/* Mobile Hamburger Toggle Button */}
+        <button
+          className="mobile-hamburger-btn"
+          onClick={onToggleSidebar}
+          style={{
+            display: 'none',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '38px',
+            height: '38px',
+            borderRadius: '10px',
+            background: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            color: '#1E293B',
+          }}
+          title="Toggle Navigation Menu"
+        >
+          <Menu size={20} />
+        </button>
       </div>
     </header>
   );

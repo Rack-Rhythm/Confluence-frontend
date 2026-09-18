@@ -19,7 +19,13 @@ import {
   Eye,
   Sliders,
   X,
-  Plus
+  Plus,
+  FileText,
+  Layers,
+  TrendingUp,
+  BarChart3,
+  Save,
+  ChevronDown,
 } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
 import { authAPI } from '../../api/auth';
@@ -40,6 +46,53 @@ const ALL_STATUSES = [
   { value: 'resolved', label: 'Resolved' },
   { value: 'reopened', label: 'Reopened' },
 ];
+
+const CATEGORY_OPTIONS = [
+  { value: 'urban_infra', label: 'Urban Infrastructure' },
+  { value: 'water', label: 'Water & Sanitation' },
+  { value: 'agriculture', label: 'Agriculture' },
+  { value: 'education', label: 'Education' },
+  { value: 'environment', label: 'Environment & Forests' },
+  { value: 'energy', label: 'Renewable Energy' },
+  { value: 'healthcare', label: 'Healthcare' },
+  { value: 'rural_livelihoods', label: 'Rural Livelihoods' },
+  { value: 'public_admin', label: 'Public Administration' },
+  { value: 'accessibility', label: 'Accessibility & Inclusion' },
+  { value: 'other', label: 'Other' },
+];
+
+const DISTRICT_OPTIONS = [
+  'Bokaro',
+  'Ranchi',
+  'Dhanbad',
+  'East Singhbhum',
+  'West Singhbhum',
+  'Khunti',
+  'Latehar',
+  'Seraikela Kharsawan',
+  'Hazaribagh',
+  'Deoghar',
+  'Ramgarh',
+  'Palamu',
+  'Dumka',
+  'Giridih',
+  'Jamtara',
+  'Godda',
+  'Sahebganj',
+  'Pakur',
+  'Lohardaga',
+  'Gumla',
+  'Simdega',
+  'Garhwa',
+  'Chatra',
+  'Koderma',
+];
+
+const BridgeIcon = ({ size = 18, color = '#2563EB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19V7M20 19V7M4 11h16M2 19h20M7 11c0 3.5 1.5 6 5 6s5-2.5 5-6M9 11v6M15 11v6" />
+  </svg>
+);
 
 export const AdminProblemsView = () => {
   const { showToast } = useToast();
@@ -387,7 +440,7 @@ export const AdminProblemsView = () => {
                           {issue.description}
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '0.7rem', color: '#94A3B8' }}>
-                          <span>ID: #{issue.id.slice(0, 8)}</span>
+                          <span>ID: #{String(issue.id || '').slice(0, 8)}</span>
                           <span>• AI Score: {Math.round((issue.ai_confidence_score || 0.8) * 100)}%</span>
                         </div>
                       </td>
@@ -669,124 +722,486 @@ export const AdminProblemsView = () => {
         </div>
       )}
 
-      {/* MODAL 3: Edit Problem Details */}
+      {/* MODAL 3: Edit Problem Details (Pixel-Perfect from Screenshot) */}
       {editModalOpen && selectedIssue && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '540px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Edit3 size={20} color="#0F172A" />
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>
-                  Direct Problem Parameter Modification
-                </h3>
+        <div className="modal-overlay" style={{ backdropFilter: 'blur(6px)', background: 'rgba(15, 23, 42, 0.6)' }} onClick={() => setEditModalOpen(false)}>
+          <div
+            className="modal-content"
+            style={{
+              maxWidth: '680px',
+              width: '100%',
+              borderRadius: '24px',
+              padding: '2rem',
+              background: '#FFFFFF',
+              boxShadow: '0 25px 60px -12px rgba(15, 23, 42, 0.25)',
+              border: '1px solid #E2E8F0',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div
+                  style={{
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '14px',
+                    background: '#F0F7FF',
+                    border: '1px solid #E0EDFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#0F172A',
+                  }}
+                >
+                  <Edit3 size={22} color="#0F172A" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: '#0F172A', letterSpacing: '-0.02em' }}>
+                    Direct Problem Parameter Modification
+                  </h3>
+                  <p style={{ fontSize: '0.875rem', color: '#64748B', margin: '3px 0 0 0' }}>
+                    Update the key details of the problem
+                  </p>
+                </div>
               </div>
-              <button onClick={() => setEditModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={18} color="#64748B" />
+              <button
+                onClick={() => setEditModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  color: '#0F172A',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Close modal"
+              >
+                <X size={22} />
               </button>
             </div>
 
-            <form onSubmit={handleEditIssue} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleEditIssue} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Field 1: Problem Title */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                  Problem Title
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    marginBottom: '6px',
+                  }}
+                >
+                  <FileText size={16} color="#0F172A" />
+                  <span>Problem Title</span>
+                  <span style={{ color: '#EF4444' }}>*</span>
                 </label>
                 <input
                   type="text"
-                  className="input-field"
                   value={editForm.title}
                   onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  placeholder="e.g. Heavy Monsoon Potholes"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '12px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.925rem',
+                    fontWeight: 600,
+                    color: '#0F172A',
+                    outline: 'none',
+                    transition: 'border-color 0.15s ease',
+                  }}
                   required
                 />
               </div>
 
+              {/* Field 2: Detailed Description */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                  Detailed Description
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    marginBottom: '6px',
+                  }}
+                >
+                  <Calendar size={16} color="#0F172A" />
+                  <span>Detailed Description</span>
+                  <span style={{ color: '#EF4444' }}>*</span>
                 </label>
                 <textarea
-                  className="input-field"
                   rows="3"
                   value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value.slice(0, 500) })}
+                  placeholder="Detailed breakdown of the issue..."
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '12px',
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.925rem',
+                    color: '#0F172A',
+                    outline: 'none',
+                    resize: 'vertical',
+                    minHeight: '85px',
+                    lineHeight: '1.5',
+                  }}
                   required
                 />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                    Category
-                  </label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={editForm.category}
-                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                    District
-                  </label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={editForm.district}
-                    onChange={(e) => setEditForm({ ...editForm, district: e.target.value })}
-                    required
-                  />
+                <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#64748B', marginTop: '4px', fontWeight: 500 }}>
+                  {(editForm.description || '').length}/500
                 </div>
               </div>
 
+              {/* Row 1: Category & District */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                {/* Category */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                    Severity
-                  </label>
-                  <select
-                    className="input-field"
-                    value={editForm.severity}
-                    onChange={(e) => setEditForm({ ...editForm, severity: e.target.value })}
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '6px',
+                    }}
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                  </select>
+                    <Layers size={16} color="#0F172A" />
+                    <span>Category</span>
+                    <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <div
+                    style={{
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: '#F0F7FF',
+                      border: '1px solid #BFDBFE',
+                      borderRadius: '14px',
+                      padding: '0.45rem 0.85rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        background: '#DBEAFE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#2563EB',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <BridgeIcon size={18} color="#2563EB" />
+                    </div>
+                    <select
+                      value={editForm.category}
+                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                      style={{
+                        flex: 1,
+                        border: 'none',
+                        background: 'transparent',
+                        paddingLeft: '0.75rem',
+                        paddingRight: '2rem',
+                        fontWeight: 600,
+                        fontSize: '0.925rem',
+                        color: '#0F172A',
+                        appearance: 'none',
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {CATEGORY_OPTIONS.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={18} color="#334155" style={{ position: 'absolute', right: '14px', pointerEvents: 'none' }} />
+                  </div>
                 </div>
 
+                {/* District */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                    AI Confidence Score (0.0 - 1.0)
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    <MapPin size={16} color="#0F172A" />
+                    <span>District</span>
+                    <span style={{ color: '#EF4444' }}>*</span>
                   </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="1"
-                    className="input-field"
-                    value={editForm.ai_confidence_score}
-                    onChange={(e) => setEditForm({ ...editForm, ai_confidence_score: parseFloat(e.target.value) })}
-                  />
+                  <div
+                    style={{
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: '#F0F7FF',
+                      border: '1px solid #BFDBFE',
+                      borderRadius: '14px',
+                      padding: '0.45rem 0.85rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        background: '#DBEAFE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#2563EB',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <MapPin size={18} color="#2563EB" />
+                    </div>
+                    <select
+                      value={editForm.district}
+                      onChange={(e) => setEditForm({ ...editForm, district: e.target.value })}
+                      style={{
+                        flex: 1,
+                        border: 'none',
+                        background: 'transparent',
+                        paddingLeft: '0.75rem',
+                        paddingRight: '2rem',
+                        fontWeight: 600,
+                        fontSize: '0.925rem',
+                        color: '#0F172A',
+                        appearance: 'none',
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {DISTRICT_OPTIONS.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={18} color="#334155" style={{ position: 'absolute', right: '14px', pointerEvents: 'none' }} />
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+              {/* Row 2: Severity & AI Confidence Score */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                {/* Severity */}
+                <div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    <ShieldAlert size={16} color="#0F172A" />
+                    <span>Severity</span>
+                    <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <div
+                    style={{
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: '#FFFDF5',
+                      border: '1px solid #FDE68A',
+                      borderRadius: '14px',
+                      padding: '0.45rem 0.85rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        background: '#FEF3C7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#D97706',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <AlertTriangle size={18} color="#D97706" />
+                    </div>
+                    <select
+                      value={editForm.severity}
+                      onChange={(e) => setEditForm({ ...editForm, severity: e.target.value })}
+                      style={{
+                        flex: 1,
+                        border: 'none',
+                        background: 'transparent',
+                        paddingLeft: '0.75rem',
+                        paddingRight: '2rem',
+                        fontWeight: 600,
+                        fontSize: '0.925rem',
+                        color: '#0F172A',
+                        appearance: 'none',
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                    <ChevronDown size={18} color="#334155" style={{ position: 'absolute', right: '14px', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+
+                {/* AI Confidence Score */}
+                <div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    <TrendingUp size={16} color="#0F172A" />
+                    <span>AI Confidence Score (0.0 – 1.0)</span>
+                  </label>
+                  <div
+                    style={{
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: '#F4F8FF',
+                      border: '1px solid #BFDBFE',
+                      borderRadius: '14px',
+                      padding: '0.45rem 0.85rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        background: '#EDE9FE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#6366F1',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <BarChart3 size={18} color="#6366F1" />
+                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="1"
+                      value={editForm.ai_confidence_score}
+                      onChange={(e) => setEditForm({ ...editForm, ai_confidence_score: parseFloat(e.target.value) || 0 })}
+                      style={{
+                        flex: 1,
+                        border: 'none',
+                        background: 'transparent',
+                        paddingLeft: '0.75rem',
+                        fontWeight: 600,
+                        fontSize: '0.925rem',
+                        color: '#0F172A',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginTop: '0.75rem',
+                  paddingTop: '1.25rem',
+                  borderTop: '1px solid #F1F5F9',
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setEditModalOpen(false)}
-                  className="btn btn-outline"
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #CBD5E1',
+                    borderRadius: '999px',
+                    padding: '0.65rem 1.6rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#F8FAFC';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#FFFFFF';
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="btn btn-primary"
-                  style={{ background: '#0F172A' }}
+                  style={{
+                    background: '#0F172A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '999px',
+                    padding: '0.65rem 1.6rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#1E293B';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#0F172A';
+                  }}
                 >
+                  <Save size={18} />
                   {submitting ? 'Saving...' : 'Save Modifications'}
                 </button>
               </div>
