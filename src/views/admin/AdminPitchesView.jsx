@@ -230,7 +230,7 @@ export const AdminPitchesView = () => {
       </div>
 
       {/* Stats Counter Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+      <div className="grid-responsive-4" style={{ gap: '1rem' }}>
         <div className="card" style={{ padding: '1.1rem' }}>
           <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>TOTAL PROPOSALS</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>
@@ -545,7 +545,7 @@ export const AdminPitchesView = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div>
                   <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>REPOSITORY</div>
                   <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>
@@ -703,7 +703,7 @@ export const AdminPitchesView = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
                     Repository URL

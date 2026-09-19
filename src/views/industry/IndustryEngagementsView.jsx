@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Briefcase, Building2, Calendar, Sparkles, Plus, CheckCircle2, Handshake, Filter } from 'lucide-react';
 import { engagementsAPI } from '../../api/engagements';
 import { issuesAPI } from '../../api/issues';
@@ -8,10 +9,18 @@ import { useToast } from '../../context/ToastContext';
 export const IndustryEngagementsView = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [engagements, setEngagements] = useState([]);
   const [adoptedIssues, setAdoptedIssues] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState('all');
+  
+  // Sync filter type with route if possible
+  let initialFilter = 'all';
+  if (location.pathname.includes('/funding')) initialFilter = 'funding';
+  if (location.pathname.includes('/partnerships')) initialFilter = 'technology_transfer'; // or prototyping
+  const [filterType, setFilterType] = useState(initialFilter);
+
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     issue_id: '',
@@ -111,7 +120,12 @@ export const IndustryEngagementsView = () => {
         {['all', 'funding', 'mentorship', 'prototyping', 'technology_transfer'].map((t) => (
           <button
             key={t}
-            onClick={() => setFilterType(t)}
+            onClick={() => {
+              setFilterType(t);
+              if (t === 'funding') navigate('/industry/funding');
+              else if (t === 'technology_transfer' || t === 'prototyping') navigate('/industry/partnerships');
+              else navigate('/industry/opportunities');
+            }}
             style={{
               padding: '6px 14px',
               borderRadius: '8px',

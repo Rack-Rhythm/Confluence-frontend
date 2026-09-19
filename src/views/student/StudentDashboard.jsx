@@ -143,7 +143,7 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
       </div>
 
       {/* 3. MIDDLE ROW: RECOMMENDED PROBLEMS + RECENT ACTIVITY */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: '1.5rem' }}>
+      <div className="grid-responsive-2" style={{ gap: '1.5rem' }}>
         {/* Recommended Problems */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
@@ -169,6 +169,7 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
                 key={issue.id}
                 style={{
                   display: 'flex',
+                  flexWrap: 'wrap',
                   alignItems: 'center',
                   gap: '1rem',
                   padding: '0.85rem',
@@ -180,21 +181,21 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
                 <img
                   src={getIssueImageUrl(issue)}
                   alt={issue.title}
-                  style={{ width: '60px', height: '60px', borderRadius: '10px', objectFit: 'cover' }}
+                  style={{ width: '60px', height: '60px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }}
                   onError={(e) => handleImageError(e, issue.category)}
                 />
 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '2px' }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '2px', flexWrap: 'wrap' }}>
                     <CategoryPill category={issue.category} />
                     <span style={{ fontSize: '0.725rem', color: '#94A3B8' }}>• {issue.district}</span>
                   </div>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {issue.title}
                   </h4>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', flexShrink: 0 }}>
                   <button
                     onClick={() => onSelectProblem(issue)}
                     className="btn btn-outline btn-sm"

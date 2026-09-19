@@ -134,7 +134,7 @@ export const AdminDashboard = ({ onNavigate }) => {
       </div>
 
       {/* 2. Key Metrics Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
+      <div className="grid-responsive-4" style={{ gap: '1.25rem' }}>
         <StatCard
           icon={Users}
           title="Total Registered Users"
@@ -177,7 +177,7 @@ export const AdminDashboard = ({ onNavigate }) => {
       </div>
 
       {/* 3. Operational Sections */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
+      <div className="grid-responsive-2" style={{ gap: '1.5rem' }}>
         {/* Management Quick Links */}
         <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>

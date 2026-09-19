@@ -10,6 +10,7 @@ import {
   Save,
   CheckCircle2,
   Camera,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -61,14 +62,24 @@ export const UniversityProfile = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className={`btn ${isEditing ? 'btn-blue' : 'btn-outline'}`}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '10px' }}
-        >
-          {isEditing ? <Save size={16} /> : <Edit size={16} />}
-          {isEditing ? 'Save Changes' : 'Edit Profile'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className={`btn ${isEditing ? 'btn-blue' : 'btn-outline'}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '10px' }}
+          >
+            {isEditing ? <Save size={16} /> : <Edit size={16} />}
+            {isEditing ? 'Save Changes' : 'Edit Profile'}
+          </button>
+          <button
+            onClick={() => window.history.back()}
+            className="btn btn-outline"
+            style={{ borderRadius: '10px', padding: '0.5rem' }}
+            title="Close Profile"
+          >
+            <X size={20} color="#64748B" />
+          </button>
+        </div>
       </div>
 
       {/* 2. Profile Card */}
@@ -123,7 +134,7 @@ export const UniversityProfile = () => {
         </div>
 
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          <div className="grid-responsive-2" style={{ gap: '1.25rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748B', marginBottom: '0.35rem' }}>
                 Email Address
@@ -153,7 +164,7 @@ export const UniversityProfile = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          <div className="grid-responsive-2" style={{ gap: '1.25rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748B', marginBottom: '0.35rem' }}>
                 Academic Department

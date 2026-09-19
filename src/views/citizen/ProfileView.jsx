@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, Edit3, X, Check, School, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useNavigate } from 'react-router-dom';
 
 export const ProfileView = () => {
   const { user, updateProfile } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
 
   const [name, setName] = useState(user?.name || '');
@@ -31,7 +33,7 @@ export const ProfileView = () => {
   };
 
   return (
-    <div style={{ maxWidth: '780px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '780px', margin: '0 auto', position: 'relative' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
@@ -43,13 +45,23 @@ export const ProfileView = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsEditing(true)}
-          className="btn btn-outline"
-          style={{ borderRadius: '10px' }}
-        >
-          <Edit3 size={16} /> Edit Profile
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="btn btn-outline"
+            style={{ borderRadius: '10px' }}
+          >
+            <Edit3 size={16} /> Edit Profile
+          </button>
+          <button
+            onClick={() => navigate('/citizen/dashboard')}
+            className="btn btn-outline"
+            style={{ borderRadius: '10px', padding: '0.5rem' }}
+            title="Close Profile"
+          >
+            <X size={20} color="#64748B" />
+          </button>
+        </div>
       </div>
 
       {/* Main Profile Card */}
@@ -83,42 +95,40 @@ export const ProfileView = () => {
 
         {/* Details Grid */}
         <div
+          className="grid-responsive-2"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '1.5rem',
             textAlign: 'left',
             borderTop: '1px solid #F1F5F9',
             paddingTop: '1.75rem',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', flexShrink: 0 }}>
               <User size={18} />
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Full Name</div>
-              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A' }}>{user?.name || 'Not provided'}</div>
+              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A', wordWrap: 'break-word' }}>{user?.name || 'Not provided'}</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', flexShrink: 0 }}>
               <Mail size={18} />
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Email Address</div>
-              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A' }}>{user?.email}</div>
+              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A', wordBreak: 'break-all' }}>{user?.email}</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', flexShrink: 0 }}>
               <Phone size={18} />
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Phone Number</div>
-              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A' }}>{user?.phone || '+91 98765 43210'}</div>
+              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A', wordWrap: 'break-word' }}>{user?.phone || '+91 98765 43210'}</div>
             </div>
           </div>
 

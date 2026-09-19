@@ -455,7 +455,7 @@ export const UserManagement = () => {
             </div>
 
             <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Full Name *</label>
                   <input
@@ -478,7 +478,7 @@ export const UserManagement = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Password *</label>
                   <input
@@ -631,7 +631,7 @@ export const UserManagement = () => {
             </div>
 
             <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Full Name</label>
                   <input
@@ -654,7 +654,7 @@ export const UserManagement = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Reset Password</label>
                   <input

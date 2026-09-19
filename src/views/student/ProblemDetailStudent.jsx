@@ -129,7 +129,7 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
       </div>
 
       {/* Layout Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 0.85fr', gap: '1.5rem' }}>
+      <div className="grid-responsive-2" style={{ gap: '1.5rem' }}>
         {/* Left column: Tabs + Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Main Photo */}

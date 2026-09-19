@@ -557,7 +557,7 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="grid-responsive-2" style={{ gap: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">GitHub / Repository URL (Optional)</label>
                 <input

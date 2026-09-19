@@ -429,7 +429,10 @@ function MainApp() {
                   <Route path="/industry/engagements" element={<IndustryEngagementsView />} />
                   <Route path="/industry/opportunities" element={<IndustryEngagementsView />} />
                   <Route path="/industry/funding" element={<IndustryEngagementsView />} />
+                  <Route path="/industry/partnerships" element={<IndustryEngagementsView />} />
                   <Route path="/industry/projects" element={<IndustryProjectsView onSelectPitch={handleSelectPitch} />} />
+                  <Route path="/industry/mentorship" element={<IndustryProjectsView onSelectPitch={handleSelectPitch} />} />
+                  <Route path="/industry/project-progress" element={<IndustryProjectsView onSelectPitch={handleSelectPitch} />} />
                   <Route
                     path="/industry/projects/:id"
                     element={<ProjectDetailsView project={selectedProject} onBack={() => navigate('/industry/projects')} />}

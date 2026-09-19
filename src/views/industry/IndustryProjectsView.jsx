@@ -17,7 +17,7 @@ import {
   Target,
   Building2,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { pitchesAPI } from '../../api/pitches';
 import { engagementsAPI } from '../../api/engagements';
 import { issuesAPI } from '../../api/issues';
@@ -34,7 +34,13 @@ export const IndustryProjectsView = ({ onSelectPitch }) => {
   const [adoptedIssues, setAdoptedIssues] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [activeTab, setActiveTab] = useState('all'); // all, sponsored, available
+  const location = useLocation();
+
+  let initialTab = 'all';
+  if (location.pathname.includes('/mentorship') || location.pathname.includes('/project-progress')) {
+    initialTab = 'sponsored';
+  }
+  const [activeTab, setActiveTab] = useState(initialTab); // all, sponsored, available
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
@@ -399,17 +405,13 @@ export const IndustryProjectsView = ({ onSelectPitch }) => {
 
               {/* Technical Deliverables & Status Note */}
               <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1.5fr 1fr',
-                  gap: '1rem',
-                  background: '#FFFFFF',
+                className="grid-responsive-2" style={{ gap: '1rem', background: '#FFFFFF',
                   padding: '0.85rem 1rem',
                   borderRadius: '10px',
                   border: '1px solid #E2E8F0',
                   marginBottom: '1.25rem',
                   fontSize: '0.8rem',
-                }}
+                 }}
               >
                 <div>
                   <span style={{ fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '2px' }}>

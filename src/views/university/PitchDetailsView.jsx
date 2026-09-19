@@ -662,7 +662,7 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
       </div>
 
       {/* 4. Main Body: Left Content + Right Info Panel */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="grid-responsive-2" style={{ gap: '1.5rem', alignItems: 'start'  }}>
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Tab 1: Overview */}
@@ -675,7 +675,7 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
                   alt="Pitch hardware"
                   style={{ width: '100%', height: '280px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.75rem' }}
                 />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                <div className="grid-responsive-4" style={{ gap: '0.5rem' }}>
                   {[
                     'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=200',
                     'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200',
@@ -1601,7 +1601,7 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
             </div>
 
             <form onSubmit={handleSubmitEvaluation} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
                     <span>Technical Feasibility</span>
@@ -2052,7 +2052,7 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#334155', marginBottom: '0.35rem' }}>
                     Repository URL

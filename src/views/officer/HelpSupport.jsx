@@ -16,7 +16,7 @@ export const HelpSupport = () => {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
+      <div className="grid-responsive-2" style={{ gap: '1.25rem' }}>
         <div
           className="card"
           style={{ padding: '1.5rem', cursor: 'pointer' }}

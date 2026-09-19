@@ -372,8 +372,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             border: '1px solid #E2E8F0',
             borderRadius: '999px',
             padding: '0.65rem 1rem',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-          }}
+            boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
         >
           <Search size={18} color="#94A3B8" />
           <input
@@ -387,8 +386,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               fontSize: '0.875rem',
               color: '#0F172A',
               outline: 'none',
-              fontWeight: 500,
-            }}
+              fontWeight: 500 }}
           />
           {searchQuery && (
             <button
@@ -436,8 +434,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 fontSize: '0.825rem',
                 fontWeight: 600,
                 color: '#334155',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-              }}
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
             >
               <ArrowUpDown size={14} color="#64748B" />
               <select
@@ -450,8 +447,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   fontSize: '0.825rem',
                   color: '#1E293B',
                   cursor: 'pointer',
-                  outline: 'none',
-                }}
+                  outline: 'none' }}
               >
                 <option value="latest">Latest First</option>
                 <option value="oldest">Oldest First</option>
@@ -472,8 +468,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             paddingBottom: '0.35rem',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch',
-          }}
+            WebkitOverflowScrolling: 'touch' }}
         >
           {categoryPills.map((pill) => {
             const Icon = pill.icon;
@@ -497,8 +492,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   color: isActive ? '#FFFFFF' : '#334155',
                   border: isActive ? '1px solid #10B981' : '1px solid #E2E8F0',
                   boxShadow: isActive ? '0 2px 8px rgba(16, 185, 129, 0.28)' : '0 1px 2px rgba(0,0,0,0.02)',
-                  flexShrink: 0,
-                }}
+                  flexShrink: 0 }}
               >
                 <Icon size={14} color={isActive ? '#FFFFFF' : '#64748B'} />
                 {pill.label}
@@ -518,8 +512,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               border: '1px solid #E2E8F0',
               padding: '3rem 1.5rem',
               textAlign: 'center',
-              color: '#64748B',
-            }}
+              color: '#64748B' }}
           >
             <RefreshCw size={28} className="animate-spin" style={{ margin: '0 auto 0.75rem', color: '#10B981' }} />
             <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
@@ -535,8 +528,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               border: '1px solid #E2E8F0',
               padding: '2.5rem 1.25rem',
               textAlign: 'center',
-              color: '#64748B',
-            }}
+              color: '#64748B' }}
           >
             <Compass size={36} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
             <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.4rem' }}>
@@ -559,8 +551,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 borderRadius: '10px',
                 fontWeight: 700,
                 fontSize: '0.8rem',
-                cursor: 'pointer',
-              }}
+                cursor: 'pointer' }}
             >
               Reset Filters
             </button>
@@ -581,8 +572,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   gap: '0.85rem',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
+                  transition: 'all 0.15s ease' }}
               >
                 {/* Left Thumbnail Image */}
                 <div
@@ -594,8 +584,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     overflow: 'hidden',
                     background: theme.bg,
                     flexShrink: 0,
-                    position: 'relative',
-                  }}
+                    position: 'relative' }}
                 >
                   <img
                     src={issue.preview_image}
@@ -614,8 +603,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     flexDirection: 'column',
                     flex: 1,
                     minWidth: 0,
-                    justifyContent: 'space-between',
-                  }}
+                    justifyContent: 'space-between' }}
                 >
                   {/* Category Pill & Right Chevron */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
@@ -630,8 +618,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        maxWidth: '85%',
-                      }}
+                        maxWidth: '85%' }}
                     >
                       {issue.category_display || theme.label}
                     </span>
@@ -649,8 +636,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
+                      overflow: 'hidden' }}
                   >
                     {issue.title}
                   </h3>
@@ -663,8 +649,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       justifyContent: 'space-between',
                       fontSize: '0.7rem',
                       color: '#64748B',
-                      marginBottom: '2px',
-                    }}
+                      marginBottom: '2px' }}
                   >
                     <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       <MapPin size={11} color="#64748B" />
@@ -685,8 +670,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
                       overflow: 'hidden',
-                      margin: 0,
-                    }}
+                      margin: 0 }}
                   >
                     {issue.description}
                   </p>
@@ -700,20 +684,11 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
       {/* 3. DESKTOP MAIN 2-COLUMN SECTION (FEED GRID ON LEFT, WIDGETS ON RIGHT) */}
       <div
         className="desktop-feed-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) 320px',
-          gap: '1.5rem',
-          alignItems: 'start',
-        }}
+        className="grid-responsive-2" style={{ gap: '1.5rem', alignItems: 'start' }}
       >
         {/* LEFT COLUMN: 3-COLUMN ISSUE CARDS GRID */}
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            gap: '1.25rem',
-          }}
+          className="grid-responsive-3" style={{ gap: '1.25rem' }}
         >
           {loading ? (
             <div
@@ -724,8 +699,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 border: '1px solid #E2E8F0',
                 padding: '3.5rem 1.5rem',
                 textAlign: 'center',
-                color: '#64748B',
-              }}
+                color: '#64748B' }}
             >
               <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 1rem', color: '#10B981' }} />
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
@@ -742,8 +716,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 border: '1px solid #E2E8F0',
                 padding: '3rem 1.5rem',
                 textAlign: 'center',
-                color: '#64748B',
-              }}
+                color: '#64748B' }}
             >
               <Compass size={40} color="#94A3B8" style={{ margin: '0 auto 1rem' }} />
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>
@@ -768,8 +741,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   borderRadius: '10px',
                   fontWeight: 700,
                   fontSize: '0.825rem',
-                  cursor: 'pointer',
-                }}
+                  cursor: 'pointer' }}
               >
                 Reset Filters
               </button>
@@ -788,8 +760,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     display: 'flex',
                     flexDirection: 'column',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)' }}
                   className="issue-feed-card"
                 >
                   {/* Top Image / Pastel Thumbnail Area */}
@@ -801,8 +772,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      overflow: 'hidden',
-                    }}
+                      overflow: 'hidden' }}
                   >
                     <img
                       src={issue.preview_image}
@@ -820,8 +790,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       padding: '1.15rem 1.25rem',
                       display: 'flex',
                       flexDirection: 'column',
-                      flex: 1,
-                    }}
+                      flex: 1 }}
                   >
                     {/* Category Badge */}
                     <div style={{ marginBottom: '0.65rem' }}>
@@ -833,8 +802,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                           color: theme.text,
                           background: theme.badgeBg,
                           padding: '3px 10px',
-                          borderRadius: '6px',
-                        }}
+                          borderRadius: '6px' }}
                       >
                         {issue.category_display || theme.label}
                       </span>
@@ -849,8 +817,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                         fontSize: '0.75rem',
                         color: '#64748B',
                         marginBottom: '0.65rem',
-                        fontWeight: 600,
-                      }}
+                        fontWeight: 600 }}
                     >
                       <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                         <MapPin size={13} color="#64748B" />
@@ -874,8 +841,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
-                        minHeight: '2.6em',
-                      }}
+                        minHeight: '2.6em' }}
                     >
                       {issue.title}
                     </h3>
@@ -891,8 +857,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                         WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
-                        flex: 1,
-                      }}
+                        flex: 1 }}
                     >
                       {issue.description}
                     </p>
@@ -913,8 +878,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                           fontWeight: 700,
                           border: '1px solid #BFDBFE',
                           cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                        }}
+                          transition: 'all 0.15s ease' }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = '#2563EB';
                           e.currentTarget.style.color = '#FFFFFF';
@@ -943,8 +907,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               borderRadius: '18px',
               border: '1px solid #E2E8F0',
               padding: '1.15rem',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-            }}
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>
@@ -964,8 +927,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   borderRadius: '6px',
                   background: '#EFF6FF',
                   border: '1px solid #BFDBFE',
-                  transition: 'all 0.15s ease',
-                }}
+                  transition: 'all 0.15s ease' }}
                 title="Open Interactive Full Map"
               >
                 View Full Map <ArrowRight size={13} />
@@ -989,15 +951,10 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
 
             {/* Map Category Legend */}
             <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '0.4rem 0.75rem',
-                fontSize: '0.725rem',
+              className="grid-responsive-2" style={{ gap: '0.4rem 0.75rem', fontSize: '0.725rem',
                 fontWeight: 600,
                 color: '#475569',
-                paddingTop: '0.25rem',
-              }}
+                paddingTop: '0.25rem' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0284C7' }}></span>
@@ -1033,8 +990,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               borderRadius: '18px',
               border: '1px solid #E2E8F0',
               padding: '1.25rem',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-            }}
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}
           >
             <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem' }}>
               Quick Filters
@@ -1050,8 +1006,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   border: '1px solid #E2E8F0',
                   borderRadius: '10px',
                   padding: '0.6rem 0.85rem',
-                  gap: '0.5rem',
-                }}
+                  gap: '0.5rem' }}
               >
                 <MapPin size={16} color="#64748B" />
                 <select
@@ -1065,8 +1020,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     fontWeight: 600,
                     color: '#1E293B',
                     outline: 'none',
-                    cursor: 'pointer',
-                  }}
+                    cursor: 'pointer' }}
                 >
                   <option value="all">All Locations ({availableDistricts.length})</option>
                   {availableDistricts.map((d) => (
@@ -1087,8 +1041,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   border: '1px solid #E2E8F0',
                   borderRadius: '10px',
                   padding: '0.6rem 0.85rem',
-                  gap: '0.5rem',
-                }}
+                  gap: '0.5rem' }}
               >
                 <LayoutGrid size={16} color="#64748B" />
                 <select
@@ -1102,8 +1055,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     fontWeight: 600,
                     color: '#1E293B',
                     outline: 'none',
-                    cursor: 'pointer',
-                  }}
+                    cursor: 'pointer' }}
                 >
                   <option value="all">All Categories ({availableCategories.length})</option>
                   {availableCategories.map((c) => (
@@ -1124,8 +1076,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   border: '1px solid #E2E8F0',
                   borderRadius: '10px',
                   padding: '0.6rem 0.85rem',
-                  gap: '0.5rem',
-                }}
+                  gap: '0.5rem' }}
               >
                 <Calendar size={16} color="#64748B" />
                 <select
@@ -1139,8 +1090,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     fontWeight: 600,
                     color: '#1E293B',
                     outline: 'none',
-                    cursor: 'pointer',
-                  }}
+                    cursor: 'pointer' }}
                 >
                   <option value="latest">Latest First</option>
                   <option value="oldest">Oldest First</option>
@@ -1168,8 +1118,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     borderRadius: '10px',
                     border: '1px solid #CBD5E1',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
+                    transition: 'all 0.15s ease' }}
                 >
                   Clear Active Filters
                 </button>
@@ -1184,19 +1133,14 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               borderRadius: '18px',
               border: '1px solid #E2E8F0',
               padding: '1.25rem',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-            }}
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}
           >
             <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem' }}>
               Community Impact
             </h3>
 
             <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '0.75rem',
-              }}
+              className="grid-responsive-2" style={{ gap: '0.75rem' }}
             >
               {/* Stat 1: Total Issues */}
               <div
@@ -1208,8 +1152,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.35rem',
-                  position: 'relative',
-                }}
+                  position: 'relative' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <div
@@ -1220,8 +1163,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       background: '#EFF6FF',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                      justifyContent: 'center' }}
                   >
                     <FileText size={16} color="#2563EB" />
                   </div>
@@ -1244,8 +1186,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.35rem',
-                  position: 'relative',
-                }}
+                  position: 'relative' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <div
@@ -1256,8 +1197,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       background: '#FFFBEB',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                      justifyContent: 'center' }}
                   >
                     <Clock size={16} color="#F59E0B" />
                   </div>
@@ -1280,8 +1220,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.35rem',
-                  position: 'relative',
-                }}
+                  position: 'relative' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <div
@@ -1292,8 +1231,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       background: '#F5F3FF',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                      justifyContent: 'center' }}
                   >
                     <PlayCircle size={16} color="#8B5CF6" />
                   </div>
@@ -1316,8 +1254,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.35rem',
-                  position: 'relative',
-                }}
+                  position: 'relative' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <div
@@ -1328,8 +1265,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       background: '#ECFDF5',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                      justifyContent: 'center' }}
                   >
                     <CheckCircle2 size={16} color="#10B981" />
                   </div>
@@ -1358,8 +1294,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '1rem',
-          }}
+            padding: '1rem' }}
           onClick={() => setIsFullMapOpen(false)}
         >
           <div
@@ -1374,8 +1309,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               flexDirection: 'column',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               overflow: 'hidden',
-              animation: 'fadeIn 0.2s ease-out',
-            }}
+              animation: 'fadeIn 0.2s ease-out' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -1388,8 +1322,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                 justifyContent: 'space-between',
                 background: '#F8FAFC',
                 flexWrap: 'wrap',
-                gap: '1rem',
-              }}
+                gap: '1rem' }}
             >
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1418,8 +1351,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       border: modalCategoryFilter === pill.id ? '1px solid #10B981' : '1px solid #E2E8F0',
                       background: modalCategoryFilter === pill.id ? '#10B981' : '#FFFFFF',
                       color: modalCategoryFilter === pill.id ? '#FFFFFF' : '#475569',
-                      transition: 'all 0.15s ease',
-                    }}
+                      transition: 'all 0.15s ease' }}
                   >
                     {pill.label}
                   </button>
@@ -1440,8 +1372,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     fontWeight: 700,
                     color: '#0F172A',
                     cursor: 'pointer',
-                    marginLeft: '0.5rem',
-                  }}
+                    marginLeft: '0.5rem' }}
                 >
                   <X size={16} /> Close Map
                 </button>
@@ -1449,7 +1380,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             </div>
 
             {/* Modal Body: Map + Side List */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', flex: 1, minHeight: '520px', overflow: 'hidden' }}>
+            <div className="grid-responsive-2" style={{ flex: 1, minHeight: '520px', overflow: 'hidden' }}>
               {/* Main Leaflet Map */}
               <div style={{ position: 'relative', height: '100%', minHeight: '520px' }}>
                 <IssueMap
@@ -1474,8 +1405,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                   overflowY: 'auto',
                   maxHeight: '560px',
                   padding: '1rem',
-                  gap: '0.75rem',
-                }}
+                  gap: '0.75rem' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #F1F5F9' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>
@@ -1506,8 +1436,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                           border: '1px solid #E2E8F0',
                           background: '#F8FAFC',
                           cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                        }}
+                          transition: 'all 0.15s ease' }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.borderColor = '#93C5FD';
                           e.currentTarget.style.background = '#EFF6FF';
@@ -1560,8 +1489,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
           justifyContent: 'space-around',
           zIndex: 100,
           boxShadow: '0 -2px 10px rgba(0,0,0,0.04)',
-          padding: '0 0.5rem',
-        }}
+          padding: '0 0.5rem' }}
       >
         {/* 1. Home (Active) */}
         <button
@@ -1576,8 +1504,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             border: 'none',
             cursor: 'pointer',
             padding: '4px',
-            minWidth: '54px',
-          }}
+            minWidth: '54px' }}
         >
           <div
             style={{
@@ -1586,8 +1513,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               padding: '4px 16px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-            }}
+              justifyContent: 'center' }}
           >
             <Home size={20} color="#2563EB" strokeWidth={2.5} />
           </div>
@@ -1596,7 +1522,28 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
           </span>
         </button>
 
-        {/* 2. Report (+ elevated circle) */}
+        {/* 2. My Issues */}
+        <button
+          onClick={() => navigate('/citizen/my-issues')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '3px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px',
+            minWidth: '54px' }}
+        >
+          <ListTodo size={20} color="#64748B" strokeWidth={2} />
+          <span style={{ fontSize: '0.675rem', fontWeight: 600, color: '#64748B' }}>
+            My Issues
+          </span>
+        </button>
+
+        {/* 3. Report (+ elevated circle) */}
         <button
           onClick={() => navigate('/citizen/report')}
           style={{
@@ -1610,8 +1557,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             cursor: 'pointer',
             padding: '2px',
             marginTop: '-12px',
-            minWidth: '54px',
-          }}
+            minWidth: '54px' }}
         >
           <div
             style={{
@@ -1623,35 +1569,12 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#FFFFFF',
-            }}
+              color: '#FFFFFF' }}
           >
             <Plus size={22} color="#FFFFFF" strokeWidth={2.8} />
           </div>
           <span style={{ fontSize: '0.675rem', fontWeight: 700, color: '#2563EB' }}>
             Report
-          </span>
-        </button>
-
-        {/* 3. My Issues */}
-        <button
-          onClick={() => navigate('/citizen/my-issues')}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '3px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '4px',
-            minWidth: '54px',
-          }}
-        >
-          <ListTodo size={20} color="#64748B" strokeWidth={2} />
-          <span style={{ fontSize: '0.675rem', fontWeight: 600, color: '#64748B' }}>
-            My Issues
           </span>
         </button>
 
@@ -1668,8 +1591,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             border: 'none',
             cursor: 'pointer',
             padding: '4px',
-            minWidth: '54px',
-          }}
+            minWidth: '54px' }}
         >
           <MapPin size={20} color="#64748B" strokeWidth={2} />
           <span style={{ fontSize: '0.675rem', fontWeight: 600, color: '#64748B' }}>
@@ -1690,8 +1612,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             border: 'none',
             cursor: 'pointer',
             padding: '4px',
-            minWidth: '54px',
-          }}
+            minWidth: '54px' }}
         >
           <User size={20} color="#64748B" strokeWidth={2} />
           <span style={{ fontSize: '0.675rem', fontWeight: 600, color: '#64748B' }}>

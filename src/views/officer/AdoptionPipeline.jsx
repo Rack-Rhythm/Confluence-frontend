@@ -52,7 +52,7 @@ export const AdoptionPipeline = () => {
       </div>
 
       {/* KPI Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
+      <div className="grid-responsive-4" style={{ gap: '1.25rem' }}>
         <div className="card" style={{ padding: '1.25rem', textAlign: 'center' }}>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#2563EB' }}>
             {nominations.length}

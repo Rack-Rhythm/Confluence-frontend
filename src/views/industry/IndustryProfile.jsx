@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Globe, Mail, Phone, MapPin, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Building2, Globe, Mail, Phone, MapPin, ShieldCheck, CheckCircle2, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
@@ -54,12 +54,22 @@ export const IndustryProfile = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className={`btn ${isEditing ? 'btn-outline' : 'btn-primary'}`}
-        >
-          {isEditing ? 'Cancel' : 'Edit Profile'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className={`btn ${isEditing ? 'btn-outline' : 'btn-primary'}`}
+          >
+            {isEditing ? 'Cancel' : 'Edit Profile'}
+          </button>
+          <button
+            onClick={() => window.history.back()}
+            className="btn btn-outline"
+            style={{ borderRadius: '10px', padding: '0.5rem' }}
+            title="Close Profile"
+          >
+            <X size={20} color="#64748B" />
+          </button>
+        </div>
       </div>
 
       <div className="card" style={{ padding: '2rem' }}>
@@ -96,7 +106,7 @@ export const IndustryProfile = () => {
           </div>
 
           {/* Form Fields */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          <div className="grid-responsive-2" style={{ gap: '1.25rem' }}>
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
                 Official Organization Name

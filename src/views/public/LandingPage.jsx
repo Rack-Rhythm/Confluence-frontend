@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Search,
   ArrowRight,
@@ -29,6 +29,9 @@ import {
   Briefcase,
   Building2,
   BookOpen,
+  Leaf,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
 import { pitchesAPI } from '../../api/pitches';
@@ -51,6 +54,10 @@ export const LandingPage = ({
   const [pitches, setPitches] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Video State
+  const videoRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   // Filters for Problems page
   const [problemSearch, setProblemSearch] = useState('');
@@ -150,266 +157,491 @@ export const LandingPage = ({
   };
 
   return (
-    <div style={{ background: '#FAFBFD', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: '#FAFBFD', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflowX: 'hidden', width: '100%' }}>
       {/* ================= PAGE 1: HOME / HERO ================= */}
       {(currentTab === 'landing' || currentTab === 'home') && (
         <>
           {/* Hero Banner */}
           <section
             style={{
-              padding: '3.5rem 0 3rem',
-              background: 'linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 100%)',
-              borderBottom: '1px solid #E2E8F0',
+              padding: '3rem 0 4rem',
+              background: '#FFFFFF',
             }}
           >
             <div className="container">
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1.2fr 0.8fr',
-                  gap: '3rem',
-                  alignItems: 'center',
-                }}
-              >
+              <div className="hero-split">
                 {/* Left Hero */}
-                <div>
+                <div style={{ paddingRight: '2rem' }}>
                   <div
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '6px',
-                      background: '#EFF6FF',
-                      border: '1px solid #BFDBFE',
-                      color: '#2563EB',
-                      padding: '4px 14px',
-                      borderRadius: '999px',
-                      fontSize: '0.8rem',
-                      fontWeight: 700,
+                      color: '#65A30D', /* Green-ish to match reference */
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
                       marginBottom: '1.25rem',
                     }}
                   >
-                    <span>Together for a Better Tomorrow</span>
+                    <Sprout size={14} />
+                    <span>Together For A Better India</span>
                   </div>
 
                   <h1
                     style={{
-                      fontSize: 'clamp(2.5rem, 4.5vw, 3.8rem)',
+                      fontSize: 'clamp(3rem, 6vw, 4.5rem)',
                       fontWeight: 900,
-                      lineHeight: 1.1,
+                      lineHeight: 1.05,
                       letterSpacing: '-0.03em',
                       color: '#0F172A',
-                      marginBottom: '1.25rem',
+                      marginBottom: '1.5rem',
                     }}
                   >
-                    Real Problems.{' '}
-                    <span style={{ color: '#2563EB' }}>Real Solutions.</span>
-                    <br />
-                    A Stronger Bharat.
+                    Solve Problems,<br />
+                    <span style={{ color: '#65A30D' }}>Build Tomorrow.</span>
                   </h1>
 
                   <p
                     style={{
-                      fontSize: '1.05rem',
-                      color: '#475569',
+                      fontSize: '1.1rem',
+                      color: '#64748B',
                       lineHeight: 1.6,
-                      maxWidth: '540px',
-                      marginBottom: '2rem',
+                      maxWidth: '480px',
+                      marginBottom: '2.5rem',
                     }}
                   >
-                    A collaborative platform connecting citizens, universities, students, industry, and government to solve real-world problems through innovation.
+                    We unite citizens, students, industry, and government to protect our communities and build a sustainable future for all.
                   </p>
 
-                  {/* CTA Buttons */}
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
+                  {/* Input / CTA */}
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    background: '#F8FAFC', 
+                    borderRadius: '999px', 
+                    padding: '0.35rem 0.35rem 0.35rem 1.5rem', 
+                    maxWidth: '420px',
+                    border: '1px solid #E2E8F0',
+                    marginBottom: '1.5rem'
+                  }}>
+                    <input 
+                      type="text" 
+                      placeholder="Enter your problem" 
+                      style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: '0.95rem' }} 
+                    />
                     <button
                       onClick={() => onOpenAuth('register')}
-                      className="btn btn-blue"
-                      style={{ padding: '0.85rem 1.75rem', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 800 }}
+                      style={{ 
+                        background: '#65A30D', 
+                        color: '#FFFFFF', 
+                        padding: '0.75rem 1.5rem', 
+                        borderRadius: '999px', 
+                        fontSize: '0.95rem', 
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
                     >
-                      Report a Problem
-                    </button>
-                    <button
-                      onClick={() => (onNavigateTab ? onNavigateTab('solutions') : onOpenAuth('login'))}
-                      className="btn btn-outline"
-                      style={{ padding: '0.85rem 1.75rem', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 700, background: '#FFFFFF' }}
-                    >
-                      Explore Solutions
+                      Report <ArrowRight size={16} />
                     </button>
                   </div>
 
-                  {/* 4 Live Stats Cards */}
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(4, 1fr)',
-                      gap: '1rem',
-                      background: '#FFFFFF',
-                      padding: '1.25rem',
-                      borderRadius: '16px',
-                      border: '1px solid #E2E8F0',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#10B981' }}>
+                  {/* Avatars */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
+                    <div style={{ display: 'flex' }}>
+                      <img src="https://i.pravatar.cc/100?img=1" alt="user" style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid #FFF', marginLeft: '0' }} />
+                      <img src="https://i.pravatar.cc/100?img=2" alt="user" style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid #FFF', marginLeft: '-12px' }} />
+                      <img src="https://i.pravatar.cc/100?img=3" alt="user" style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid #FFF', marginLeft: '-12px' }} />
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600, lineHeight: 1.2 }}>
+                      Join 15,000+ citizens<br />making a difference
+                    </div>
+                  </div>
+
+                  {/* 4 Live Stats Cards - Styled as clean minimal blocks */}
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ background: '#F8FAFC', padding: '1rem 1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', minWidth: '120px' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0F172A' }}>
                         {totalIssuesCount >= 1000 ? `${(totalIssuesCount / 1000).toFixed(1)}K` : totalIssuesCount}
                       </div>
-                      <div style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>Problems Reported</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Issues Reported</div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#2563EB' }}>
-                        {totalPitchesCount >= 1000 ? `${(totalPitchesCount / 1000).toFixed(1)}K` : totalPitchesCount}
-                      </div>
-                      <div style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>Student Solutions</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#8B5CF6' }}>
+                    <div style={{ background: '#F8FAFC', padding: '1rem 1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', minWidth: '120px' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0F172A' }}>
                         {projectsInProgressCount}
                       </div>
-                      <div style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>Projects in Progress</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Active Projects</div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#F59E0B' }}>
-                        {industryPartnersCount}
+                    <div style={{ background: '#F8FAFC', padding: '1rem 1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', minWidth: '120px' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0F172A' }}>
+                        100%
                       </div>
-                      <div style={{ fontSize: '0.725rem', color: '#64748B', fontWeight: 600 }}>Industry Partners</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>For The People</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Right Hero Visual Card */}
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
                   <div
                     style={{
-                      position: 'absolute',
-                      top: '-24px',
-                      right: '12px',
-                      zIndex: 2,
-                    }}
-                  >
-                    <span className="handwriting" style={{ color: '#0F172A', fontSize: '1.75rem', fontWeight: 700 }}>
-                      Innovating for People<br />and a Greener Tomorrow 🌱
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      background: '#FFFFFF',
-                      borderRadius: '24px',
-                      padding: '12px',
-                      boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)',
-                      border: '1px solid #E2E8F0',
+                      width: '100%',
+                      height: '100%',
+                      minHeight: '600px',
+                      borderRadius: '32px',
                       position: 'relative',
                       overflow: 'hidden',
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                      background: '#0F172A' // fallback
                     }}
                   >
-                    <img
-                      src="https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=800&auto=format&fit=crop&q=80"
-                      alt="Heritage Temple & Modern Bharat"
-                      style={{
-                        width: '100%',
-                        height: '380px',
+                    {/* Video Background */}
+                    <video 
+                      ref={videoRef}
+                      autoPlay 
+                      loop 
+                      muted={isMuted}
+                      playsInline
+                      style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%', 
+                        height: '100%', 
                         objectFit: 'cover',
-                        borderRadius: '16px',
+                        zIndex: 0
                       }}
-                    />
+                    >
+                      <source src="/confluence-hero-video.mp4" type="video/mp4" />
+                    </video>
+
+                    {/* Gradient Overlay for better contrast */}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 100%)', zIndex: 1 }}></div>
+
+                    {/* Content wrapper with higher z-index */}
+                    <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%' }}>
+                    {/* Mute/Unmute toggle moved to corner */}
+                    <div 
+                      onClick={() => {
+                        setIsMuted(!isMuted);
+                        if (videoRef.current) {
+                           videoRef.current.muted = !isMuted; 
+                           videoRef.current.play().catch(e => console.log('Playback prevented', e));
+                        }
+                      }}
+                      style={{ 
+                        position: 'absolute', 
+                        bottom: '24px', 
+                        left: '24px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px', 
+                        cursor: 'pointer', 
+                        zIndex: 10,
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        padding: '8px 16px',
+                        borderRadius: '999px',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                    >
+                      <div style={{ color: '#FFFFFF' }}>
+                        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                      </div>
+                      <span style={{ color: '#FFFFFF', fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.02em' }}>
+                        {isMuted ? "Click to Unmute" : "Playing Audio"}
+                      </span>
+                    </div>
+
+                    {/* Floating Glass Cards */}
+                    <div style={{ position: 'absolute', top: '15%', right: '-5%', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(10px)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', maxWidth: '240px' }}>
+                      <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=100&auto=format&fit=crop&q=80" alt="cleaning" style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }} />
+                      <div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0F172A' }}>Civic Action</div>
+                        <div style={{ fontSize: '0.65rem', color: '#64748B' }}>Resolving local infrastructure problems.</div>
+                      </div>
+                    </div>
+
+                    <div style={{ position: 'absolute', top: '45%', right: '5%', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(10px)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', maxWidth: '240px' }}>
+                      <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&auto=format&fit=crop&q=80" alt="innovation" style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }} />
+                      <div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0F172A' }}>Student Solutions</div>
+                        <div style={{ fontSize: '0.65rem', color: '#64748B' }}>Prototyping tech for public goods.</div>
+                      </div>
+                    </div>
+
+                    <div style={{ position: 'absolute', bottom: '15%', right: '-2%', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(10px)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', maxWidth: '240px' }}>
+                      <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=100&auto=format&fit=crop&q=80" alt="industry" style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }} />
+                      <div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0F172A' }}>Industry Backing</div>
+                        <div style={{ fontSize: '0.65rem', color: '#64748B' }}>Scaling validated solutions nationwide.</div>
+                      </div>
+                    </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Who Can Join Section */}
-          <section style={{ padding: '4rem 0 3rem' }}>
+          {/* Mission Section */}
+          <section style={{ padding: '5rem 0', background: '#F8FAFC' }}>
             <div className="container">
-              <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A' }}>Who Can Join?</h2>
-                <p style={{ fontSize: '0.9rem', color: '#64748B', marginTop: '4px' }}>
-                  Empowering every stakeholder in the grassroots problem-to-patent lifecycle.
-                </p>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.25rem' }}>
-                {[
-                  { title: 'Citizen', desc: 'Report and track problems in your area', icon: Users, color: '#10B981', bg: '#ECFDF5' },
-                  { title: 'Student', desc: 'Solve problems with innovation and win POC grants', icon: Lightbulb, color: '#2563EB', bg: '#EFF6FF' },
-                  { title: 'University', desc: 'Validate, adopt and mentor student research', icon: GraduationCap, color: '#8B5CF6', bg: '#F5F3FF' },
-                  { title: 'Government', desc: 'Monitor, fund and adopt verified solutions', icon: Building2, color: '#F59E0B', bg: '#FFFBEB' },
-                  { title: 'Industry', desc: 'Partner, co-develop and fund impactful innovations', icon: Briefcase, color: '#EC4899', bg: '#FDF2F8' },
-                ].map((roleItem, idx) => {
-                  const Icon = roleItem.icon;
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => onOpenAuth('register')}
-                      style={{
-                        background: '#FFFFFF',
-                        borderRadius: '16px',
-                        border: '1px solid #E2E8F0',
-                        padding: '1.5rem 1.25rem',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                      }}
-                      className="card-hover-lift"
-                    >
-                      <div
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          borderRadius: '12px',
-                          background: roleItem.bg,
-                          color: roleItem.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto 1rem',
-                        }}
-                      >
-                        <Icon size={24} />
-                      </div>
-                      <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem' }}>
-                        {roleItem.title}
-                      </h3>
-                      <p style={{ fontSize: '0.775rem', color: '#64748B', lineHeight: 1.4 }}>
-                        {roleItem.desc}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Callout Banner: Small Ideas Big Impact */}
-              <div
-                style={{
-                  marginTop: '3.5rem',
-                  background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-                  borderRadius: '20px',
-                  padding: '2.5rem 3rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  color: '#FFFFFF',
-                  flexWrap: 'wrap',
-                  gap: '1.5rem',
-                }}
-              >
+              <div className="mission-split">
+                
+                {/* Left Column */}
                 <div>
-                  <h3 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-                    Small ideas. Big impact.
-                  </h3>
-                  <p style={{ fontSize: '0.95rem', color: '#94A3B8' }}>
-                    Be part of the change and help build resilient communities.
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      color: '#65A30D',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <Leaf size={14} />
+                    <span>Our Mission</span>
+                  </div>
+
+                  <h2
+                    style={{
+                      fontSize: 'clamp(2rem, 4vw, 3rem)',
+                      fontWeight: 900,
+                      lineHeight: 1.15,
+                      letterSpacing: '-0.02em',
+                      color: '#0F172A',
+                      marginBottom: '1.25rem',
+                    }}
+                  >
+                    We're Building a<br />
+                    <span style={{ color: '#65A30D' }}>Smarter, Cleaner, Stronger</span><br />
+                    Bharat.
+                  </h2>
+
+                  <p
+                    style={{
+                      fontSize: '1.05rem',
+                      color: '#64748B',
+                      lineHeight: 1.6,
+                      marginBottom: '2rem',
+                    }}
+                  >
+                    Through education, action, and grassroots innovation, we empower citizens and students to protect their communities and create lasting structural change.
                   </p>
+
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => (onNavigateTab ? onNavigateTab('problems') : onOpenAuth('login'))}
+                      style={{ 
+                        background: '#65A30D', 
+                        color: '#FFFFFF', 
+                        padding: '0.8rem 1.5rem', 
+                        borderRadius: '999px', 
+                        fontSize: '0.95rem', 
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      Explore Projects <ArrowRight size={16} />
+                    </button>
+                    <button
+                      onClick={() => (onNavigateTab ? onNavigateTab('how_it_works') : onOpenAuth('login'))}
+                      style={{ 
+                        background: '#FFFFFF', 
+                        color: '#0F172A', 
+                        padding: '0.8rem 1.5rem', 
+                        borderRadius: '999px', 
+                        fontSize: '0.95rem', 
+                        fontWeight: 700,
+                        border: '1px solid #E2E8F0',
+                      }}
+                    >
+                      Learn More
+                    </button>
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => onOpenAuth('register')}
-                  className="btn btn-blue"
-                  style={{ padding: '0.75rem 1.75rem', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 800 }}
-                >
-                  Get Started
-                </button>
+                {/* Right Column: 3 Vertical Cards */}
+                <div className="vertical-cards-grid">
+                  {[
+                    { 
+                      title: 'Civic Action', 
+                      desc: 'Promoting responsible problem reporting and community management.',
+                      img: 'https://images.unsplash.com/photo-1574682782782-78d1f271184a?auto=format&fit=crop&q=80',
+                      icon: Users
+                    },
+                    { 
+                      title: 'Student Innovation', 
+                      desc: 'Building sustainable and scalable solutions for local problems.',
+                      img: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80',
+                      icon: Lightbulb
+                    },
+                    { 
+                      title: 'Govt Adoption', 
+                      desc: 'Empowering local authorities to fund and adopt validated tech.',
+                      img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80',
+                      icon: Building2
+                    }
+                  ].map((card, idx) => {
+                    const Icon = card.icon;
+                    return (
+                      <div key={idx} style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', height: '360px', background: '#0F172A' }}>
+                        <img src={card.img} alt={card.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 20%, rgba(15,23,42,0.95) 100%)' }} />
+                        
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem' }}>
+                          <div style={{ width: '40px', height: '40px', background: '#FFFFFF', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#65A30D', marginBottom: '1rem' }}>
+                            <Icon size={20} />
+                          </div>
+                          <h3 style={{ color: '#FFFFFF', fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.35rem' }}>{card.title}</h3>
+                          <p style={{ color: '#94A3B8', fontSize: '0.85rem', lineHeight: 1.5 }}>{card.desc}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* Trusted By Logos */}
+          <section style={{ padding: '3rem 0', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', borderTop: '1px solid #E2E8F0' }}>
+            <div className="container">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.5rem' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94A3B8', letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  TRUSTED BY
+                </span>
+                <div style={{ height: '1px', background: '#E2E8F0', flex: 1 }}></div>
+              </div>
+              <div className="trust-logos">
+                {[
+                  'Ministry of Education',
+                  'Smart City Mission',
+                  'Digital India',
+                  'Startup India',
+                  'NITI Aayog',
+                  'AICTE'
+                ].map((logo, idx) => (
+                  <div key={idx} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    color: '#94A3B8', 
+                    fontSize: '1.25rem', 
+                    fontWeight: 900,
+                    opacity: 0.6,
+                    cursor: 'default'
+                  }}
+                  >
+                    <div style={{ width: '28px', height: '28px', background: '#CBD5E1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}>
+                      <Award size={16} />
+                    </div>
+                    {logo}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Initiatives Section */}
+          <section style={{ padding: '5rem 0', background: '#FAFBFD' }}>
+            <div className="container">
+              <div className="mission-split">
+                
+                {/* Left Column: 3 vertical cards */}
+                <div className="vertical-cards-grid">
+                  {[
+                    { title: 'Clean Oceans, Bright Future', desc: 'Removing plastic and debris from our oceans and coastlines.', label: 'Ocean Cleanup', img: 'https://images.unsplash.com/photo-1621451537084-482c73073e0f?auto=format&fit=crop&q=80' },
+                    { title: 'More Trees, Better Planet', desc: 'Planting and restoring forests for a healthier Earth.', label: 'Reforestation', img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80' },
+                    { title: 'Stronger Communities, Stronger Future', desc: 'Empowering communities to lead local change.', label: 'Community', img: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&q=80' }
+                  ].map((item, idx) => (
+                    <div key={idx} style={{ background: '#FFFFFF', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ position: 'relative', height: '220px' }}>
+                        <img src={item.img} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: '#FFFFFF', padding: '4px 12px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 800, color: '#0F172A' }}>
+                          {item.label}
+                        </div>
+                      </div>
+                      <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem', lineHeight: 1.3 }}>
+                          {item.title}
+                        </h3>
+                        <p style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: 1.5, marginBottom: '1.5rem', flex: 1 }}>
+                          {item.desc}
+                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 700, color: '#65A30D', cursor: 'pointer' }}>
+                          Learn More <ArrowRight size={14} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      color: '#65A30D',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <Leaf size={14} />
+                    <span>Our Initiatives</span>
+                  </div>
+                  <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', fontWeight: 900, lineHeight: 1.1, color: '#0F172A', letterSpacing: '-0.02em', marginBottom: '1.25rem' }}>
+                    Real Actions.<br />Real Impact.<br />A Better Future.
+                  </h2>
+                  <p style={{ fontSize: '1.1rem', color: '#64748B', lineHeight: 1.6, marginBottom: '2rem' }}>
+                    Discover how we turn ideas into impact through projects that protect our planet and support communities.
+                  </p>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', cursor: 'pointer', marginBottom: '3rem' }}>
+                    View All Initiatives <ArrowRight size={16} />
+                  </div>
+
+                  {/* Newsletter Box */}
+                  <div style={{ background: '#D9F99D', padding: '2rem', borderRadius: '24px' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>
+                      Stay Inspired. Stay Informed.
+                    </h3>
+                    <p style={{ fontSize: '0.9rem', color: '#3F6212', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                      Subscribe to our newsletter and get the latest updates on our projects, stories, and how you can help.
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <input type="text" placeholder="Enter your email" style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '12px', border: 'none', fontSize: '0.9rem', minWidth: '150px' }} />
+                      <button style={{ background: '#4D7C0F', color: '#FFFFFF', padding: '0.75rem 1.25rem', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        Subscribe <ArrowRight size={14} style={{ display: 'inline', marginLeft: '4px' }} />
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '1.5rem' }}>
+                      <div style={{ display: 'flex' }}>
+                        <img src="https://i.pravatar.cc/100?img=4" alt="user" style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid #D9F99D', marginLeft: '0' }} />
+                        <img src="https://i.pravatar.cc/100?img=5" alt="user" style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid #D9F99D', marginLeft: '-10px' }} />
+                      </div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#3F6212' }}>
+                        Join thousands of<br />change-makers
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </section>
@@ -916,7 +1148,7 @@ export const LandingPage = ({
                   </p>
 
                   {/* 3 Stats Row */}
-                  <div style={{ marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', background: '#F8FAFC', padding: '0.75rem', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+                  <div className="grid-responsive-3" style={{ gap: '0.5rem', background: '#F8FAFC', padding: '0.75rem', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center'  }}>
                     <div>
                       <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#10B981' }}>{story.stat1.value}</div>
                       <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>{story.stat1.label}</div>

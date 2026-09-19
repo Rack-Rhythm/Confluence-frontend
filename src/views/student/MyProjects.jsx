@@ -184,7 +184,7 @@ export const MyProjects = () => {
                     </div>
 
                     {/* Deliverables & Test Results details */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '0.8rem' }}>
+                    <div className="grid-responsive-2" style={{ gap: '1rem', background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '0.8rem'  }}>
                       <div>
                         <div style={{ fontWeight: 700, color: '#64748B', marginBottom: '2px' }}>DELIVERABLES</div>
                         <div style={{ color: '#0F172A', fontWeight: 600 }}>{lc.deliverables || 'Pending submission'}</div>

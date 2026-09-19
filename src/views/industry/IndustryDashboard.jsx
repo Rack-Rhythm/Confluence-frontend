@@ -225,8 +225,8 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
         />
       </div>
 
-      {/* 3. Main Content: Active Engagements & Innovation Opportunities */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+      {/* 3. ACTIVE ENGAGEMENTS & PITCHES GRID */}
+      <div className="grid-responsive-2" style={{ gap: '1.5rem' }}>
         {/* Left Column: Active Engagements List */}
         <div className="card" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>

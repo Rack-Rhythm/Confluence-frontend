@@ -285,14 +285,18 @@ export const HowItWorksView = ({ onOpenAuth, onNavigateTab }) => {
           {/* Quick Jump Timeline Navigation Pills */}
           <div
             style={{
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
               gap: '0.35rem',
               background: 'rgba(255, 255, 255, 0.05)',
               padding: '4px',
               borderRadius: '999px',
               border: '1px solid rgba(255, 255, 255, 0.1)',
+              overflowX: 'auto',
+              maxWidth: '100%',
+              WebkitOverflowScrolling: 'touch',
             }}
+            className="hide-scrollbar"
           >
             {stagesData.map((stage, idx) => {
               const isActive = activeStep === idx;
@@ -314,6 +318,7 @@ export const HowItWorksView = ({ onOpenAuth, onNavigateTab }) => {
                     boxShadow: isActive ? `0 0 16px ${stage.themeColor}80` : 'none',
                     cursor: 'pointer',
                     transition: 'all 0.25s ease',
+                    flexShrink: 0,
                   }}
                 >
                   <span
@@ -497,9 +502,8 @@ export const HowItWorksView = ({ onOpenAuth, onNavigateTab }) => {
                 />
 
                 <div
+                  className="grid-responsive-2"
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: isEven ? '1.15fr 0.85fr' : '0.85fr 1.15fr',
                     gap: '2.5rem',
                     alignItems: 'center',
                   }}
@@ -524,7 +528,8 @@ export const HowItWorksView = ({ onOpenAuth, onNavigateTab }) => {
                         alt={`${stage.title} 3D Diorama World`}
                         style={{
                           width: '100%',
-                          height: 'auto',
+                          height: '100%',
+                          minHeight: '480px',
                           display: 'block',
                           objectFit: 'cover',
                           maxHeight: '480px',
@@ -654,9 +659,8 @@ export const HowItWorksView = ({ onOpenAuth, onNavigateTab }) => {
 
                     {/* 4 Interactive Process Action Pills */}
                     <div
+                      className="grid-responsive-2"
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)',
                         gap: '0.75rem',
                         marginBottom: '1.75rem',
                       }}

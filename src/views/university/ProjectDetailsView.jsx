@@ -534,7 +534,7 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
       </div>
 
       {/* 5. Main Body: Left Content + Right Metadata Card */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="grid-responsive-2" style={{ gap: '1.5rem', alignItems: 'start'  }}>
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Tab 1: Overview */}

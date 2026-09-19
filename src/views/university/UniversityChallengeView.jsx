@@ -421,7 +421,7 @@ export const UniversityChallengeView = ({ issueId, onBack, onSelectPitch }) => {
 
       {/* TAB 1: OVERVIEW (README) */}
       {activeTab === 'overview' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+        <div className="grid-responsive-2" style={{ gap: '1.5rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Reported Photographic Evidence Card */}
             <div
@@ -1064,7 +1064,7 @@ export const UniversityChallengeView = ({ issueId, onBack, onSelectPitch }) => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '0.75rem' }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
                     Closing Date *

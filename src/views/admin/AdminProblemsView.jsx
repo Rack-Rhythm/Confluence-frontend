@@ -327,7 +327,7 @@ export const AdminProblemsView = () => {
       </div>
 
       {/* Stats Counter Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+      <div className="grid-responsive-4" style={{ gap: '1rem' }}>
         <div className="card" style={{ padding: '1.1rem' }}>
           <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>TOTAL REGISTERED</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>
@@ -872,7 +872,7 @@ export const AdminProblemsView = () => {
               </div>
 
               {/* Row 1: Category & District */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 {/* Category */}
                 <div>
                   <label
@@ -1015,7 +1015,7 @@ export const AdminProblemsView = () => {
               </div>
 
               {/* Row 2: Severity & AI Confidence Score */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 {/* Severity */}
                 <div>
                   <label

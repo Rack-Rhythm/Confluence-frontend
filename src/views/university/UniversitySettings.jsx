@@ -131,7 +131,7 @@ export const UniversitySettings = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', borderTop: '1px solid #F1F5F9', paddingTop: '1.5rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1.25rem', borderTop: '1px solid #F1F5F9', paddingTop: '1.5rem'  }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
                     Portal Language

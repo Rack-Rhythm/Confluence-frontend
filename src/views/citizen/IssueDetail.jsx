@@ -176,7 +176,7 @@ export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel 
       </div>
 
       {/* Content Grid: Photos + Quick Info */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.85fr', gap: '1.5rem' }}>
+      <div className="grid-responsive-2" style={{ gap: '1.5rem' }}>
         {/* Left Column: Media & Description */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Main Photo Card */}

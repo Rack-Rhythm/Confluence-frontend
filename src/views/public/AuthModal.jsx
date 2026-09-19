@@ -177,7 +177,7 @@ export const AuthModal = ({ isOpen, initialTab = 'login', onClose, onSuccess }) 
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.75rem', fontWeight: 700, color: '#2563EB', marginBottom: '8px' }}>
             <Sparkles size={13} /> ONE-CLICK DEMO LOGIN (REAL BACKEND USERS)
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+          <div className="grid-responsive-2" style={{ gap: '6px' }}>
             {Object.entries(DEMO_ACCOUNTS).map(([key, item]) => (
               <button
                 key={key}

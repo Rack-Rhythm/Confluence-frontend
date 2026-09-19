@@ -107,12 +107,12 @@ export const getViewPath = (role, id) => {
     },
     industry_partner: {
       dashboard: '/industry/dashboard',
-      opportunities: '/industry/engagements',
-      funding: '/industry/engagements',
-      partnerships: '/industry/engagements',
+      opportunities: '/industry/opportunities',
+      funding: '/industry/funding',
+      partnerships: '/industry/partnerships',
       shortlisted_projects: '/industry/projects',
-      mentorship: '/industry/projects',
-      project_progress: '/industry/projects',
+      mentorship: '/industry/mentorship',
+      project_progress: '/industry/project-progress',
       notifications: '/industry/notifications',
       profile: '/industry/profile',
     },
@@ -256,7 +256,7 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
   const renderNavBtn = (item) => {
     const Icon = item.icon;
     const itemPath = getViewPath(role, item.id);
-    const isActive = location.pathname === itemPath || currentView === item.id || (itemPath !== `/${role}/dashboard` && location.pathname.startsWith(itemPath));
+    const isActive = location.pathname === itemPath || currentView === item.id || (itemPath !== `/${role}/dashboard` && location.pathname.startsWith(itemPath + '/'));
 
     if (item.isAction) {
       return (

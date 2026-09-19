@@ -190,7 +190,7 @@ export const OfficerDashboard = ({ onNavigate, onSelectIssue }) => {
       </div>
 
       {/* 3. CHARTS ROW: ISSUE TRENDS & CATEGORY DISTRIBUTION */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: '1.5rem' }}>
+      <div className="grid-responsive-2" style={{ gap: '1.5rem' }}>
         {/* Issue Trends Chart */}
         <div className="card" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
