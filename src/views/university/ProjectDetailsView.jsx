@@ -24,6 +24,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { pitchesAPI } from '../../api/pitches';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const ProjectDetailsView = ({ project, onBack }) => {
   const { id } = useParams();
@@ -120,6 +121,11 @@ export const ProjectDetailsView = ({ project, onBack }) => {
           pitchId: pitchData.id,
           solution_title: pitchData.title,
           challenge_title: pitchData.issue_details?.title || pitchData.title,
+          challenge_details: pitchData.issue_details || { id: pitchData.issue, title: pitchData.title },
+          issue_details: pitchData.issue_details,
+          photo: pitchData.issue_photo || pitchData.issue_details?.photo,
+          photo_url: pitchData.issue_photo_url || pitchData.issue_details?.photo_url,
+          category: pitchData.issue_details?.category || 'urban_infra',
           university_name: pitchData.university_details?.name || 'Partner Technical University',
           mentor_name: pitchData.assigned_mentor_details?.name || 'Assigned Faculty Mentor',
           team_members_detail: pitchData.student_team_details || [],
@@ -540,13 +546,39 @@ Verified and timestamped through Confluence Lifecycle Pipeline.
           {/* Tab 1: Overview */}
           {activeTab === 'overview' && (
             <>
-              {/* Media gallery */}
-              <div className="card" style={{ padding: '1rem' }}>
-                <img
-                  src={currentProject.photo_url || 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800'}
-                  alt="Project Hardware"
-                  style={{ width: '100%', height: '240px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.75rem' }}
-                />
+              {/* Media gallery: Problem Photographic Evidence */}
+              <div className="card" style={{ padding: '1rem', overflow: 'hidden' }}>
+                <div style={{ position: 'relative', width: '100%', height: '280px', borderRadius: '12px', overflow: 'hidden', background: '#0F172A' }}>
+                  <img
+                    src={getIssueImageUrl(currentProject.challenge_details || currentProject.issue_details || currentProject.solution_details || currentProject)}
+                    alt={currentProject.challenge_details?.title || currentProject.title || 'Project Implementation Target'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => handleImageError(e, currentProject.category || currentProject.challenge_details?.category || 'urban_infra')}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      padding: '1rem 1.25rem',
+                      background: 'linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.6) 60%, transparent 100%)',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.725rem', fontWeight: 800, textTransform: 'uppercase', color: '#60A5FA', letterSpacing: '0.05em', marginBottom: '2px' }}>
+                      Target Problem Field Evidence
+                    </div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F8FAFC' }}>
+                      {currentProject.challenge_details?.title || currentProject.title}
+                    </div>
+                    {currentProject.challenge_details?.district && (
+                      <div style={{ fontSize: '0.75rem', color: '#CBD5E1', marginTop: '2px' }}>
+                        📍 {currentProject.challenge_details.district} • Status: {currentProject.status?.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Milestones Preview inside Overview */}

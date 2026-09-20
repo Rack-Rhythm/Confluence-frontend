@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { pitchesAPI } from '../../api/pitches';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const StudentPitchesList = ({ onSelectPitch }) => {
   const [pitches, setPitches] = useState([]);
@@ -198,11 +199,21 @@ export const StudentPitchesList = ({ onSelectPitch }) => {
                     </td>
 
                     <td style={{ padding: '1rem 1.25rem' }}>
-                      <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '2px' }}>
-                        {titleText}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                        {pitch.issue_title ? `Addressing: ${pitch.issue_title}` : 'Societal Engineering Challenge'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <img
+                          src={getIssueImageUrl(pitch)}
+                          alt={titleText}
+                          style={{ width: '42px', height: '42px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                          onError={(e) => handleImageError(e, pitch.category)}
+                        />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '2px' }}>
+                            {titleText}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                            {pitch.issue_details?.title || pitch.issue_title ? `Addressing: ${pitch.issue_details?.title || pitch.issue_title}` : 'Societal Engineering Challenge'}
+                          </div>
+                        </div>
                       </div>
                     </td>
 

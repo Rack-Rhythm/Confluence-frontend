@@ -23,6 +23,7 @@ import { engagementsAPI } from '../../api/engagements';
 import { issuesAPI } from '../../api/issues';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const IndustryProjectsView = ({ onSelectPitch }) => {
   const navigate = useNavigate();
@@ -135,7 +136,9 @@ export const IndustryProjectsView = ({ onSelectPitch }) => {
       issue_id: pitch.issue,
       issue_title: pitch.issue_details?.title || 'Grassroots Innovation Challenge',
       district: pitch.issue_details?.district || 'Jharkhand',
-      category: pitch.category || 'water',
+      category: pitch.issue_details?.category || pitch.category || 'water',
+      photo: pitch.issue_details?.photo || pitch.issue_photo,
+      issue_details: pitch.issue_details,
       university: pitch.university_details?.name || 'Birsa Institute of Technology (BIT) Sindri',
       team: pitch.student_team_details?.map((s) => s.name).join(', ') || 'Student Innovation Team',
       isSponsored,
@@ -349,42 +352,50 @@ export const IndustryProjectsView = ({ onSelectPitch }) => {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <span
-                      style={{
-                        fontSize: '0.725rem',
-                        fontWeight: 700,
-                        padding: '2px 8px',
-                        borderRadius: '6px',
-                        background: '#EFF6FF',
-                        color: '#2563EB',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {p.category}
-                    </span>
-
-                    {p.isSponsored ? (
-                      <span style={{ fontSize: '0.725rem', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <ShieldCheck size={13} /> Active Partner — Full IP Unlocked
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flex: 1, minWidth: '280px' }}>
+                  <img
+                    src={getIssueImageUrl(p)}
+                    alt={p.issue_title || p.title}
+                    style={{ width: '84px', height: '84px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                    onError={(e) => handleImageError(e, p.category)}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span
+                        style={{
+                          fontSize: '0.725rem',
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {p.category}
                       </span>
-                    ) : (
-                      <span style={{ fontSize: '0.725rem', fontWeight: 600, padding: '2px 8px', borderRadius: '6px', background: '#FFFBEB', color: '#D97706', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Lock size={12} /> Open For Corporate Grant
+
+                      {p.isSponsored ? (
+                        <span style={{ fontSize: '0.725rem', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <ShieldCheck size={13} /> Active Partner — Full IP Unlocked
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.725rem', fontWeight: 600, padding: '2px 8px', borderRadius: '6px', background: '#FFFBEB', color: '#D97706', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Lock size={12} /> Open For Corporate Grant
+                        </span>
+                      )}
+
+                      <span style={{ fontSize: '0.725rem', color: '#64748B' }}>
+                        📍 {p.district}
                       </span>
-                    )}
+                    </div>
 
-                    <span style={{ fontSize: '0.725rem', color: '#64748B' }}>
-                      📍 {p.district}
-                    </span>
-                  </div>
-
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '3px' }}>
-                    {p.title}
-                  </h3>
-                  <div style={{ fontSize: '0.825rem', color: '#475569' }}>
-                    Academic Institution: <strong>{p.university}</strong> • Innovator: {p.team}
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '3px' }}>
+                      {p.title}
+                    </h3>
+                    <div style={{ fontSize: '0.825rem', color: '#475569' }}>
+                      Academic Institution: <strong>{p.university}</strong> • Innovator: {p.team}
+                    </div>
                   </div>
                 </div>
 

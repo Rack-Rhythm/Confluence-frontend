@@ -32,6 +32,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { issuesAPI } from '../../api/issues';
 import { IssueMap } from '../../components/common/IssueMap';
+import { getCategoryFallbackImage, getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 // Map helper to format category theme colors and human-readable badges
 const getCategoryTheme = (category) => {
@@ -135,35 +136,9 @@ const getCategoryTheme = (category) => {
   };
 };
 
-// Curated contextual photo fallbacks matching Jharkhand civic & problem categories
-const getCategoryFallbackImage = (category, title) => {
-  const cat = (category || '').toLowerCase();
-  const t = (title || '').toLowerCase();
-  if (cat.includes('water') || cat.includes('sanitat') || t.includes('water')) {
-    return 'https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?w=400&auto=format&fit=crop&q=80';
-  }
-  if (cat.includes('agri') || cat.includes('farm') || t.includes('crop') || t.includes('soil')) {
-    return 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&auto=format&fit=crop&q=80';
-  }
-  if (cat.includes('edu') || cat.includes('school') || t.includes('teacher') || t.includes('school')) {
-    return 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&auto=format&fit=crop&q=80';
-  }
-  if (cat.includes('env') || cat.includes('forest') || cat.includes('pollut') || t.includes('slag') || t.includes('smoke') || t.includes('mud')) {
-    return 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=400&auto=format&fit=crop&q=80';
-  }
-  if (cat.includes('energy') || cat.includes('solar') || cat.includes('power')) {
-    return 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=400&auto=format&fit=crop&q=80';
-  }
-  if (cat.includes('rural') || cat.includes('livelihood') || cat.includes('handloom') || cat.includes('artisan') || cat.includes('tribal') || t.includes('jacquard')) {
-    return 'https://images.unsplash.com/photo-1606857521015-7f9fcf423740?w=400&auto=format&fit=crop&q=80';
-  }
-  if (cat.includes('health') || cat.includes('medic') || cat.includes('clinic')) {
-    return 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=400&auto=format&fit=crop&q=80';
-  }
-  if (cat.includes('infra') || cat.includes('road') || cat.includes('urban') || t.includes('bridge') || t.includes('defect') || t.includes('tree')) {
-    return 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&auto=format&fit=crop&q=80';
-  }
-  return 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&auto=format&fit=crop&q=80';
+// Fallback image helper delegating to centralized robust imageUtils
+const getCategoryFallbackImageLocal = (category, title) => {
+  return getCategoryFallbackImage(category);
 };
 
 export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
@@ -224,7 +199,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
         category_display: theme.label,
         time_ago: daysDiff === 1 ? '1 day ago' : `${daysDiff} days ago`,
         theme,
-        preview_image: issue.photo_url || issue.photo || getCategoryFallbackImage(issue.category, issue.title),
+        preview_image: getIssueImageUrl(issue),
       };
     });
   }, [allIssues]);
@@ -587,12 +562,10 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                     position: 'relative' }}
                 >
                   <img
-                    src={issue.preview_image}
+                    src={issue.preview_image || getIssueImageUrl(issue)}
                     alt={issue.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => {
-                      e.currentTarget.src = getCategoryFallbackImage(issue.category, issue.title);
-                    }}
+                    onError={(e) => handleImageError(e, issue.category)}
                   />
                 </div>
 
@@ -775,12 +748,10 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
                       overflow: 'hidden' }}
                   >
                     <img
-                      src={issue.preview_image}
+                      src={issue.preview_image || getIssueImageUrl(issue)}
                       alt={issue.title}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => {
-                        e.currentTarget.src = getCategoryFallbackImage(issue.category, issue.title);
-                      }}
+                      onError={(e) => handleImageError(e, issue.category)}
                     />
                   </div>
 

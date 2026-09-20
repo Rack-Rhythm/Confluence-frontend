@@ -16,6 +16,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { issuesAPI } from '../../api/issues';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
   const { id } = useParams();
@@ -133,11 +134,12 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
         {/* Left column: Tabs + Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Main Photo */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="card" style={{ padding: 0, overflow: 'hidden', background: '#F1F5F9' }}>
             <img
-              src={problem.photo_url || problem.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800'}
+              src={getIssueImageUrl(problem)}
               alt={problem.title}
               style={{ width: '100%', height: '320px', objectFit: 'cover' }}
+              onError={(e) => handleImageError(e, problem.category)}
             />
           </div>
 

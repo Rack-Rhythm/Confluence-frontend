@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, Plus, MapPin, Eye, MessageSquare, Clock, ArrowRight } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const MyIssues = ({ onNavigate, onSelectIssue }) => {
   const [issues, setIssues] = useState([]);
@@ -173,7 +174,7 @@ export const MyIssues = ({ onNavigate, onSelectIssue }) => {
               }}
             >
               <img
-                src={issue.photo_url || issue.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=300'}
+                src={getIssueImageUrl(issue)}
                 alt={issue.title}
                 style={{
                   width: '90px',
@@ -181,7 +182,10 @@ export const MyIssues = ({ onNavigate, onSelectIssue }) => {
                   borderRadius: '12px',
                   objectFit: 'cover',
                   flexShrink: 0,
+                  border: '1px solid #E2E8F0',
+                  background: '#F1F5F9',
                 }}
+                onError={(e) => handleImageError(e, issue.category)}
               />
 
               <div style={{ flex: 1, minWidth: 0 }}>

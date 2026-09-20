@@ -36,8 +36,8 @@ import {
 import { issuesAPI } from '../../api/issues';
 import { pitchesAPI } from '../../api/pitches';
 import { analyticsAPI } from '../../api/analytics';
-import { IssueCard } from '../../components/common/IssueCard';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
+import { getIssueImageUrl, handleImageError, getCategoryFallbackImage } from '../../utils/imageUtils';
 import { HowItWorksView } from './HowItWorksView';
 import { ConfluenceScrollWorld } from '../../components/common/ConfluenceScrollWorld';
 import { useAuth } from '../../context/AuthContext';
@@ -777,9 +777,10 @@ export const LandingPage = ({
                   }}
                 >
                   <img
-                    src={issue.photo_url || issue.photo || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=500'}
+                    src={getIssueImageUrl(issue)}
                     alt={issue.title}
-                    style={{ width: '100%', height: '170px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.85rem' }}
+                    style={{ width: '100%', height: '170px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.85rem', background: '#F1F5F9' }}
+                    onError={(e) => handleImageError(e, issue.category)}
                   />
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
@@ -956,52 +957,53 @@ export const LandingPage = ({
 
             {/* Solutions Grid */}
             <div className="grid-3" style={{ gap: '1.5rem' }}>
-              {[
-                { title: 'IoT Damodar Water Turbidity Monitor', solves: 'Industrial Effluent in Water', stage: 'Prototype', impact: 'High Impact', university: 'BIT Sindri', img: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500' },
-                { title: 'Mining Slag & Waste Repurposing', solves: 'Heavy Metal Land Contamination', stage: 'Development', impact: 'High Impact', university: 'NIT Jamshedpur', img: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=500' },
-                { title: 'Solar Cold Storage for Tribal Farmers', solves: 'Perishable Produce Spoilage', stage: 'Deployed', impact: 'High Impact', university: 'Birsa Agricultural University', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=500' },
-                { title: 'Lac & Tassar Silk Micro-Enterprise IoT', solves: 'Rural Artisan Livelihood Yield', stage: 'Testing', impact: 'Medium Impact', university: 'Ranchi University', img: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500' },
-                { title: 'Rural Microgrid Power Backup', solves: 'Grid Outages in Remote Panchayats', stage: 'Deployed', impact: 'High Impact', university: 'BIT Sindri', img: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=500' },
-                { title: 'Tribal Dialect Digital Literacy App', solves: 'Santhali / Ho Medium Learning', stage: 'Prototype', impact: 'Medium Impact', university: 'Kolhan University', img: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500' },
-              ].map((sol, idx) => (
+              {filteredSolutions.slice((solutionPage - 1) * 6, solutionPage * 6).map((pitch, idx) => (
                 <div
-                  key={idx}
+                  key={pitch.id || idx}
                   className="card"
+                  onClick={() => onSelectIssue ? onSelectIssue({ id: pitch.issue || pitch.issue_details?.id, ...pitch.issue_details }) : onOpenAuth('login')}
                   style={{
                     padding: '1rem',
                     borderRadius: '16px',
                     display: 'flex',
                     flexDirection: 'column',
+                    cursor: 'pointer',
                     transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                   }}
                 >
                   <img
-                    src={sol.img}
-                    alt={sol.title}
-                    style={{ width: '100%', height: '170px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.85rem' }}
+                    src={getIssueImageUrl(pitch)}
+                    alt={pitch.title}
+                    style={{ width: '100%', height: '170px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.85rem', background: '#F1F5F9' }}
+                    onError={(e) => handleImageError(e, pitch.category || pitch.issue_details?.category || 'education')}
                   />
 
                   <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem' }}>
-                    {sol.title}
+                    {pitch.title}
                   </h3>
 
                   <div style={{ fontSize: '0.775rem', color: '#64748B', marginBottom: '0.75rem' }}>
-                    Solves: <span style={{ fontWeight: 600, color: '#334155' }}>{sol.solves}</span>
+                    Solves: <span style={{ fontWeight: 600, color: '#334155' }}>{pitch.issue_details?.title || pitch.summary || 'Civic Infrastructure Challenge'}</span>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
                     <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', background: '#EFF6FF', color: '#2563EB' }}>
-                      {sol.stage}
+                      {pitch.stage || (pitch.status === 'approved' ? 'Development' : pitch.status === 'under_review' ? 'Prototype' : 'Testing')}
                     </span>
                     <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', background: '#FFFBEB', color: '#D97706' }}>
-                      {sol.impact}
+                      {pitch.impact || 'High Impact'}
                     </span>
                   </div>
 
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '0.75rem' }}>
-                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#64748B' }}>{sol.university}</span>
+                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#64748B' }}>
+                      {pitch.university_details?.name || 'Partner Technical University'}
+                    </span>
                     <button
-                      onClick={() => onOpenAuth('login')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectIssue ? onSelectIssue({ id: pitch.issue || pitch.issue_details?.id, ...pitch.issue_details }) : onOpenAuth('login');
+                      }}
                       style={{ fontSize: '0.8rem', fontWeight: 700, color: '#2563EB', display: 'flex', alignItems: 'center', gap: '3px', background: 'transparent' }}
                     >
                       View Details ➔
@@ -1113,7 +1115,7 @@ export const LandingPage = ({
                   stat1: { value: '12 km', label: 'Rural Roads Paved' },
                   stat2: { value: '8,000+', label: 'Residents Impacted' },
                   university: 'NIT Jamshedpur',
-                  img: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=500',
+                  img: '/media/issues/photos/damodar_water_effluent.jpg',
                 },
               ].map((story, idx) => (
                 <div
@@ -1130,7 +1132,8 @@ export const LandingPage = ({
                   <img
                     src={story.img}
                     alt={story.title}
-                    style={{ width: '100%', height: '180px', borderRadius: '14px', objectFit: 'cover', marginBottom: '1rem' }}
+                    style={{ width: '100%', height: '180px', borderRadius: '14px', objectFit: 'cover', marginBottom: '1rem', background: '#F1F5F9' }}
+                    onError={(e) => handleImageError(e, 'environment')}
                   />
 
                   <div style={{ marginBottom: '0.4rem' }}>

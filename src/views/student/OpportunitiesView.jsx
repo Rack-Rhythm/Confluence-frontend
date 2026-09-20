@@ -4,6 +4,7 @@ import { Briefcase, Building2, Calendar, Sparkles, MapPin, ArrowRight, CheckCirc
 import { engagementsAPI } from '../../api/engagements';
 import { issuesAPI } from '../../api/issues';
 import { useToast } from '../../context/ToastContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const OpportunitiesView = () => {
   const navigate = useNavigate();
@@ -63,6 +64,9 @@ export const OpportunitiesView = () => {
       sponsor: orgName,
       deadline: 'Ongoing Review',
       sector: 'Technology & CSR',
+      category: eng.category || 'technology',
+      photo: eng.issue_details?.photo || eng.issue_photo,
+      issue_details: eng.issue_details,
       grant: `Verified ${eng.engagement_type?.toUpperCase() || 'CSR'} Partnership`,
       desc: eng.proposal_notes || 'Industry partner active sponsorship, equipment support, and student mentorship grant.',
     });
@@ -76,6 +80,8 @@ export const OpportunitiesView = () => {
       sponsor: `${issue.district} District Community / Innovation Board`,
       deadline: 'Open Call',
       sector: issue.category?.replace('_', ' ')?.toUpperCase() || 'CIVIC TECH',
+      category: issue.category,
+      photo: issue.photo || issue.photo_url,
       grant: 'University Adoption & Project Lifecycle Grant',
       desc: issue.expected_outcome || issue.description,
     });
@@ -123,11 +129,21 @@ export const OpportunitiesView = () => {
                   </span>
                 </div>
 
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.4rem' }}>
-                  {op.title}
-                </h3>
-                <div style={{ fontSize: '0.8rem', color: '#64748B', marginBottom: '0.75rem' }}>
-                  🏢 {op.sponsor}
+                <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                  <img
+                    src={getIssueImageUrl(op)}
+                    alt={op.title}
+                    style={{ width: '56px', height: '56px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                    onError={(e) => handleImageError(e, op.category)}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
+                      {op.title}
+                    </h3>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                      🏢 {op.sponsor}
+                    </div>
+                  </div>
                 </div>
 
                 <p

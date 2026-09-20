@@ -58,10 +58,10 @@ export const ReportIssue = ({ onBack, onSuccess }) => {
   const [aiTriageResult, setAiTriageResult] = useState(null);
 
   const samplePhotoUrls = [
-    { label: 'Damaged Road & Pothole', url: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800' },
-    { label: 'Water Contamination', url: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800' },
-    { label: 'Street Light Broken', url: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800' },
-    { label: 'Garbage Dump & Waste', url: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800' },
+    { label: 'Damaged Road & Traffic', url: '/media/issues/photos/downtoearth_2025-07-09_cg59u6xh_Congested-road-in-Mumbai-India.jpg' },
+    { label: 'Water & River Pollution', url: '/media/issues/photos/damodar_water_effluent.jpg' },
+    { label: 'Monsoon Pothole & Bridge', url: '/media/issues/photos/monsoon_pothole_bridge.jpg' },
+    { label: 'Solar Cold Storage Farm', url: '/media/issues/photos/cold_chain_solar.jpg' },
   ];
 
   const handleProcessFile = async (file) => {

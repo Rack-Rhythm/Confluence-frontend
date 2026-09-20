@@ -29,6 +29,7 @@ import { authAPI } from '../../api/auth';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { handleImageError, getCategoryFallbackImage, getIssueImageUrl } from '../../utils/imageUtils';
 
 export const PitchDetailsView = ({ pitch, onBack, onRefresh }) => {
   const { id } = useParams();
@@ -668,27 +669,43 @@ This artifact is cryptographically stamped and licensed under Jharkhand Innovati
           {/* Tab 1: Overview */}
           {activeTab === 'overview' && (
             <>
-              {/* Media gallery */}
-              <div className="card" style={{ padding: '1rem' }}>
-                <img
-                  src={currentPitch.photo_url || 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800'}
-                  alt="Pitch hardware"
-                  style={{ width: '100%', height: '280px', borderRadius: '12px', objectFit: 'cover', marginBottom: '0.75rem' }}
-                />
-                <div className="grid-responsive-4" style={{ gap: '0.5rem' }}>
-                  {[
-                    'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=200',
-                    'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200',
-                    'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=200',
-                    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200',
-                  ].map((img, i) => (
-                    <img
-                      key={i}
-                      src={img}
-                      alt="Thumbnail"
-                      style={{ width: '100%', height: '65px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer' }}
-                    />
-                  ))}
+              {/* Media gallery: Real Issue Photo from Database */}
+              <div className="card" style={{ padding: '1rem', overflow: 'hidden' }}>
+                <div style={{ position: 'relative', width: '100%', height: '320px', borderRadius: '12px', overflow: 'hidden', background: '#0F172A' }}>
+                  <img
+                    src={getIssueImageUrl(currentPitch.issue_details || currentPitch)}
+                    alt={currentPitch.issue_details?.title || currentPitch.title || 'Problem Photographic Evidence'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => handleImageError(e, currentPitch.category || currentPitch.issue_details?.category)}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      padding: '1rem 1.25rem',
+                      background: 'linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.6) 60%, transparent 100%)',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-end',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '0.725rem', fontWeight: 800, textTransform: 'uppercase', color: '#60A5FA', letterSpacing: '0.05em', marginBottom: '2px' }}>
+                        Verified Problem Photographic Evidence
+                      </div>
+                      <div style={{ fontSize: '1rem', fontWeight: 800, color: '#F8FAFC' }}>
+                        {currentPitch.issue_details?.title || (currentPitch.issue ? `Problem #${currentPitch.issue}` : 'Reported Civic Problem')}
+                      </div>
+                      {currentPitch.issue_details?.district && (
+                        <div style={{ fontSize: '0.775rem', color: '#CBD5E1', marginTop: '2px' }}>
+                          📍 {currentPitch.issue_details.district} • Status: {currentPitch.issue_details.status?.toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 

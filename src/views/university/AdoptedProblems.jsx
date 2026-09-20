@@ -447,6 +447,27 @@ export const AdoptedProblems = ({ onSelectIssue, onCreateOpenCall }) => {
                       <Building2 size={14} /> Corporate Sponsor • 📍 Problem #{eng.issue}: {eng.issue_title}
                     </div>
 
+                    {/* Problem Thumbnail & Link */}
+                    {(() => {
+                      const matchedIssue = issues.find((i) => i.id === eng.issue);
+                      return (
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.75rem', padding: '0.5rem 0.75rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                          <img
+                            src={getIssueImageUrl(eng.issue_details || matchedIssue || eng)}
+                            alt={eng.issue_title || partner}
+                            style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                            onError={(e) => handleImageError(e, eng.category || matchedIssue?.category)}
+                          />
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Target Problem</div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {eng.issue_title || (matchedIssue ? matchedIssue.title : `Problem #${eng.issue}`)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     <div style={{ background: '#FFFFFF', padding: '0.85rem', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '0.75rem' }}>
                       <div style={{ fontSize: '0.725rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
                         Proposal Notes:

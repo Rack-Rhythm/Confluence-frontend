@@ -18,6 +18,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { issuesAPI } from '../../api/issues';
 import { useToast } from '../../context/ToastContext';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel }) => {
   const { id } = useParams();
@@ -180,20 +181,17 @@ export const IssueDetail = ({ issue: initialIssue, onBack, onRefresh, backLabel 
         {/* Left Column: Media & Description */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Main Photo Card */}
-          <div className="card" style={{ padding: '0.75rem', overflow: 'hidden' }}>
+          <div className="card" style={{ padding: '0.75rem', overflow: 'hidden', background: '#F1F5F9' }}>
             <img
-              src={
-                issue.photo_url ||
-                issue.photo ||
-                'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?w=800'
-              }
-              alt="Issue evidence"
+              src={getIssueImageUrl(issue)}
+              alt={issue.title || 'Issue evidence'}
               style={{
                 width: '100%',
                 maxHeight: '340px',
                 objectFit: 'cover',
                 borderRadius: '12px',
               }}
+              onError={(e) => handleImageError(e, issue.category)}
             />
           </div>
 

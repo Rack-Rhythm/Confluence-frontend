@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { pitchesAPI } from '../../api/pitches';
 import { issuesAPI } from '../../api/issues';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const ProjectsList = ({ onSelectProject }) => {
   const [projects, setProjects] = useState([]);
@@ -257,9 +258,19 @@ export const ProjectsList = ({ onSelectProject }) => {
                     </td>
 
                     <td style={{ padding: '1rem 1.25rem' }}>
-                      <div style={{ fontWeight: 800, color: '#0F172A' }}>{titleText}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                        {proj.category ? `Domain: ${proj.category}` : 'University Lab Project'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <img
+                          src={getIssueImageUrl(proj.challenge_details || proj)}
+                          alt={titleText}
+                          style={{ width: '42px', height: '42px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                          onError={(e) => handleImageError(e, proj.category)}
+                        />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 800, color: '#0F172A' }}>{titleText}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                            {proj.problem ? `Problem: ${proj.problem}` : (proj.category ? `Domain: ${proj.category}` : 'University Lab Project')}
+                          </div>
+                        </div>
                       </div>
                     </td>
 

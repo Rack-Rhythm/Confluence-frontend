@@ -20,6 +20,7 @@ import { issuesAPI } from '../../api/issues';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { StatCard } from '../../components/common/StatCard';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
 export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
   const { user } = useAuth();
@@ -271,40 +272,48 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
                       gap: '1rem',
                     }}
                   >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <span
-                          style={{
-                            fontSize: '0.725rem',
-                            fontWeight: 700,
-                            padding: '2px 8px',
-                            borderRadius: '6px',
-                            background: '#EFF6FF',
-                            color: '#2563EB',
-                            textTransform: 'uppercase',
-                          }}
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                      <img
+                        src={getIssueImageUrl(eng.issue_details || eng)}
+                        alt={eng.issue_title || partnerName}
+                        style={{ width: '56px', height: '56px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                        onError={(e) => handleImageError(e, eng.category)}
+                      />
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span
+                            style={{
+                              fontSize: '0.725rem',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              background: '#EFF6FF',
+                              color: '#2563EB',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {eng.engagement_type}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>
+                            ● {eng.status?.toUpperCase()}
+                          </span>
+                        </div>
+                        <h4
+                          onClick={() => onNavigate && onNavigate('opportunities')}
+                          style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '2px', cursor: 'pointer' }}
+                          title="Click to manage engagement"
                         >
-                          {eng.engagement_type}
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>
-                          ● {eng.status?.toUpperCase()}
-                        </span>
+                          {eng.issue_title || `${partnerName} Innovation Support`}
+                        </h4>
+                        <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                          Sponsor: <strong>{partnerName}</strong> • Initiator: {eng.created_by_details?.name || 'Innovation Board'}
+                        </div>
+                        {eng.proposal_notes && (
+                          <p style={{ fontSize: '0.8rem', color: '#475569', marginTop: '4px', fontStyle: 'italic' }}>
+                            "{eng.proposal_notes}"
+                          </p>
+                        )}
                       </div>
-                      <h4
-                        onClick={() => onNavigate && onNavigate('opportunities')}
-                        style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '2px', cursor: 'pointer' }}
-                        title="Click to manage engagement"
-                      >
-                        {eng.issue_title || `${partnerName} Innovation Support`}
-                      </h4>
-                      <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                        Sponsor: <strong>{partnerName}</strong> • Initiator: {eng.created_by_details?.name || 'Innovation Board'}
-                      </div>
-                      {eng.proposal_notes && (
-                        <p style={{ fontSize: '0.8rem', color: '#475569', marginTop: '4px', fontStyle: 'italic' }}>
-                          "{eng.proposal_notes}"
-                        </p>
-                      )}
                     </div>
 
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
@@ -394,14 +403,25 @@ export const IndustryDashboard = ({ onNavigate, onSelectPitch }) => {
                       border: '1px solid #E2E8F0',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
+                      display: 'flex',
+                      gap: '0.75rem',
+                      alignItems: 'center',
                     }}
                     className="table-row-hover"
                   >
-                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.875rem' }}>
-                      {p.title}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>
-                      {author} • {uni}
+                    <img
+                      src={getIssueImageUrl(p)}
+                      alt={p.title}
+                      style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
+                      onError={(e) => handleImageError(e, p.category)}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {p.title}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>
+                        {author} • {uni}
+                      </div>
                     </div>
                   </div>
                 );
