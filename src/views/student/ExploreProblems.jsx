@@ -71,6 +71,7 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
 
       {/* Filter Bar */}
       <div
+        className="explore-filter-bar"
         style={{
           background: '#FFFFFF',
           padding: '1rem 1.25rem',
@@ -144,7 +145,7 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
           Loading real community problems...
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3.5rem 1rem', background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '3.5rem 1rem', background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B' }}>
           No problems match your filters.
         </div>
       ) : (

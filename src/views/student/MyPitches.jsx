@@ -107,7 +107,7 @@ export const MyPitches = ({ onNavigate, onSelectPitch }) => {
       )}
 
       {/* Metric Tabs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+      <div className="pitches-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
         {[
           { id: 'all', count: pitches.length, label: 'Total Pitches', color: '#2563EB', bg: '#EFF6FF' },
           { id: 'changes_requested', count: changesRequestedPitches.length, label: 'Action Required', color: '#D97706', bg: '#FEF3C7' },
@@ -120,7 +120,7 @@ export const MyPitches = ({ onNavigate, onSelectPitch }) => {
             <div
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              style={{
+              className={`pitch-stat-card ${isActive ? "active" : ""}`} style={{
                 background: isActive ? tab.bg : '#FFFFFF',
                 borderRadius: '14px',
                 border: isActive ? `2px solid ${tab.color}` : '1px solid #E2E8F0',

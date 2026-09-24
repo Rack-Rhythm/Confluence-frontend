@@ -376,10 +376,10 @@ export const Sidebar = ({ currentView, onNavigate, onOpenLogout, unreadNotificat
               <Leaf size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+              <div className="brand-text" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
                 CONFLUENCE
               </div>
-              <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
+              <div className="brand-subtext" style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
                 People. Ideas. Impact.
               </div>
             </div>

@@ -299,7 +299,7 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
   return (
     <div style={{ maxWidth: '820px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+      <div className="submit-pitch-page-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
         <button
           onClick={onBack}
           style={{
@@ -327,7 +327,7 @@ export const SubmitPitchWizard = ({ selectedProblem, onBack, onSuccess }) => {
       </div>
 
       {/* Stepper Header */}
-      <div
+      <div className="wizard-stepper-header"
         style={{
           display: 'flex',
           justifyContent: 'space-between',

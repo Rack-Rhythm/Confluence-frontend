@@ -883,3 +883,1124 @@ button {
     overflow-x: visible;
   }
 }
+/* ==========================================================================
+   STUDENT GUILD THEME (VINTAGE ADVENTURE)
+   ========================================================================== */
+body.theme-student-guild {
+  background: url('/dashboard-global-bg.png') no-repeat center center fixed !important;
+  background-size: cover !important;
+}
+
+body.theme-student-guild .dashboard-container,
+body.theme-student-guild .dashboard-main,
+body.theme-student-guild .dashboard-content {
+  background: transparent !important;
+}
+
+/* Glassmorphism for Sidebar & Header */
+body.theme-student-guild .dashboard-sidebar,
+body.theme-student-guild .top-header {
+  background: rgba(10, 15, 10, 0.8) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(230, 195, 113, 0.2) !important;
+}
+
+/* Text and Links in Sidebar/Header */
+body.theme-student-guild .dashboard-sidebar button,
+body.theme-student-guild .dashboard-sidebar span,
+body.theme-student-guild .top-header span,
+body.theme-student-guild .top-header input {
+  color: #DFD3B6 !important;
+  font-family: 'Playfair Display', 'Cinzel', Georgia, serif;
+}
+
+body.theme-student-guild .dashboard-sidebar button:hover {
+  background: rgba(230, 195, 113, 0.15) !important;
+  border-left: 3px solid #E6C371 !important;
+}
+
+body.theme-student-guild .dashboard-sidebar svg,
+body.theme-student-guild .top-header svg {
+  color: #E6C371 !important;
+}
+
+body.theme-student-guild .mobile-header-brand div,
+body.theme-student-guild .dashboard-sidebar .brand-text {
+  color: #E6C371 !important;
+}
+
+body.theme-student-guild .search-bar-input {
+  background: rgba(20, 30, 20, 0.6) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+}
+body.theme-student-guild .desktop-profile-pill {
+  background: rgba(20, 30, 20, 0.6) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+}
+
+/* Glassmorphism for Default Cards in the Dashboard */
+body.theme-student-guild .card {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(230, 195, 113, 0.25) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  color: #DFD3B6 !important;
+}
+
+body.theme-student-guild h3,
+body.theme-student-guild h4,
+body.theme-student-guild p {
+  color: #DFD3B6 !important;
+}
+body.theme-student-guild h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: #E6C371 !important;
+}
+
+body.theme-student-guild .btn-outline {
+  border-color: rgba(230, 195, 113, 0.5) !important;
+  color: #E6C371 !important;
+}
+body.theme-student-guild .btn-outline:hover {
+  background: rgba(230, 195, 113, 0.2) !important;
+}
+body.theme-student-guild .btn-blue {
+  background: rgba(230, 195, 113, 0.8) !important;
+  color: #0F172A !important;
+  border: none !important;
+}
+body.theme-student-guild .btn-blue:hover {
+  background: rgba(230, 195, 113, 1) !important;
+}
+
+body.theme-student-guild .card-stat-hover {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(230, 195, 113, 0.25) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+body.theme-student-guild .card-stat-hover > div:first-child {
+  background: rgba(230, 195, 113, 0.1) !important;
+  border-color: rgba(230, 195, 113, 0.3) !important;
+  color: #E6C371 !important;
+}
+body.theme-student-guild .card-stat-hover > div:last-child > div {
+  color: #E6C371 !important;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+body.theme-student-guild .table-row-hover > div:first-child {
+  background: rgba(230, 195, 113, 0.1) !important;
+  color: #E6C371 !important;
+}
+body.theme-student-guild .table-row-hover > div:last-child > div {
+  color: #DFD3B6 !important;
+}
+body.theme-student-guild .table-row-hover > div:last-child > span {
+  color: #E6C371 !important;
+}
+
+body.theme-student-guild .table-row-hover:hover {
+  background: rgba(230, 195, 113, 0.1) !important;
+}
+
+body.theme-student-guild span {
+  color: #DFD3B6 !important;
+}
+body.theme-student-guild .category-pill {
+  background: rgba(230, 195, 113, 0.2) !important;
+  color: #E6C371 !important;
+  border-color: rgba(230, 195, 113, 0.4) !important;
+}
+
+/* FIXES FOR GUILD THEME */
+body.theme-student-guild .dashboard-sidebar button[style*="background: #EFF6FF"],
+body.theme-student-guild .dashboard-sidebar button[style*="background: rgb(239, 246, 255)"],
+body.theme-student-guild .dashboard-sidebar button[style*="background: #EFF6FF;"] {
+  background: rgba(230, 195, 113, 0.2) !important;
+  border-left: 4px solid #E6C371 !important;
+}
+body.theme-student-guild .dashboard-sidebar h2, body.theme-student-guild .dashboard-sidebar h2 span {
+  color: #E6C371 !important;
+  font-family: 'Playfair Display', serif !important;
+}
+body.theme-student-guild .top-header .search-container,
+body.theme-student-guild .top-header > div:first-child {
+  opacity: 0;
+  pointer-events: none;
+}
+body.theme-student-guild .desktop-profile-pill div {
+  color: #DFD3B6 !important;
+}
+body.theme-student-guild .top-header > button {
+  background: rgba(230, 195, 113, 0.1) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+}
+body.theme-student-guild {
+  background-color: #0A0F0A !important;
+  background-image: none !important;
+}
+body.theme-student-guild::before {
+  content: "";
+  position: fixed;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background: url('/dashboard-global-bg.png') no-repeat center center;
+  background-size: cover;
+  filter: brightness(0.6) sepia(0.35) contrast(1.15) blur(3px);
+  z-index: -1;
+}
+body.theme-student-guild .desktop-profile-pill > div:first-child {
+  background: rgba(230, 195, 113, 0.2) !important;
+  color: #E6C371 !important;
+  border: 1px solid #E6C371 !important;
+}
+
+body.theme-student-guild .wanted-poster-hover:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  z-index: 10;
+  box-shadow: 10px 15px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(139, 69, 19, 0.2) !important;
+}
+
+body.theme-student-guild .wanted-poster-hover:hover {
+  transform: scale(1.5) rotate(0deg) !important;
+  z-index: 100 !important;
+  box-shadow: 15px 25px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(139, 69, 19, 0.2) !important;
+}
+/* Welcome Banner Guild Styles */
+body.theme-student-guild .welcome-banner-guild {
+  background-image: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.7) 100%), url('/student-welcome-bg.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 20px;
+  border: 1px solid #E6C371;
+  padding: 4rem 3rem;
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-student-guild .welcome-banner-guild-title {
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: #E6C371;
+  margin-bottom: 0.5rem;
+  font-family: "Playfair Display", "Cinzel", Georgia, serif;
+  letter-spacing: 0.05em;
+}
+
+body.theme-student-guild .welcome-banner-guild-subtitle {
+  font-size: 0.95rem;
+  color: #DFD3B6;
+  max-width: 580px;
+  font-family: "Playfair Display", "Cinzel", Georgia, serif;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+
+body.theme-student-guild .welcome-banner-guild-badge {
+  background: rgba(0, 0, 0, 0.4);
+  color: #E6C371;
+  padding: 1rem 1.5rem;
+  border-radius: 0px;
+  border: 1px solid #E6C371;
+  text-align: right;
+  backdrop-filter: blur(4px);
+  font-family: "Playfair Display", "Cinzel", Georgia, serif;
+}
+
+/* Stats Row Horizontal Scrolling */
+body.theme-student-guild .stats-row-guild {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+/* MOBILE MEDIA QUERIES */
+@media (max-width: 768px) {
+  body.theme-student-guild .welcome-banner-guild {
+    padding: 2rem 1.5rem;
+    min-height: 170px;
+  }
+  body.theme-student-guild .welcome-banner-guild-title {
+    font-size: 1.5rem;
+  }
+  body.theme-student-guild .welcome-banner-guild-subtitle {
+    font-size: 0.8rem;
+  }
+  body.theme-student-guild .welcome-banner-guild-badge {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    width: 100%;
+  }
+
+  body.theme-student-guild .stats-row-guild {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+  
+  body.theme-student-guild .stats-row-guild > div {
+    min-width: 200px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+  
+  body.theme-student-guild .stats-row-guild::-webkit-scrollbar {
+    height: 4px;
+  }
+  body.theme-student-guild .stats-row-guild::-webkit-scrollbar-track {
+    background: rgba(15, 25, 20, 0.3);
+    border-radius: 10px;
+  }
+  body.theme-student-guild .stats-row-guild::-webkit-scrollbar-thumb {
+    background: rgba(230, 195, 113, 0.4);
+    border-radius: 10px;
+  }
+}
+body.theme-student-guild .dashboard-sidebar .brand-subtext {
+  color: #DFD3B6 !important;
+}
+body.theme-student-guild .top-header .brand-text { color: #E6C371 !important; }
+body.theme-student-guild .top-header .brand-subtext { color: #DFD3B6 !important; }
+/* Quest Book Layout for Problem Details */
+.quest-book-container {
+  width: 100%;
+  aspect-ratio: 16 / 9.5;
+  background-image: url("/quest-book-bg.jpg");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  border-radius: 12px;
+  display: flex;
+  padding: 4% 6%;
+  position: relative;
+}
+.quest-book-left {
+  flex: 1;
+  padding-right: 4%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.quest-book-right {
+  flex: 1;
+  padding-left: 5%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .quest-book-container {
+    flex-direction: column;
+    aspect-ratio: auto;
+    background-size: cover;
+    padding: 8% 5%;
+    min-height: 80vh;
+  }
+  .quest-book-left, .quest-book-right {
+    flex: none;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 2rem;
+  }
+}
+
+/* ==========================================================================
+   GLOBAL STUDENT GUILD THEME FIXES
+   ========================================================================== */
+body.theme-student-guild .issue-card-hover {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+}
+
+body.theme-student-guild .issue-card-hover h3 {
+  color: #E6C371 !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+body.theme-student-guild .issue-card-hover p {
+  color: #DFD3B6 !important;
+}
+
+body.theme-student-guild .issue-card-hover span {
+  color: #DFD3B6 !important;
+}
+
+/* Fix Explore Problems Header text */
+body.theme-student-guild h1 {
+  color: #E6C371 !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8) !important;
+  font-family: "Playfair Display", "Cinzel", Georgia, serif !important;
+}
+body.theme-student-guild > div p {
+  color: #DFD3B6 !important;
+}
+
+/* Fix Explore Problems Filter Bar */
+body.theme-student-guild .explore-filter-bar {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+}
+
+body.theme-student-guild .explore-filter-bar input,
+body.theme-student-guild .explore-filter-bar select {
+  background: rgba(10, 15, 10, 0.8) !important;
+  color: #E6C371 !important;
+  border-color: rgba(230, 195, 113, 0.5) !important;
+}
+
+body.theme-student-guild .explore-filter-bar select option {
+  background: #0F1914 !important;
+  color: #E6C371 !important;
+}
+
+/* Generic Card Fixes for all other pages (My Pitches, Projects, etc) */
+body.theme-student-guild .card {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+  color: #DFD3B6 !important;
+}
+body.theme-student-guild .card h2, 
+body.theme-student-guild .card h3 {
+  color: #E6C371 !important;
+}
+body.theme-student-guild .card p {
+  color: #DFD3B6 !important;
+}
+body.theme-student-guild .issue-card-hover > div:last-child {
+  border-top: 1px solid rgba(230, 195, 113, 0.2) !important;
+}
+body.theme-student-guild .explore-filter-bar svg,
+body.theme-student-guild .issue-card-hover svg,
+body.theme-student-guild .card svg {
+  stroke: #E6C371 !important;
+}
+body.theme-student-guild input::placeholder {
+  color: rgba(223, 211, 182, 0.5) !important;
+}
+/* Fix Notifications View for Guild Theme */
+body.theme-student-guild .notification-row {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(230, 195, 113, 0.2) !important;
+}
+
+body.theme-student-guild .notification-row.unread {
+  background: rgba(45, 35, 15, 0.85) !important;
+  border: 1px solid rgba(230, 195, 113, 0.6) !important;
+}
+
+/* Icon Wrapper */
+body.theme-student-guild .notification-row > div:first-child {
+  background: rgba(230, 195, 113, 0.1) !important;
+}
+
+/* All text default to beige */
+body.theme-student-guild .notification-row div,
+body.theme-student-guild .notification-row span,
+body.theme-student-guild .notification-row p {
+  color: #DFD3B6 !important;
+}
+
+/* Title text */
+body.theme-student-guild .notification-row > div:nth-child(2) > div:first-child > div {
+  color: #E6C371 !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+/* Unread indicator dot */
+body.theme-student-guild .notification-row > span {
+  background: #E6C371 !important;
+  box-shadow: 0 0 10px #E6C371 !important;
+}
+
+/* View Details link */
+body.theme-student-guild .notification-row > div:nth-child(2) > div:last-child {
+  color: #E6C371 !important;
+}
+
+/* Mark all as read button */
+body.theme-student-guild button {
+  color: #E6C371;
+}
+body.theme-student-guild .mark-read-btn {
+  color: #E6C371 !important;
+}
+body.theme-student-guild .mark-read-btn svg {
+  stroke: #E6C371 !important;
+}
+body.theme-student-guild .empty-state-text {
+  color: #DFD3B6 !important;
+}
+/* My Profile Theme Fixes */
+body.theme-student-guild .profile-container .card > div:nth-child(3) {
+  background: rgba(230, 195, 113, 0.15) !important;
+  color: #E6C371 !important;
+}
+
+body.theme-student-guild .profile-container .card .grid-responsive-2 > div > div:first-child {
+  background: rgba(230, 195, 113, 0.1) !important;
+  color: #E6C371 !important;
+}
+
+body.theme-student-guild .profile-container .card .grid-responsive-2 > div > div:nth-child(2) > div:first-child {
+  color: #DFD3B6 !important;
+  opacity: 0.8 !important;
+}
+
+body.theme-student-guild .profile-container .card .grid-responsive-2 > div > div:nth-child(2) > div:last-child {
+  color: #E6C371 !important;
+}
+/* Opportunities Asymmetric Grid */
+.opp-grid-masonry {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 280px;
+  gap: 1rem;
+  grid-auto-flow: dense;
+}
+
+.opp-item-standard {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.opp-item-tall {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+.opp-item-wide {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+.opp-item-large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* Card image zoom effect */
+.opp-item-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(230,195,113,0.3) !important;
+  background: #0A0F0A;
+}
+
+.opp-item-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.opp-item-card:hover img {
+  transform: scale(1.05);
+}
+
+.opp-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15,25,20,0.95) 0%, rgba(15,25,20,0.6) 40%, transparent 100%);
+  pointer-events: none;
+}
+
+.opp-card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hover reveal for description & button */
+.opp-hover-reveal {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+}
+
+.opp-item-card:hover .opp-hover-reveal {
+  max-height: 150px;
+  opacity: 1;
+  margin-top: 0.75rem;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 1024px) {
+  .opp-grid-masonry {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 240px;
+  }
+  .opp-item-wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .opp-grid-masonry {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+  .opp-item-standard, .opp-item-tall, .opp-item-wide, .opp-item-large {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+  .opp-item-card {
+    height: 320px;
+  }
+  .opp-hover-reveal {
+    max-height: 150px;
+    opacity: 1;
+    margin-top: 0.75rem;
+  }
+  .opp-card-overlay {
+    background: linear-gradient(to top, rgba(15,25,20,0.95) 0%, rgba(15,25,20,0.8) 60%, transparent 100%);
+  }
+}
+/* Horizontal Scroll Gallery */
+.opp-horizontal-gallery {
+  display: grid;
+  grid-template-rows: repeat(2, 320px);
+  grid-auto-columns: 300px;
+  grid-auto-flow: column;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding: 0.5rem 0.5rem 1.5rem 0.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar for gallery */
+.opp-horizontal-gallery::-webkit-scrollbar {
+  height: 8px;
+}
+.opp-horizontal-gallery::-webkit-scrollbar-track {
+  background: rgba(15, 25, 20, 0.3);
+  border-radius: 10px;
+}
+.opp-horizontal-gallery::-webkit-scrollbar-thumb {
+  background: rgba(230, 195, 113, 0.4);
+  border-radius: 10px;
+}
+.opp-horizontal-gallery::-webkit-scrollbar-thumb:hover {
+  background: rgba(230, 195, 113, 0.6);
+}
+
+.opp-item-horizontal-standard {
+  grid-column: span 1;
+  scroll-snap-align: start;
+}
+
+.opp-item-horizontal-wide {
+  grid-column: span 2;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 768px) {
+  .opp-horizontal-gallery {
+    grid-template-rows: repeat(1, 320px);
+    grid-auto-columns: 280px;
+  }
+  .opp-item-horizontal-wide {
+    grid-column: span 1;
+  }
+}
+/* ==========================================================================
+   GLOBAL FORM & WIZARD FIXES FOR STUDENT GUILD THEME
+   ========================================================================== */
+
+/* Labels */
+body.theme-student-guild .form-group .form-label,
+body.theme-student-guild label,
+body.theme-student-guild .target-problem-box > div:first-child {
+  color: #E6C371 !important;
+}
+
+/* Inputs, Textareas, Selects */
+body.theme-student-guild input,
+body.theme-student-guild textarea,
+body.theme-student-guild select,
+body.theme-student-guild .form-input,
+body.theme-student-guild .form-textarea,
+body.theme-student-guild .form-select {
+  background: rgba(10, 15, 10, 0.7) !important;
+  color: #DFD3B6 !important;
+  border: 1px solid rgba(230, 195, 113, 0.4) !important;
+}
+
+body.theme-student-guild input:focus,
+body.theme-student-guild textarea:focus,
+body.theme-student-guild select:focus {
+  border-color: #E6C371 !important;
+  box-shadow: 0 0 0 2px rgba(230, 195, 113, 0.2) !important;
+  outline: none;
+}
+
+/* Placeholders */
+body.theme-student-guild input::placeholder,
+body.theme-student-guild textarea::placeholder {
+  color: rgba(223, 211, 182, 0.4) !important;
+}
+
+/* Select options */
+body.theme-student-guild select option {
+  background: #0A0F0A !important;
+  color: #DFD3B6 !important;
+}
+
+/* Primary and Outline Buttons Fix */
+body.theme-student-guild .btn-primary {
+  background: #E6C371 !important;
+  color: #0F172A !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(230, 195, 113, 0.2) !important;
+}
+body.theme-student-guild .btn-primary:hover {
+  background: #DFD3B6 !important;
+}
+
+body.theme-student-guild .btn-outline {
+  background: rgba(230, 195, 113, 0.1) !important;
+  color: #E6C371 !important;
+  border: 1px solid rgba(230, 195, 113, 0.5) !important;
+}
+body.theme-student-guild .btn-outline:hover {
+  background: rgba(230, 195, 113, 0.2) !important;
+}
+
+/* Wizard Header / Stepper Container (Fallbacks) */
+body.theme-student-guild .wizard-stepper-header,
+body.theme-student-guild .card + div > div[style*="FFFFFF"] {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+  color: #DFD3B6 !important;
+}
+
+/* Wizard Step Progress Indicator Text */
+body.theme-student-guild .wizard-stepper-header span,
+body.theme-student-guild .card + div > div span {
+  color: #DFD3B6 !important;
+}
+body.theme-student-guild .wizard-stepper-header > div > div > div {
+  background: rgba(15, 25, 20, 0.8) !important;
+  border: 1px solid rgba(230, 195, 113, 0.5) !important;
+  color: #DFD3B6 !important;
+}
+
+/* Target Problem Box Overlay */
+body.theme-student-guild .target-problem-box,
+body.theme-student-guild .card > div[style*="F8FAFC"] {
+  background: rgba(230, 195, 113, 0.1) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+  border-radius: 12px;
+}
+body.theme-student-guild .target-problem-box span,
+body.theme-student-guild .card > div[style*="F8FAFC"] span {
+  color: #DFD3B6 !important;
+}
+
+/* Global Arrow/Back Circle Button */
+body.theme-student-guild .btn-back-circle,
+body.theme-student-guild button[style*="border-radius: 50%"] {
+  background: rgba(15, 25, 20, 0.7) !important;
+  border: 1px solid rgba(230, 195, 113, 0.4) !important;
+  color: #E6C371 !important;
+}
+body.theme-student-guild button[style*="border-radius: 50%"]:hover {
+  background: rgba(230, 195, 113, 0.2) !important;
+}
+
+/* Typography Overrides for Submit Pitch Titles */
+body.theme-student-guild .card > div > h3 {
+  color: #E6C371 !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+/* Fix Wizard Circles exactly */
+body.theme-student-guild .wizard-stepper-header > div > div:first-child {
+  background: rgba(230, 195, 113, 0.1) !important;
+  border: 1px solid rgba(230, 195, 113, 0.6) !important;
+  color: #E6C371 !important;
+}
+/* Text inside wizard header */
+body.theme-student-guild .wizard-stepper-header > div {
+  color: #DFD3B6 !important;
+}
+/* Active step highlight */
+body.theme-student-guild .wizard-stepper-header > div[style*="opacity: 1"] > div:first-child {
+  background: #E6C371 !important;
+  color: #0F172A !important;
+  box-shadow: 0 0 10px rgba(230,195,113,0.5) !important;
+}
+/* Completed step highlight */
+body.theme-student-guild .wizard-stepper-header > div[style*="cursor: pointer"] > div:first-child {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: #10B981 !important;
+  color: #10B981 !important;
+}
+
+/* Generic text color overrides for Student Theme */
+body.theme-student-guild * {
+  --text-dark: #0F172A;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
+}
+
+body.theme-student-guild .card [style*="color: #0F172A"],
+body.theme-student-guild .card [style*="color: rgb(15, 23, 42)"],
+body.theme-student-guild .card [style*="color: #334155"],
+body.theme-student-guild .card [style*="color: rgb(51, 65, 85)"] {
+  color: #E6C371 !important;
+}
+
+body.theme-student-guild .card [style*="color: #64748B"],
+body.theme-student-guild .card [style*="color: rgb(100, 116, 139)"],
+body.theme-student-guild .card [style*="color: #94A3B8"],
+body.theme-student-guild .card [style*="color: rgb(148, 163, 184)"] {
+  color: #DFD3B6 !important;
+}
+/* ==========================================================================
+   MOBILE BOTTOM NAVIGATION (INSTAGRAM STYLE)
+   ========================================================================== */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  background: #FFFFFF;
+  border-top: 1px solid #E2E8F0;
+  z-index: 9999;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+
+.mobile-bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #64748B;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 0.25rem 0;
+  transition: color 0.2s;
+}
+
+.mobile-bottom-nav .nav-item span {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.mobile-bottom-nav .nav-item.active {
+  color: #2563EB;
+}
+
+/* Student Theme Override */
+.mobile-bottom-nav.student-theme {
+  background: rgba(10, 15, 10, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(230, 195, 113, 0.2);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+}
+
+.mobile-bottom-nav.student-theme .nav-item {
+  color: rgba(223, 211, 182, 0.6);
+}
+
+.mobile-bottom-nav.student-theme .nav-item.active {
+  color: #E6C371;
+}
+
+@media (max-width: 768px) {
+  /* Show bottom nav, hide desktop sidebar */
+  .mobile-bottom-nav {
+    display: flex;
+  }
+  
+  /* Add padding to the main content area so it doesn't get hidden behind bottom nav */
+  body.theme-student-guild #root > div > div > div > main,
+  #root > div > div > div > main,
+  .dashboard-main,
+  main {
+    padding-bottom: 85px !important;
+  }
+}
+/* ==========================================================================
+   MOBILE FILTER BAR HORIZONTAL SCROLL FIX
+   ========================================================================== */
+@media (max-width: 768px) {
+  body.theme-student-guild .explore-filter-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 1rem !important;
+    -webkit-overflow-scrolling: touch;
+    align-items: center !important;
+    gap: 1rem !important;
+  }
+  
+  body.theme-student-guild .explore-filter-bar > div,
+  body.theme-student-guild .explore-filter-bar > select {
+    flex-shrink: 0 !important;
+  }
+  
+  /* Ensure search input wrapper doesn't take 100% width on mobile */
+  body.theme-student-guild .explore-filter-bar .search-bar-input,
+  body.theme-student-guild .explore-filter-bar > div:first-child {
+    width: 250px !important;
+  }
+
+  body.theme-student-guild .explore-filter-bar::-webkit-scrollbar {
+    height: 4px;
+  }
+  body.theme-student-guild .explore-filter-bar::-webkit-scrollbar-track {
+    background: rgba(15, 25, 20, 0.3);
+    border-radius: 4px;
+  }
+  body.theme-student-guild .explore-filter-bar::-webkit-scrollbar-thumb {
+    background: rgba(230, 195, 113, 0.4);
+    border-radius: 4px;
+  }
+  body.theme-student-guild .explore-filter-bar::-webkit-scrollbar-thumb:hover {
+    background: rgba(230, 195, 113, 0.6);
+  }
+}
+/* ==========================================================================
+   WIZARD MOBILE FIXES
+   ========================================================================== */
+
+/* Add dark glass background to the page title so it doesn't blend with background image */
+body.theme-student-guild .submit-pitch-page-header {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+}
+
+body.theme-student-guild .submit-pitch-page-header h1 {
+  color: #E6C371 !important;
+}
+body.theme-student-guild .submit-pitch-page-header p {
+  color: #DFD3B6 !important;
+}
+
+@media (max-width: 768px) {
+  body.theme-student-guild .wizard-stepper-header {
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+    gap: 1.5rem !important;
+    padding-bottom: 1rem !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body.theme-student-guild .wizard-stepper-header > div {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+  
+  /* Custom scrollbar for mobile wizard stepper */
+  body.theme-student-guild .wizard-stepper-header::-webkit-scrollbar {
+    height: 4px;
+  }
+  body.theme-student-guild .wizard-stepper-header::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  body.theme-student-guild .wizard-stepper-header::-webkit-scrollbar-thumb {
+    background: rgba(230, 195, 113, 0.4);
+    border-radius: 4px;
+  }
+}
+/* ==========================================================================
+   MY PITCHES STATS GRID FIX (MOBILE SCROLL + DARK THEME)
+   ========================================================================== */
+
+body.theme-student-guild .pitch-stat-card {
+  background: rgba(15, 25, 20, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(230, 195, 113, 0.3) !important;
+}
+
+body.theme-student-guild .pitch-stat-card.active {
+  background: rgba(230, 195, 113, 0.15) !important;
+  border-color: #E6C371 !important;
+  box-shadow: 0 0 15px rgba(230, 195, 113, 0.2) !important;
+}
+
+/* Make the label text beige instead of slate */
+body.theme-student-guild .pitch-stat-card > div:last-child {
+  color: #DFD3B6 !important;
+}
+
+/* Make the Notification Dot border blend correctly */
+body.theme-student-guild .pitch-stat-card > span[style*="DC2626"] {
+  border-color: rgba(15, 25, 20, 0.9) !important;
+}
+
+@media (max-width: 768px) {
+  .pitches-stats-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 1rem !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 1rem !important;
+  }
+  
+  .pitch-stat-card {
+    flex: 0 0 160px !important;
+  }
+  
+  /* Scrollbar */
+  body.theme-student-guild .pitches-stats-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+  body.theme-student-guild .pitches-stats-grid::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  body.theme-student-guild .pitches-stats-grid::-webkit-scrollbar-thumb {
+    background: rgba(230, 195, 113, 0.4);
+    border-radius: 4px;
+  }
+}
+/* ==========================================================================
+   GENERIC BADGE & PILL FIXES FOR STUDENT THEME
+   ========================================================================== */
+
+/* Badges */
+body.theme-student-guild .badge {
+  background: rgba(15, 25, 20, 0.8) !important;
+  color: #DFD3B6 !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+body.theme-student-guild .badge-submitted,
+body.theme-student-guild .badge-under_review,
+body.theme-student-guild .badge-review {
+  border: 1px solid rgba(253, 230, 138, 0.6) !important; /* Yellowish */
+  color: #FDE68A !important;
+}
+
+body.theme-student-guild .badge-validated,
+body.theme-student-guild .badge-adopted,
+body.theme-student-guild .badge-in_progress {
+  border: 1px solid rgba(191, 219, 254, 0.6) !important; /* Bluish */
+  color: #BFDBFE !important;
+}
+
+body.theme-student-guild .badge-assigned {
+  border: 1px solid rgba(221, 214, 254, 0.6) !important; /* Purplish */
+  color: #DDD6FE !important;
+}
+
+body.theme-student-guild .badge-resolved,
+body.theme-student-guild .badge-selected,
+body.theme-student-guild .badge-completed {
+  border: 1px solid rgba(167, 243, 208, 0.6) !important; /* Greenish */
+  color: #A7F3D0 !important;
+}
+
+body.theme-student-guild .badge-rejected,
+body.theme-student-guild .badge-declined,
+body.theme-student-guild .badge-high_impact {
+  border: 1px solid rgba(254, 202, 202, 0.6) !important; /* Reddish */
+  color: #FECACA !important;
+}
+
+body.theme-student-guild .badge-medium_impact {
+  border: 1px solid rgba(253, 230, 138, 0.6) !important; /* Yellowish */
+  color: #FDE68A !important;
+}
+
+/* Category Pills */
+body.theme-student-guild .category-pill {
+  background: rgba(230, 195, 113, 0.1) !important;
+  color: #E6C371 !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+}
+
+/* 
+  Fallback for ALL inline bright backgrounds inside cards
+  React sometimes renders as RGB or Hex. We target both just in case,
+  but specific class injection is safer for complex components.
+*/
+body.theme-student-guild .card div[style*="background: #F8FAFC"],
+body.theme-student-guild .card div[style*="background: rgb(248, 250, 252)"],
+body.theme-student-guild .card div[style*="background: #FFFBEB"],
+body.theme-student-guild .card div[style*="background: rgb(255, 251, 235)"],
+body.theme-student-guild .card div[style*="background: #EFF6FF"],
+body.theme-student-guild .card div[style*="background: rgb(239, 246, 255)"] {
+  background: rgba(15, 25, 20, 0.6) !important;
+  border-color: rgba(230, 195, 113, 0.3) !important;
+}
+/* ==========================================================================
+   PROBLEM DETAIL STUDENT VIEW FIXES (ALERT BOXES)
+   ========================================================================== */
+
+/* File attachment box */
+body.theme-student-guild .attachment-box-student {
+  background: rgba(15, 25, 20, 0.75) !important;
+  border: 1px solid rgba(230, 195, 113, 0.3) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+body.theme-student-guild .attachment-box-student span {
+  color: #DFD3B6 !important;
+}
+
+/* Warning alert box (Pitching Locked) */
+body.theme-student-guild .alert-warning-student {
+  background: rgba(253, 230, 138, 0.1) !important;
+  border: 1px solid rgba(253, 230, 138, 0.4) !important;
+  color: #FDE68A !important;
+}
+body.theme-student-guild .alert-warning-student div {
+  color: #FDE68A !important;
+}
+
+/* Info alert box (Nominated for Review) */
+body.theme-student-guild .alert-info-student {
+  background: rgba(191, 219, 254, 0.1) !important;
+  border: 1px solid rgba(191, 219, 254, 0.4) !important;
+  color: #BFDBFE !important;
+}
+body.theme-student-guild .alert-info-student span {
+  color: #BFDBFE !important;
+}
