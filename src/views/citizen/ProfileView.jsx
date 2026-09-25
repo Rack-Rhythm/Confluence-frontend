@@ -33,7 +33,7 @@ export const ProfileView = () => {
   };
 
   return (
-    <div className="profile-container" style={{ maxWidth: '780px', margin: '0 auto', position: 'relative' }}>
+    <div style={{ maxWidth: '780px', margin: '0 auto', position: 'relative' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>

@@ -204,7 +204,6 @@ export const NotificationsView = () => {
         </div>
 
         <button
-          className="mark-read-btn"
           onClick={markAllAsRead}
           style={{
             display: 'flex',
@@ -228,14 +227,13 @@ export const NotificationsView = () => {
             Loading live notifications...
           </div>
         ) : notifications.length === 0 ? (
-          <div className="empty-state-text" style={{ textAlign: 'center', padding: '2rem 0', color: '#64748B' }}>
+          <div style={{ textAlign: 'center', padding: '2rem 0', color: '#64748B' }}>
             No notifications at this time.
           </div>
         ) : (
           notifications.map((n) => (
             <div
               key={n.id}
-              className={`notification-row ${n.unread ? 'unread' : 'read'}`}
               onClick={() => handleNotificationClick(n)}
               style={{
                 display: 'flex',

@@ -218,7 +218,7 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
                 <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>
                   Attached Documents & Photographs
                 </h3>
-                <div className="attachment-box-student" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
                   <FileText size={20} color="#2563EB" />
                   <span style={{ fontSize: '0.825rem', fontWeight: 600 }}>Field_Report_Survey.pdf (Verified Citizen Submission)</span>
                 </div>
@@ -315,7 +315,19 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
                   ) : (
                     <>
                       {/* Lock Warning Notice */}
-                      <div className="alert-warning-student" style={{ padding: '0.85rem 1rem', borderRadius: '12px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E', fontSize: '0.8rem', lineHeight: 1.5, display: 'flex', flexDirection: 'column', gap: '6px' }}
+                      <div
+                        style={{
+                          padding: '0.85rem 1rem',
+                          borderRadius: '12px',
+                          background: '#FFFBEB',
+                          border: '1px solid #FDE68A',
+                          color: '#92400E',
+                          fontSize: '0.8rem',
+                          lineHeight: 1.5,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                        }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#B45309' }}>
                           <Lock size={15} /> Pitching Locked (University Adoption Required)
@@ -348,7 +360,19 @@ export const ProblemDetailStudent = ({ problem, onBack, onSubmitPitch }) => {
                       {/* Nomination Action */}
                       {!isAdoptedByOtherUni && (
                         userNomination ? (
-                          <div className="alert-info-student" style={{ padding: '1rem', borderRadius: '12px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1E40AF', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}
+                          <div
+                            style={{
+                              padding: '0.75rem 1rem',
+                              borderRadius: '10px',
+                              background: '#EFF6FF',
+                              border: '1px solid #BFDBFE',
+                              color: '#1E40AF',
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                            }}
                           >
                             <CheckCircle2 size={16} color="#2563EB" />
                             <span>Nominated for your University Review ({userNomination.status || 'Pending'})</span>

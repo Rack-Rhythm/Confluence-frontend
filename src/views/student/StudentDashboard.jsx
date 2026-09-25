@@ -60,33 +60,50 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-      {/* 1. WELCOME BANNER (Custom Styled) */}
-      <div className="welcome-banner-guild">
+      {/* 1. WELCOME BANNER */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 50%, #FFFFFF 100%)',
+          borderRadius: '20px',
+          border: '1px solid #BFDBFE',
+          padding: '1.75rem 2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1.5rem',
+          boxShadow: '0 4px 15px rgba(37, 99, 235, 0.05)',
+        }}
+      >
         <div>
-          <h1 className="welcome-banner-guild-title">
-            Welcome back, {user?.name || 'Student Innovator'}.
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.35rem' }}>
+            Welcome back, {user?.name || 'Priya'}! 🎓
           </h1>
-          <p className="welcome-banner-guild-subtitle">
+          <p style={{ fontSize: '0.875rem', color: '#475569', maxWidth: '580px' }}>
             Transform real grassroots problems into patented technologies and scalable societal impact.
           </p>
         </div>
 
-        <div className="welcome-banner-guild-badge">
-          <div style={{ fontSize: '0.7rem', color: '#E6C371', letterSpacing: '0.15em', marginBottom: '4px' }}>
-            ◆ INSTITUTIONAL INNOVATION
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+            color: '#FFFFFF',
+            padding: '0.85rem 1.5rem',
+            borderRadius: '16px',
+            textAlign: 'right',
+          }}
+        >
+          <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>
+            ● INSTITUTIONAL INNOVATION
           </div>
-          <div style={{ fontSize: '0.95rem', letterSpacing: '0.05em' }}>
-            {user?.university_details?.name || user?.university?.name || 'Birsa Institute of Technology (BIT) Sindri'}
+          <div style={{ fontSize: '0.9rem', fontWeight: 800, marginTop: '2px' }}>
+            {user?.university_details?.name || user?.university?.name || 'BIT Sindri Innovation Lab'}
           </div>
         </div>
       </div>
 
       {/* 2. STATS ROW */}
-<<<<<<< HEAD
       <div className="grid-4 mobile-scroll-row">
-=======
-      <div className="stats-row-guild">
->>>>>>> bac1dc2c9c2244c3220f97da3f8e433df489fc5d
         <StatCard
           icon={Compass}
           title="Open Problems"
@@ -157,8 +174,8 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
                   gap: '1rem',
                   padding: '0.85rem',
                   borderRadius: '12px',
-                  border: '1px solid rgba(230, 195, 113, 0.2)',
-                  background: 'rgba(230, 195, 113, 0.05)',
+                  border: '1px solid #F1F5F9',
+                  background: '#F8FAFC',
                 }}
               >
                 <img
