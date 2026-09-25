@@ -57,7 +57,11 @@ export const MobileBottomNav = () => {
   };
 
   return (
+<<<<<<< HEAD
     <div className={`mobile-bottom-nav ${isStudent ? 'student-theme-white' : ''}`}>
+=======
+    <div className={`mobile-bottom-nav ${isStudent ? 'student-theme' : ''}`}>
+>>>>>>> bac1dc2c9c2244c3220f97da3f8e433df489fc5d
       {navItems.map((item) => {
         const Icon = item.icon;
         const path = getViewPath(role, item.id);

@@ -55,10 +55,10 @@ export const TopHeader = ({ onNavigate, onSearch, searchQuery, unreadCount = 3, 
           <Leaf size={19} />
         </div>
         <div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+          <div className="brand-text" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
             CONFLUENCE
           </div>
-          <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
+          <div className="brand-subtext" style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600 }}>
             People. Ideas. Impact.
           </div>
         </div>

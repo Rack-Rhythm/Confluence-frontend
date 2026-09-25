@@ -15,6 +15,10 @@ import { DemoRoleSwitcher } from './components/common/DemoRoleSwitcher';
 import { Navbar } from './components/common/Navbar';
 import { Sidebar, getViewPath } from './components/common/Sidebar';
 import { MobileBottomNav } from './components/common/MobileBottomNav';
+<<<<<<< HEAD
+=======
+
+>>>>>>> bac1dc2c9c2244c3220f97da3f8e433df489fc5d
 import { TopHeader } from './components/common/TopHeader';
 import { LogoutModal } from './components/common/LogoutModal';
 import { AuthModal } from './views/public/AuthModal';
@@ -175,6 +179,16 @@ function MainApp() {
 
   const publicRoutes = ['/', '/problems', '/solutions', '/how_it_works', '/success_stories', '/stats', '/public'];
   const isPublicPage = publicRoutes.includes(location.pathname);
+
+  // Apply the student guild theme globally if the user is a student
+  useEffect(() => {
+    if (role === 'student' && !isPublicPage) {
+      document.body.classList.add('theme-student-guild');
+    } else {
+      document.body.classList.remove('theme-student-guild');
+    }
+    return () => document.body.classList.remove('theme-student-guild');
+  }, [role, isPublicPage]);
 
   const openAuth = (tab = 'login') => {
     setAuthModalTab(tab);
