@@ -71,7 +71,9 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
 
       {/* Filter Bar */}
       <div
+        className="explore-filter-bar-mobile"
         style={{
+
           background: '#FFFFFF',
           padding: '1rem 1.25rem',
           borderRadius: '16px',
@@ -162,3 +164,5 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
     </div>
   );
 };
+
+

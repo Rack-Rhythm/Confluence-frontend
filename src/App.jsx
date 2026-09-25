@@ -14,6 +14,7 @@ import { ToastProvider } from './context/ToastContext';
 import { DemoRoleSwitcher } from './components/common/DemoRoleSwitcher';
 import { Navbar } from './components/common/Navbar';
 import { Sidebar, getViewPath } from './components/common/Sidebar';
+import { MobileBottomNav } from './components/common/MobileBottomNav';
 import { TopHeader } from './components/common/TopHeader';
 import { LogoutModal } from './components/common/LogoutModal';
 import { AuthModal } from './views/public/AuthModal';
@@ -516,6 +517,7 @@ function MainApp() {
           </div>
         </div>
       )}
+      <MobileBottomNav />
     </div>
   );
 }
@@ -531,3 +533,4 @@ export default function App() {
     </ToastProvider>
   );
 }
+

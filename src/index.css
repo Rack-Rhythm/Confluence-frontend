@@ -883,3 +883,117 @@ button {
     overflow-x: visible;
   }
 }
+/* ==========================================================================
+   MOBILE BOTTOM NAVIGATION & SCROLL UTILITIES
+   ========================================================================== */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  background: #FFFFFF;
+  border-top: 1px solid #E2E8F0;
+  z-index: 9999;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -4px 15px rgba(0,0,0,0.03);
+}
+
+.mobile-bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #64748B;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 0.25rem 0;
+  transition: color 0.2s;
+}
+
+.mobile-bottom-nav .nav-item span {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.mobile-bottom-nav .nav-item.active {
+  color: #2563EB;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+  }
+  
+  /* Add padding to the main content area so it doesn't get hidden behind bottom nav */
+  body #root > div > div > div > main,
+  #root > div > div > div > main,
+  .dashboard-main,
+  main {
+    padding-bottom: 85px !important;
+  }
+
+  /* Horizontal scroll for grid stats */
+  .mobile-scroll-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 1rem !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 1rem !important;
+  }
+  
+  .mobile-scroll-row > div {
+    flex: 0 0 160px !important;
+    min-width: 160px !important;
+  }
+
+  .mobile-scroll-row::-webkit-scrollbar {
+    height: 4px;
+  }
+  .mobile-scroll-row::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .mobile-scroll-row::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+  }
+
+  /* Explore Filter Bar Mobile */
+  .explore-filter-bar-mobile {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 1rem !important;
+    -webkit-overflow-scrolling: touch;
+    align-items: center !important;
+    gap: 1rem !important;
+  }
+  
+  .explore-filter-bar-mobile > div,
+  .explore-filter-bar-mobile > select {
+    flex-shrink: 0 !important;
+  }
+  
+  .explore-filter-bar-mobile > div:first-child {
+    width: 220px !important;
+  }
+
+  .explore-filter-bar-mobile::-webkit-scrollbar {
+    height: 4px;
+  }
+  .explore-filter-bar-mobile::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .explore-filter-bar-mobile::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+  }
+}

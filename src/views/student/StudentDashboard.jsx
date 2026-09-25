@@ -103,7 +103,7 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
       </div>
 
       {/* 2. STATS ROW */}
-      <div className="grid-4">
+      <div className="grid-4 mobile-scroll-row">
         <StatCard
           icon={Compass}
           title="Open Problems"
@@ -285,3 +285,4 @@ export const StudentDashboard = ({ onNavigate, onSelectProblem, onSelectPitch, o
     </div>
   );
 };
+
