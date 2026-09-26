@@ -477,191 +477,79 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
         </div>
       </div>
 
-      {/* 2. MOBILE FEED CARDS LIST (Matching Screenshot on Phone) */}
-      <div className="mobile-feed-container" style={{ display: 'none', flexDirection: 'column', gap: '0.85rem' }}>
-        {loading ? (
-          <div
-            style={{
-              background: '#FFFFFF',
-              borderRadius: '16px',
-              border: '1px solid #E2E8F0',
-              padding: '3rem 1.5rem',
-              textAlign: 'center',
-              color: '#64748B' }}
+      
+      {/* MOBILE-ONLY TOP FILTERS & IMPACT WIDGETS */}
+      <div className="mobile-only-top-widgets">
+        {/* Map Button + Quick Filters Horizontal Scroll */}
+        <div className="mobile-horizontal-scroll-row">
+          <button
+            className="mobile-map-btn"
+            onClick={() => setIsFullMapOpen(true)}
           >
-            <RefreshCw size={28} className="animate-spin" style={{ margin: '0 auto 0.75rem', color: '#10B981' }} />
-            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
-              Loading Community Issues...
-            </h3>
-            <p style={{ fontSize: '0.8rem' }}>Fetching live database records</p>
+            <MapPin size={14} /> View Map
+          </button>
+          
+          <select className="mobile-quick-select" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+            <option value="all">📍 All Locations ({availableDistricts.length})</option>
+            {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+          
+          <select className="mobile-quick-select" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+            <option value="all">📋 All Categories ({availableCategories.length})</option>
+            {availableCategories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+
+          <select className="mobile-quick-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="latest">⏱️ Latest</option>
+            <option value="oldest">⏳ Oldest</option>
+            <option value="most_upvoted">🔥 Most Upvoted</option>
+          </select>
+        </div>
+
+        {/* Community Impact Horizontal Scroll */}
+        <div className="mobile-horizontal-scroll-row impact-row">
+          <div className="mobile-impact-card blue">
+            <div className="impact-icon"><FileText size={14} color="#2563EB" /></div>
+            <div className="impact-info">
+              <span className="impact-val">{totalCount}</span>
+              <span className="impact-lbl">Total Issues</span>
+            </div>
           </div>
-        ) : displayedIssues.length === 0 ? (
-          <div
-            style={{
-              background: '#FFFFFF',
-              borderRadius: '16px',
-              border: '1px solid #E2E8F0',
-              padding: '2.5rem 1.25rem',
-              textAlign: 'center',
-              color: '#64748B' }}
-          >
-            <Compass size={36} color="#94A3B8" style={{ margin: '0 auto 0.75rem' }} />
-            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.4rem' }}>
-              No Issues Found
-            </h3>
-            <p style={{ fontSize: '0.8rem', marginBottom: '1rem' }}>
-              {searchQuery
-                ? `No issues found matching "${searchQuery}".`
-                : 'No issues match the selected category filters.'}
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategoryPill('all');
-              }}
-              style={{
-                background: '#10B981',
-                color: '#FFFFFF',
-                padding: '0.45rem 1.15rem',
-                borderRadius: '10px',
-                fontWeight: 700,
-                fontSize: '0.8rem',
-                cursor: 'pointer' }}
-            >
-              Reset Filters
-            </button>
+          
+          <div className="mobile-impact-card yellow">
+            <div className="impact-icon"><Clock size={14} color="#F59E0B" /></div>
+            <div className="impact-info">
+              <span className="impact-val">{underReviewCount}</span>
+              <span className="impact-lbl">Under Review</span>
+            </div>
           </div>
-        ) : (
-          displayedIssues.map((issue) => {
-            const theme = issue.theme || getCategoryTheme(issue.category);
-            return (
-              <div
-                key={issue.id}
-                onClick={() => onSelectIssue && onSelectIssue(issue)}
-                style={{
-                  background: '#FFFFFF',
-                  borderRadius: '16px',
-                  border: '1px solid #E2E8F0',
-                  padding: '0.75rem',
-                  display: 'flex',
-                  gap: '0.85rem',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease' }}
-              >
-                {/* Left Thumbnail Image */}
-                <div
-                  style={{
-                    width: '115px',
-                    minWidth: '115px',
-                    height: '88px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    background: theme.bg,
-                    flexShrink: 0,
-                    position: 'relative' }}
-                >
-                  <img
-                    src={issue.preview_image || getIssueImageUrl(issue)}
-                    alt={issue.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => handleImageError(e, issue.category)}
-                  />
-                </div>
 
-                {/* Right Content */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1,
-                    minWidth: 0,
-                    justifyContent: 'space-between' }}
-                >
-                  {/* Category Pill & Right Chevron */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
-                    <span
-                      style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        color: theme.text,
-                        background: theme.badgeBg,
-                        padding: '2px 8px',
-                        borderRadius: '6px',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: '85%' }}
-                    >
-                      {issue.category_display || theme.label}
-                    </span>
-                    <ChevronRight size={16} color="#94A3B8" />
-                  </div>
+          <div className="mobile-impact-card purple">
+            <div className="impact-icon"><Compass size={14} color="#8B5CF6" /></div>
+            <div className="impact-info">
+              <span className="impact-val">{inProgressCount}</span>
+              <span className="impact-lbl">Active Grants</span>
+            </div>
+          </div>
 
-                  {/* Title (2-line clamp) */}
-                  <h3
-                    style={{
-                      fontSize: '0.875rem',
-                      fontWeight: 800,
-                      color: '#0F172A',
-                      lineHeight: 1.25,
-                      margin: '3px 0 2px 0',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden' }}
-                  >
-                    {issue.title}
-                  </h3>
-
-                  {/* Location & Time Row */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      fontSize: '0.7rem',
-                      color: '#64748B',
-                      marginBottom: '2px' }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <MapPin size={11} color="#64748B" />
-                      {issue.district ? `${issue.district}, Jharkhand` : 'Jharkhand'}
-                    </span>
-                    <span style={{ color: '#94A3B8', fontSize: '0.675rem', whiteSpace: 'nowrap', marginLeft: '4px' }}>
-                      {issue.time_ago || '1 day ago'}
-                    </span>
-                  </div>
-
-                  {/* Description Snippet (2-line clamp) */}
-                  <p
-                    style={{
-                      fontSize: '0.725rem',
-                      color: '#64748B',
-                      lineHeight: 1.3,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      margin: 0 }}
-                  >
-                    {issue.description}
-                  </p>
-                </div>
-              </div>
-            );
-          })
-        )}
+          <div className="mobile-impact-card green">
+            <div className="impact-icon"><CheckCircle2 size={14} color="#10B981" /></div>
+            <div className="impact-info">
+              <span className="impact-val">{resolvedCount}</span>
+              <span className="impact-lbl">Resolved</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 3. DESKTOP MAIN 2-COLUMN SECTION (FEED GRID ON LEFT, WIDGETS ON RIGHT) */}
       <div
         className="desktop-feed-grid"
-        className="grid-responsive-2" style={{ gap: '1.5rem', alignItems: 'start' }}
+        style={{ gap: '1.5rem', alignItems: 'start' }}
       >
         {/* LEFT COLUMN: 3-COLUMN ISSUE CARDS GRID */}
         <div
-          className="grid-responsive-3" style={{ gap: '1.25rem' }}
+          className="feed-left-col grid-responsive-3" style={{ gap: '1.25rem' }}
         >
           {loading ? (
             <div
@@ -725,143 +613,48 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
               return (
                 <div
                   key={issue.id}
-                  style={{
-                    background: '#FFFFFF',
-                    borderRadius: '18px',
-                    border: '1px solid #E2E8F0',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)' }}
-                  className="issue-feed-card"
+                  className="modern-citizen-card"
+                  onClick={() => onSelectIssue && onSelectIssue(issue)}
                 >
-                  {/* Top Image / Pastel Thumbnail Area */}
-                  <div
-                    style={{
-                      height: '140px',
-                      background: theme.bg,
-                      position: 'relative',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden' }}
-                  >
+                  <div className="modern-citizen-image-container">
                     <img
                       src={issue.preview_image || getIssueImageUrl(issue)}
                       alt={issue.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      className="modern-citizen-image"
                       onError={(e) => handleImageError(e, issue.category)}
                     />
+                    <div className="modern-citizen-badge">{issue.time_ago || 'Recent'}</div>
                   </div>
 
-                  {/* Card Body */}
-                  <div
-                    style={{
-                      padding: '1.15rem 1.25rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      flex: 1 }}
-                  >
-                    {/* Category Badge */}
-                    <div style={{ marginBottom: '0.65rem' }}>
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          fontSize: '0.725rem',
-                          fontWeight: 700,
-                          color: theme.text,
-                          background: theme.badgeBg,
-                          padding: '3px 10px',
-                          borderRadius: '6px' }}
-                      >
-                        {issue.category_display || theme.label}
-                      </span>
-                    </div>
-
-                    {/* Location & Time Metadata */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        fontSize: '0.75rem',
-                        color: '#64748B',
-                        marginBottom: '0.65rem',
-                        fontWeight: 600 }}
-                    >
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        <MapPin size={13} color="#64748B" />
-                        {issue.district ? `${issue.district}, Jharkhand` : 'Jharkhand'}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#94A3B8' }}>
-                        <Clock size={12} color="#94A3B8" />
-                        {issue.time_ago || 'Recently'}
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <h3
-                      style={{
-                        fontSize: '0.95rem',
-                        fontWeight: 800,
-                        color: '#0F172A',
-                        lineHeight: 1.35,
-                        marginBottom: '0.45rem',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        minHeight: '2.6em' }}
-                    >
-                      {issue.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p
-                      style={{
-                        fontSize: '0.785rem',
-                        color: '#64748B',
-                        lineHeight: 1.45,
-                        marginBottom: '1.25rem',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        flex: 1 }}
-                    >
-                      {issue.description}
+                  <div className="modern-citizen-content">
+                    <h3 className="modern-citizen-title">{issue.title}</h3>
+                    <p className="modern-citizen-sponsor">
+                      <MapPin size={12} color="#64748B" />
+                      {issue.district ? `${issue.district}, Jharkhand` : 'Jharkhand'}
                     </p>
 
-                    {/* Bottom Action Button */}
-                    <div style={{ textAlign: 'center', marginTop: 'auto', paddingTop: '0.5rem' }}>
-                      <button
-                        onClick={() => onSelectIssue && onSelectIssue(issue)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          color: '#2563EB',
-                          background: '#F0F7FF',
-                          padding: '6px 18px',
-                          borderRadius: '999px',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          border: '1px solid #BFDBFE',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease' }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#2563EB';
-                          e.currentTarget.style.color = '#FFFFFF';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#F0F7FF';
-                          e.currentTarget.style.color = '#2563EB';
-                        }}
-                      >
-                        View More <ArrowRight size={13} />
-                      </button>
+                    <div className="modern-citizen-divider"></div>
+
+                    <div className="modern-citizen-stats">
+                      <div className="modern-citizen-stat-item">
+                        <span className="modern-citizen-stat-value">
+                          {issue.category_display ? issue.category_display.split(' ')[0] : (theme.label ? theme.label.split(' ')[0] : 'General')}
+                        </span>
+                        <span className="modern-citizen-stat-label">Category</span>
+                      </div>
+                      <div className="modern-citizen-stat-item">
+                        <span className="modern-citizen-stat-value">{issue.upvotes || 0}</span>
+                        <span className="modern-citizen-stat-label">Upvotes</span>
+                      </div>
+                      <div className="modern-citizen-stat-item">
+                        <span className="modern-citizen-stat-value">{issue.status === 'resolved' ? 'Fixed' : 'Open'}</span>
+                        <span className="modern-citizen-stat-label">Status</span>
+                      </div>
                     </div>
+
+                    <button className="modern-citizen-btn">
+                      View Details
+                    </button>
                   </div>
                 </div>
               );
@@ -870,7 +663,7 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
         </div>
 
         {/* RIGHT COLUMN: SIDEBAR WIDGETS */}
-        <div className="desktop-sidebar-widgets" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="feed-right-col desktop-sidebar-widgets" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* 1. ISSUE MAP WIDGET */}
           <div
             style={{
@@ -1284,76 +1077,70 @@ export const CitizenDashboard = ({ onNavigate, onSelectIssue }) => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div
-              style={{
-                padding: '1.25rem 1.5rem',
-                borderBottom: '1px solid #E2E8F0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: '#F8FAFC',
-                flexWrap: 'wrap',
-                gap: '1rem' }}
-            >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.4rem' }}>🗺️</span>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>
-                    Jharkhand Community Issue Map
-                  </h2>
-                </div>
-                <p style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
-                  Explore verified challenges and active solutions across all regional districts ({modalIssues.length} issues mapped)
-                </p>
-              </div>
-
-              {/* Category Filter Chips in Modal */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {categoryPills.map((pill) => (
+              <div className="map-modal-header">
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '1.4rem' }}>🗺️</span>
+                      <h2 className="map-modal-title" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>
+                        Jharkhand Community Issue Map
+                      </h2>
+                    </div>
+                    <p className="map-modal-subtitle" style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
+                      Explore verified challenges and active solutions across all regional districts ({modalIssues.length} issues mapped)
+                    </p>
+                  </div>
+                  
+                  {/* Close Button MOVED TO TOP RIGHT */}
                   <button
-                    key={pill.id}
-                    onClick={() => setModalCategoryFilter(pill.id)}
+                    onClick={() => setIsFullMapOpen(false)}
+                    className="map-modal-close-btn"
                     style={{
-                      padding: '0.35rem 0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#F1F5F9',
+                      color: '#0F172A',
+                      border: 'none',
+                      padding: '0.45rem 0.85rem',
                       borderRadius: '999px',
                       fontSize: '0.75rem',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      border: modalCategoryFilter === pill.id ? '1px solid #10B981' : '1px solid #E2E8F0',
-                      background: modalCategoryFilter === pill.id ? '#10B981' : '#FFFFFF',
-                      color: modalCategoryFilter === pill.id ? '#FFFFFF' : '#475569',
-                      transition: 'all 0.15s ease' }}
+                      flexShrink: 0
+                    }}
                   >
-                    {pill.label}
+                    <X size={14} /> <span className="hide-on-mobile">Close</span>
                   </button>
-                ))}
-
-                {/* Close Button */}
-                <button
-                  onClick={() => setIsFullMapOpen(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '0.45rem 0.85rem',
-                    borderRadius: '10px',
-                    background: '#F1F5F9',
-                    border: '1px solid #CBD5E1',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    cursor: 'pointer',
-                    marginLeft: '0.5rem' }}
-                >
-                  <X size={16} /> Close Map
-                </button>
+                </div>
+  
+                {/* Category Filter Chips in Modal */}
+                <div className="map-modal-pills">
+                  {categoryPills.map((pill) => (
+                    <button
+                      key={pill.id}
+                      onClick={() => setModalCategoryFilter(pill.id)}
+                      className="map-modal-pill-btn"
+                      style={{
+                        padding: '0.35rem 0.85rem',
+                        borderRadius: '999px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        border: modalCategoryFilter === pill.id ? '1px solid #10B981' : '1px solid #E2E8F0',
+                        background: modalCategoryFilter === pill.id ? '#10B981' : '#FFFFFF',
+                        color: modalCategoryFilter === pill.id ? '#FFFFFF' : '#475569',
+                        transition: 'all 0.15s ease' }}
+                    >
+                      {pill.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* Modal Body: Map + Side List */}
-            <div className="grid-responsive-2" style={{ flex: 1, minHeight: '520px', overflow: 'hidden' }}>
-              {/* Main Leaflet Map */}
-              <div style={{ position: 'relative', height: '100%', minHeight: '520px' }}>
+              
+              <div className="grid-responsive-2 map-modal-content-area" style={{ flex: 1, overflow: 'hidden' }}>
+                {/* Main Leaflet Map */}
+              <div style={{ position: 'relative', height: '100%' }}>
                 <IssueMap
                   issues={modalIssues}
                   onViewIssue={(issue) => {

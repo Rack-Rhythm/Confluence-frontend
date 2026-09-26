@@ -520,17 +520,11 @@ img {
     padding: 1rem 0.85rem 5.5rem 0.85rem;
   }
 
-  .desktop-sidebar-widgets {
-    display: none !important;
-  }
+  
 
-  .desktop-feed-grid {
-    display: none !important;
-  }
+  
 
-  .mobile-feed-container {
-    display: flex !important;
-  }
+  
 
   .mobile-bottom-nav {
     display: flex !important;
@@ -996,4 +990,699 @@ button {
     background: #CBD5E1;
     border-radius: 4px;
   }
+}
+/* ==========================================================================
+   MODERN APP-STYLE OPPORTUNITY CARDS
+   ========================================================================== */
+.modern-opp-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #F1F5F9;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.modern-opp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.modern-opp-image-container {
+  position: relative;
+  padding: 12px;
+  padding-bottom: 0;
+}
+
+.modern-opp-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 16px;
+  background: #F8FAFC;
+}
+
+.modern-opp-badge {
+  position: absolute;
+  bottom: -10px;
+  right: 24px;
+  background: #0F172A;
+  color: #FFFFFF;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  border: 2px solid #FFFFFF;
+}
+
+.modern-opp-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.modern-opp-header {
+  margin-bottom: 16px;
+}
+
+.modern-opp-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.modern-opp-sponsor {
+  font-size: 0.85rem;
+  color: #64748B;
+  margin: 0;
+}
+
+.modern-opp-divider {
+  height: 1px;
+  background: #F1F5F9;
+  margin-bottom: 20px;
+}
+
+.modern-opp-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0F172A;
+  text-transform: capitalize;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.modern-opp-btn {
+  width: 100%;
+  background: #0F172A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: auto;
+}
+
+.modern-opp-btn:hover {
+  background: #1E293B;
+}
+
+.modern-opp-btn.applied {
+  background: #F1F5F9;
+  color: #10B981;
+}
+
+@media (max-width: 768px) {
+  .modern-opp-card {
+    border-radius: 20px;
+  }
+  .modern-opp-image {
+    height: 180px;
+  }
+  .modern-opp-content {
+    padding: 20px;
+  }
+  .modern-opp-stats {
+    gap: 12px;
+  }
+  .stat-value {
+    font-size: 0.85rem;
+  }
+}
+/* ==========================================================================
+   AIRBNB-STYLE ISSUE CARDS (STUDENT EXPLORE)
+   ========================================================================== */
+.airbnb-issue-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  border: 1px solid #E2E8F0;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.airbnb-issue-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+}
+
+.airbnb-image-container {
+  position: relative;
+  padding: 8px;
+  padding-bottom: 0;
+}
+
+.airbnb-image {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 16px;
+  background: #F1F5F9;
+}
+
+.airbnb-badges-top {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.airbnb-badge-blur {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.airbnb-rating {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: #FFFFFF;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.airbnb-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.airbnb-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.airbnb-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.airbnb-badge-outline {
+  border: 1px solid #CBD5E1;
+  color: #64748B;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.airbnb-subtitle {
+  font-size: 0.8rem;
+  color: #64748B;
+  margin-bottom: 8px;
+}
+
+.airbnb-desc {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.airbnb-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.airbnb-price {
+  font-size: 0.9rem;
+  color: #0F172A;
+}
+.airbnb-price strong {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.airbnb-book-btn {
+  background: #000000;
+  color: #FFFFFF;
+  border: none;
+  padding: 6px 8px 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.airbnb-book-btn:hover {
+  background: #1E293B;
+}
+
+.airbnb-btn-icon-wrapper {
+  background: #FFFFFF;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* ==========================================================================
+   MODERN CITIZEN CARDS (CITIZEN FEED)
+   ========================================================================== */
+.modern-citizen-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  border: 1px solid #F1F5F9;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.modern-citizen-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.modern-citizen-image-container {
+  position: relative;
+  padding: 8px;
+  padding-bottom: 0;
+}
+
+.modern-citizen-image {
+  width: 100%;
+  height: 160px; /* Shorter height to prevent card from being too long */
+  object-fit: cover;
+  border-radius: 12px;
+  background: #F8FAFC;
+}
+
+.modern-citizen-badge {
+  position: absolute;
+  bottom: -10px;
+  right: 16px;
+  background: #0F172A;
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.modern-citizen-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.modern-citizen-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 4px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.modern-citizen-sponsor {
+  font-size: 0.75rem;
+  color: #64748B;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modern-citizen-divider {
+  height: 1px;
+  background: #F1F5F9;
+  margin: 12px 0;
+}
+
+.modern-citizen-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.modern-citizen-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modern-citizen-stat-value {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0F172A;
+  text-transform: capitalize;
+}
+
+.modern-citizen-stat-label {
+  font-size: 0.6rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.modern-citizen-btn {
+  width: 100%;
+  background: #0F172A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: auto;
+}
+.modern-citizen-btn:hover {
+  background: #1E293B;
+}
+
+@media (max-width: 768px) {
+  .modern-citizen-image {
+    height: 140px; /* Even shorter on mobile */
+  }
+}
+/* Custom layout for desktop citizen feed */
+.desktop-feed-grid {
+  display: grid;
+  grid-template-columns: 2.7fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .desktop-feed-grid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-feed-grid {
+    display: flex !important;
+    flex-direction: column-reverse;
+    gap: 2rem !important;
+  }
+}
+
+/* ==========================================================================
+   MOBILE-ONLY TOP WIDGETS
+   ========================================================================== */
+.mobile-only-top-widgets {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-only-top-widgets {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .desktop-sidebar-widgets {
+    display: none !important;
+  }
+}
+
+.mobile-horizontal-scroll-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.mobile-horizontal-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #0F172A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+  cursor: pointer;
+}
+
+.mobile-quick-select {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+  flex-shrink: 0;
+  outline: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  cursor: pointer;
+}
+
+.mobile-impact-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 0.6rem 0.85rem;
+  flex-shrink: 0;
+  min-width: 130px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.mobile-impact-card.blue .impact-icon { background: #EFF6FF; }
+.mobile-impact-card.yellow .impact-icon { background: #FFFBEB; }
+.mobile-impact-card.purple .impact-icon { background: #F5F3FF; }
+.mobile-impact-card.green .impact-icon { background: #ECFDF5; }
+
+.impact-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.impact-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.impact-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.1;
+}
+
+.impact-lbl {
+  font-size: 0.65rem;
+  color: #64748B;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   MAP MODAL RESPONSIVE STYLES
+   ========================================================================== */
+.map-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F8FAFC;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.map-modal-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  /* On mobile, remove padding from modal container wrapper */
+  .full-map-modal-overlay > div {
+    padding: 0 !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+  }
+  
+  .map-modal-header {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .map-modal-title {
+    font-size: 1.1rem !important;
+  }
+  
+  .map-modal-subtitle {
+    font-size: 0.75rem !important;
+  }
+
+  .map-modal-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .map-modal-pills::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .map-modal-pill-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .map-modal-close-btn {
+    padding: 0.5rem !important; /* Make it a square X button on mobile */
+    border-radius: 50% !important;
+  }
+  
+
+}
+
+@media (max-width: 768px) {
+  .full-map-modal-overlay {
+    padding: 0 !important;
+  }
+  
+  .full-map-modal-content {
+    border-radius: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .map-modal-content-area > div:first-child {
+    min-height: 40vh !important;
+    height: 40vh !important;
+  }
+}
+
+/* ==========================================================================
+   MOBILE BOTTOM NAV PRIMARY ACTION BUTTON
+   ========================================================================== */
+.mobile-bottom-nav .nav-item-primary {
+  color: #2563EB;
+}
+
+.nav-primary-circle {
+  background: #EFF6FF;
+  color: #2563EB;
+  width: 44px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.mobile-bottom-nav .nav-item-primary.active {
+  color: #1D4ED8;
+}
+
+.mobile-bottom-nav .nav-item-primary.active .nav-primary-circle {
+  background: #2563EB;
+  color: #FFFFFF;
 }

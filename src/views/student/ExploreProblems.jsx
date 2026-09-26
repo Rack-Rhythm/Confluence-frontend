@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Compass, MapPin, Eye, MessageSquare, ArrowRight, Lightbulb } from 'lucide-react';
 import { issuesAPI } from '../../api/issues';
-import { IssueCard } from '../../components/common/IssueCard';
+import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 import { useAuth } from '../../context/AuthContext';
 
 export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) => {
@@ -73,7 +73,6 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
       <div
         className="explore-filter-bar-mobile"
         style={{
-
           background: '#FFFFFF',
           padding: '1rem 1.25rem',
           borderRadius: '16px',
@@ -105,7 +104,7 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
           >
             <option value="all">All Adoption States</option>
             <option value="pitchable">🔓 Open for Pitches (My Uni)</option>
-            <option value="nominate">🏛️ Needs Adoption (Nominate)</option>
+            <option value="nominate">🤝 Needs Adoption (Nominate)</option>
           </select>
 
           <select
@@ -152,11 +151,56 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
       ) : (
         <div className="grid-3">
           {filtered.map((issue) => (
-            <div key={issue.id} style={{ display: 'flex', flexDirection: 'column' }}>
-              <IssueCard
-                issue={issue}
-                onView={() => onSelectProblem(issue)}
-              />
+            <div
+              key={issue.id}
+              className="airbnb-issue-card"
+              onClick={() => onSelectProblem(issue)}
+            >
+              <div className="airbnb-image-container">
+                <img
+                  src={getIssueImageUrl(issue)}
+                  alt={issue.title}
+                  className="airbnb-image"
+                  onError={(e) => handleImageError(e, issue.category)}
+                />
+                <div className="airbnb-badges-top">
+                  <span className="airbnb-badge-blur">{issue.category ? issue.category.replace('_', ' ') : 'General'}</span>
+                  <span className="airbnb-badge-blur">{issue.status}</span>
+                </div>
+                <div className="airbnb-rating">
+                  ★ 4.8
+                </div>
+              </div>
+
+              <div className="airbnb-content">
+                <div className="airbnb-header-row">
+                  <h3 className="airbnb-title">{issue.title}</h3>
+                  <span className="airbnb-badge-outline">{issue.is_adopted_by_user_university ? 'Pitchable' : 'Nominate'}</span>
+                </div>
+                
+                <p className="airbnb-subtitle">
+                  {issue.district || 'Remote'}, {issue.state || 'India'} &middot; {new Date(issue.created_at || Date.now()).toLocaleDateString()}
+                </p>
+                
+                <p className="airbnb-desc">
+                  {issue.description}
+                </p>
+                
+                <div className="airbnb-footer">
+                  <div className="airbnb-price">
+                    <strong>{issue.bounty ? `₹${issue.bounty}` : 'Community'}</strong> / project
+                  </div>
+                  <button 
+                    className="airbnb-book-btn"
+                    onClick={(e) => { e.stopPropagation(); onSelectProblem(issue); }}
+                  >
+                    View Details 
+                    <div className="airbnb-btn-icon-wrapper">
+                      <ArrowRight size={14} color="#000" strokeWidth={3} />
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -164,5 +208,3 @@ export const ExploreProblems = ({ onSelectProblem, onSubmitPitchForProblem }) =>
     </div>
   );
 };
-
-

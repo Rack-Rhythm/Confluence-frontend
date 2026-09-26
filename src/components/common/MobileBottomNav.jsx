@@ -38,8 +38,8 @@ export const MobileBottomNav = () => {
   } else if (role === 'citizen') {
     navItems = [
       { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
-      { id: 'report_problem', icon: PlusCircle, label: 'Report' },
       { id: 'my_issues', icon: ListChecks, label: 'Issues' },
+      { id: 'report_problem', icon: PlusCircle, label: 'Report', isPrimary: true },
       { id: 'notifications', icon: Bell, label: 'Alerts' },
       { id: 'profile', icon: User, label: 'Profile' },
     ];
@@ -67,10 +67,16 @@ export const MobileBottomNav = () => {
           <button
             key={item.id}
             onClick={() => handleNav(item.id)}
-            className={`nav-item ${isActive ? 'active' : ''}`}
+            className={`nav-item ${isActive ? 'active' : ''} ${item.isPrimary ? 'nav-item-primary' : ''}`}
           >
-            <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-            <span>{item.label}</span>
+            {item.isPrimary ? (
+              <div className="nav-primary-circle">
+                <Icon size={20} strokeWidth={2.5} />
+              </div>
+            ) : (
+              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+            )}
+            <span style={item.isPrimary ? { fontWeight: 700 } : {}}>{item.label}</span>
           </button>
         );
       })}

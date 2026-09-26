@@ -4,6 +4,30 @@ import { issuesAPI } from '../../api/issues';
 import { StatusBadge, CategoryPill } from '../../components/common/StatusBadge';
 import { getIssueImageUrl, handleImageError } from '../../utils/imageUtils';
 
+
+const getCategoryTheme = (category) => {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('water') || cat.includes('sanitat')) {
+    return { color: '#10B981', bg: '#D1FAE5', label: 'Water & San.' };
+  }
+  if (cat.includes('infra') || cat.includes('road')) {
+    return { color: '#EF4444', bg: '#FEE2E2', label: 'Infrastructure' };
+  }
+  if (cat.includes('agri') || cat.includes('farm')) {
+    return { color: '#F59E0B', bg: '#FEF3C7', label: 'Agriculture' };
+  }
+  if (cat.includes('edu') || cat.includes('school')) {
+    return { color: '#3B82F6', bg: '#DBEAFE', label: 'Education' };
+  }
+  if (cat.includes('health') || cat.includes('medic')) {
+    return { color: '#EC4899', bg: '#FCE7F3', label: 'Healthcare' };
+  }
+  if (cat.includes('rural') || cat.includes('panchayat')) {
+    return { color: '#8B5CF6', bg: '#EDE9FE', label: 'Rural Services' };
+  }
+  return { color: '#6366F1', bg: '#E0E7FF', label: category || 'General' };
+};
+
 export const MyIssues = ({ onNavigate, onSelectIssue }) => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +122,7 @@ export const MyIssues = ({ onNavigate, onSelectIssue }) => {
         </div>
 
         {/* Filter Tabs */}
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+        <div className="mobile-horizontal-scroll-row" style={{ display: 'flex', gap: '0.4rem', flexWrap: 'nowrap', width: '100%', margin: '0 -0.5rem', padding: '0 0.5rem 0.5rem' }}>
           {[
             { id: 'all', label: `All (${issues.length})` },
             { id: 'under_review', label: `Under Review (${underReviewIssues.length})` },
@@ -158,94 +182,68 @@ export const MyIssues = ({ onNavigate, onSelectIssue }) => {
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {filtered.map((issue) => (
-            <div
-              key={issue.id}
-              className="card table-row-hover"
-              onClick={() => onSelectIssue && onSelectIssue(issue)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1.25rem',
-                padding: '1.25rem',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer',
-              }}
-            >
-              <img
-                src={getIssueImageUrl(issue)}
-                alt={issue.title}
-                style={{
-                  width: '90px',
-                  height: '90px',
-                  borderRadius: '12px',
-                  objectFit: 'cover',
-                  flexShrink: 0,
-                  border: '1px solid #E2E8F0',
-                  background: '#F1F5F9',
-                }}
-                onError={(e) => handleImageError(e, issue.category)}
-              />
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                  <CategoryPill category={issue.category} />
-                  <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                    • Reported on {new Date(issue.created_at).toLocaleDateString()}
-                  </span>
+        <div className="grid-responsive-3" style={{ gap: '1.25rem' }}>
+          {filtered.map((issue) => {
+            const theme = getCategoryTheme(issue.category);
+            return (
+              <div
+                key={issue.id}
+                className="modern-citizen-card"
+                onClick={() => onSelectIssue && onSelectIssue(issue)}
+              >
+                <div className="modern-citizen-image-container">
+                  <img
+                    src={issue.preview_image || getIssueImageUrl(issue)}
+                    alt={issue.title}
+                    className="modern-citizen-image"
+                    onError={(e) => handleImageError(e, issue.category)}
+                  />
+                  <div className="modern-citizen-badge">{new Date(issue.created_at).toLocaleDateString()}</div>
                 </div>
 
-                <h3
-                  style={{
-                    fontSize: '1.05rem',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    marginBottom: '0.35rem',
-                  }}
-                >
-                  {issue.title}
-                </h3>
+                <div className="modern-citizen-content">
+                  <h3 className="modern-citizen-title">{issue.title}</h3>
+                  <p className="modern-citizen-sponsor">
+                    <MapPin size={12} color="#64748B" />
+                    {issue.address || issue.district || 'Jharkhand'}
+                  </p>
 
-                <p
-                  style={{
-                    fontSize: '0.825rem',
-                    color: '#475569',
-                    marginBottom: '0.5rem',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {issue.description}
-                </p>
+                  <div className="modern-citizen-divider"></div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#64748B' }}>
-                  <MapPin size={13} color="#94A3B8" />
-                  <span>{issue.address || issue.district}</span>
+                  <div className="modern-citizen-stats">
+                    <div className="modern-citizen-stat-item">
+                      <span className="modern-citizen-stat-value">
+                        {theme.label.split(' ')[0]}
+                      </span>
+                      <span className="modern-citizen-stat-label">Category</span>
+                    </div>
+                    <div className="modern-citizen-stat-item">
+                      <span className="modern-citizen-stat-value">{issue.upvotes || 0}</span>
+                      <span className="modern-citizen-stat-label">Upvotes</span>
+                    </div>
+                    <div className="modern-citizen-stat-item">
+                      <span className="modern-citizen-stat-value">{issue.status === 'resolved' ? 'Resolved' : 'Open'}</span>
+                      <span className="modern-citizen-stat-label">Status</span>
+                    </div>
+                  </div>
+
+                  <button 
+                    className="modern-citizen-btn" 
+                    style={{ 
+                      background: issue.status === 'resolved' && !issue.citizen_verified_resolved ? '#10B981' : '#5B21B6', 
+                      color: 'white' 
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onSelectIssue) onSelectIssue(issue);
+                    }}
+                  >
+                    {issue.status === 'resolved' && !issue.citizen_verified_resolved ? 'Verify Resolution' : 'View Progress'}
+                  </button>
                 </div>
               </div>
-
-              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.75rem' }}>
-                <StatusBadge status={issue.status} />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onSelectIssue) onSelectIssue(issue);
-                  }}
-                  className={issue.status === 'resolved' && !issue.citizen_verified_resolved ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
-                  style={{
-                    borderRadius: '8px',
-                    background: issue.status === 'resolved' && !issue.citizen_verified_resolved ? '#10B981' : undefined,
-                    color: issue.status === 'resolved' && !issue.citizen_verified_resolved ? '#FFFFFF' : undefined,
-                  }}
-                >
-                  {issue.status === 'resolved' && !issue.citizen_verified_resolved ? 'Verify Resolution' : 'View Details'}
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

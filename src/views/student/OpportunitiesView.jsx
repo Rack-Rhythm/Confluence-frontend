@@ -107,81 +107,54 @@ export const OpportunitiesView = () => {
           No active opportunities currently listed.
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
           {liveOpportunities.map((op) => (
             <div
               key={op.id}
-              className="card"
-              style={{
-                padding: '1.5rem',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-              }}
+              className="modern-opp-card"
+              onClick={() => handleApply(op)}
             >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2563EB', background: '#EFF6FF', padding: '3px 10px', borderRadius: '999px', textTransform: 'capitalize' }}>
-                    {op.sector}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
-                    {op.deadline}
-                  </span>
+              <div className="modern-opp-image-container">
+                <img
+                  src={getIssueImageUrl(op)}
+                  alt={op.title}
+                  className="modern-opp-image"
+                  onError={(e) => handleImageError(e, op.category)}
+                />
+                <div className="modern-opp-badge">{op.deadline}</div>
+              </div>
+
+              <div className="modern-opp-content">
+                <div className="modern-opp-header">
+                  <h3 className="modern-opp-title">{op.title}</h3>
+                  <p className="modern-opp-sponsor">by {op.sponsor}</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                  <img
-                    src={getIssueImageUrl(op)}
-                    alt={op.title}
-                    style={{ width: '56px', height: '56px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0, border: '1px solid #E2E8F0', background: '#F1F5F9' }}
-                    onError={(e) => handleImageError(e, op.category)}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
-                      {op.title}
-                    </h3>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                      🏢 {op.sponsor}
-                    </div>
+                <div className="modern-opp-divider"></div>
+
+                <div className="modern-opp-stats">
+                  <div className="stat-item">
+                    <span className="stat-value">{op.sector.split(' ')[0]}</span>
+                    <span className="stat-label">Sector</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-value">{op.category ? (op.category.length > 10 ? op.category.substring(0, 10)+'..' : op.category) : 'Tech'}</span>
+                    <span className="stat-label">Category</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-value">Open</span>
+                    <span className="stat-label">Status</span>
                   </div>
                 </div>
 
-                <p
-                  style={{
-                    fontSize: '0.85rem',
-                    color: '#334155',
-                    lineHeight: 1.5,
-                    marginBottom: '1rem',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleApply(op); }}
+                  disabled={applied[op.id]}
+                  className={`modern-opp-btn ${applied[op.id] ? 'applied' : ''}`}
                 >
-                  {op.desc}
-                </p>
-
-                <div style={{ background: '#ECFDF5', padding: '0.65rem 0.85rem', borderRadius: '10px', border: '1px solid #A7F3D0', fontSize: '0.8rem', fontWeight: 700, color: '#065F46', marginBottom: '1.25rem' }}>
-                  💰 {op.grant}
-                </div>
+                  {applied[op.id] ? 'Application Registered' : 'Apply Now'}
+                </button>
               </div>
-
-              <button
-                onClick={() => handleApply(op)}
-                disabled={applied[op.id]}
-                className={`btn ${applied[op.id] ? 'btn-outline' : 'btn-primary'}`}
-                style={{ width: '100%', borderRadius: '10px', background: applied[op.id] ? '#F1F5F9' : '#0F172A' }}
-              >
-                {applied[op.id] ? (
-                  <>
-                    <CheckCircle2 size={16} color="#10B981" /> Application Registered
-                  </>
-                ) : (
-                  <>
-                    Apply Now <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
             </div>
           ))}
         </div>
